@@ -1,20 +1,24 @@
 #!/usr/bin/env node
 /**
  * E2e smoke: build test-vault (canvases included) through the real engine,
- * serve the output, then verify over HTTP + headless Chromium that the canvas
- * viewer actually mounts and renders build-time-rewritten content. Phase 3
- * adds: validation-pass assertions on the build result and a `publish deploy
- * --dry-run` exercise through the real CLI (no aws CLI / credentials needed).
+ * serve the output with the REAL `publish preview` server (the URL-routing
+ * contract of docs/hosting.md), then verify over HTTP + headless Chromium
+ * that the canvas viewer actually mounts and renders build-time-rewritten
+ * content. Phase 3 adds: validation-pass assertions on the build result and
+ * a `publish deploy --dry-run` exercise through the real CLI (no aws CLI /
+ * credentials needed). Preview routing checks (extensionless URLs, 404 page,
+ * traversal rejection) run against this real output too.
  *
  * Run: `npm run test:e2e` (Node >= 22 via nvm; system Chromium at /usr/bin/chromium).
  * Exits non-zero on any failed check. Screenshot -> .out/phase-2-canvas-smoke.png.
  */
 import { spawnSync } from "node:child_process"
-import { createServer } from "node:http"
+import http from "node:http"
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { SiteBuilder, SiteConfigParser } from "../engine/src/index.ts"
+import { PreviewServer } from "../cli/src/preview/previewServer.ts"
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const siteDir = path.join(repoRoot, ".build", "e2e-canvas-site")
@@ -93,33 +97,12 @@ check(
 )
 check("deploy dry-run executes nothing", dryRunOutput.includes("nothing was executed"))
 
-// --- 2. Serve (extensionless -> .html mapping is a hosting concern; mimic it) ---
-const MIME = {
-  ".html": "text/html",
-  ".js": "text/javascript",
-  ".css": "text/css",
-  ".json": "application/json",
-  ".png": "image/png",
-  ".xml": "application/xml",
-}
-const server = createServer((req, res) => {
-  const urlPath = decodeURIComponent((req.url ?? "/").split("?")[0])
-  let filePath = path.join(siteDir, urlPath === "/" ? "index.html" : urlPath.slice(1))
-  if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-    if (fs.existsSync(`${filePath}.html`)) filePath = `${filePath}.html`
-  }
-  try {
-    const body = fs.readFileSync(filePath)
-    res.writeHead(200, { "content-type": MIME[path.extname(filePath)] ?? "application/octet-stream" })
-    res.end(body)
-  } catch {
-    res.writeHead(404)
-    res.end("not found")
-  }
-})
-await new Promise((resolve) => server.listen(0, resolve))
-const base = `http://127.0.0.1:${server.address().port}`
-console.log(`serving ${siteDir} at ${base}`)
+// --- 2. Serve with the REAL preview server (the same URL-routing contract
+// production hosting implements — docs/hosting.md) --------------------------
+const server = new PreviewServer(siteDir)
+const address = await server.start(0)
+const base = `http://127.0.0.1:${address.port}`
+console.log(`serving ${siteDir} at ${base} (publish preview server)`)
 
 // --- 3. HTTP checks ----------------------------------------------------------
 const status = async (p) => (await fetch(base + p)).status
@@ -130,6 +113,50 @@ check("note fragment (full) 200", (await status("/canvases/main.canvas.fragments
 check("note fragment (subpath) 200", (await status("/canvases/main.canvas.fragments/file-note-subpath.html")) === 200)
 check("image asset 200", (await status("/attachments/diagram.png")) === 200)
 check("private note 404", (await status("/notes/private-secret.html")) === 404)
+
+// --- 3b. Preview-server routing contract over REAL build output ---------------
+// Raw request that sends the path VERBATIM: fetch()/WHATWG URL normalize `..`
+// and `%2e%2e` dot-segments client-side, which would hide traversal attempts.
+const rawGet = (rawPath) =>
+  new Promise((resolve, reject) => {
+    const request = http.request(
+      { host: "127.0.0.1", port: address.port, path: rawPath, method: "GET" },
+      (response) => {
+        let body = ""
+        response.on("data", (chunk) => (body += chunk))
+        response.on("end", () => resolve({ status: response.statusCode, body }))
+      },
+    )
+    request.on("error", reject)
+    request.end()
+  })
+
+check("preview: site root / 200", (await status("/")) === 200)
+check("preview: extensionless canvas URL 200 (the exact URL that 404'd on plain servers)", (await status("/canvases/main.canvas")) === 200)
+check("preview: extensionless note URL 200", (await status("/notes/architecture")) === 200)
+check("preview: folder URL without slash redirects to slashed folder index", (await fetch(`${base}/notes`, { redirect: "manual" })).status === 302)
+check("preview: missing URL serves themed 404 page with status 404", await (async () => {
+  const response = await fetch(`${base}/definitely/not/here`)
+  return response.status === 404 && (await response.text()).includes("<html")
+})())
+const traversalPlain = await rawGet("/../package.json")
+check(
+  "preview: raw /../package.json rejected, not served",
+  traversalPlain.status === 400 && !traversalPlain.body.includes("vintrin-markdown-publish"),
+  `status=${traversalPlain.status}`,
+)
+const traversalEncoded = await rawGet("/%2e%2e/package.json")
+check(
+  "preview: encoded /%2e%2e/package.json rejected, not served",
+  traversalEncoded.status === 400 && !traversalEncoded.body.includes("vintrin-markdown-publish"),
+  `status=${traversalEncoded.status}`,
+)
+const traversalNested = await rawGet("/notes/../../package.json")
+check(
+  "preview: nested /notes/../../package.json rejected, not served",
+  traversalNested.status === 400 && !traversalNested.body.includes("vintrin-markdown-publish"),
+  `status=${traversalNested.status}`,
+)
 
 const mainHtml = await (await fetch(base + "/canvases/main.canvas.html")).text()
 check(
@@ -218,7 +245,7 @@ if (!fs.existsSync(CHROMIUM_PATH)) {
 }
 
 // --- 5. Summary ----------------------------------------------------------------
-server.close()
+await server.stop()
 const failed = results.filter((r) => !r.ok)
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`)
 process.exit(failed.length === 0 ? 0 : 1)
