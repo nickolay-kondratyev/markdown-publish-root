@@ -46,7 +46,7 @@ describe("SiteBuilder integration — builds test-vault markdown-only", () => {
     assert.deepEqual(filesContaining(OUT_DIR, LEAK_SENTINEL), [])
   })
 
-  test("THEN no canvas artifacts are emitted (Phase 1)", () => {
+  test("THEN no canvas artifacts are emitted (no includeFolders cover the canvases)", () => {
     assert.deepEqual(
       listFiles(OUT_DIR).filter((p) => p.includes(".canvas")),
       [],
@@ -75,7 +75,7 @@ describe("SiteBuilder integration — builds test-vault markdown-only", () => {
     const html = fs.readFileSync(path.join(OUT_DIR, "index.html"), "utf-8")
     const broken = internalHrefs(html)
       .map(stripAnchor)
-      // Phase 1 known exception: links to unpublished/canvas targets stay unresolved.
+      // Known exceptions: private target and (in this bare-config build) unstaged canvases.
       .filter((href) => !href.includes("private-secret") && !href.includes(".canvas"))
       .filter((href) => {
         const target = path.join(OUT_DIR, href)

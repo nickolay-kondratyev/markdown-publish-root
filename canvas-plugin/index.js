@@ -77,6 +77,9 @@ export default function VintrinCanvasPage() {
     },
 
     layout: "canvas",
+    // WHY-NOT "full-width": that core frame drops the left/right sidebars,
+    // losing graph + backlinks on canvas pages — a differentiator (plan §4.1).
+    // The canvas itself pans/zooms, so the default content width is fine.
     frame: "default",
     body: CanvasPageBody,
   }
