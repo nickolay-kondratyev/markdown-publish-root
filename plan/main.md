@@ -2,7 +2,7 @@ GOAL: Create MVP to be able have INPUT: an Obsidian vault that contains markdown
 
 # Obsidian Publish Replacement: MVP Plan (Nexus Document)
 
-**Status:** Phase 0 complete. Deviations discovered by spikes are recorded in `docs/status/phase-0.md` and `docs/decisions/0001-own-pagetype-plugin-with-hesprs-viewer.md` (notably: Quartz 5 DOES ship an official canvas-page plugin — we build our own pageType plugin with hesprs and disable it; Quartz is not on npm; Node >= 22 required).
+**Status:** MVP COMPLETE — all phases (0-4) executed; definition of done verified by browser QA (38/38). See `docs/status/phase-{0..4}.md` for per-phase results and deviations, `docs/decisions/` for ADRs. Remaining before real-world use: run against Nickolay's actual vault (fixture stood in) and the §7 follow-ups.
 **Owner:** Nickolay
 **Audience:** Implementation agent. This document contains all required context. Read fully before writing code.
 
@@ -185,6 +185,9 @@ Each phase ends with a short written status: what was built, what deviated from 
 8. **Incremental builds / build performance** for the hosted service.
 9. **Advanced Canvas plugin attributes** (hesprs already parses some of its extended spec); decide support level for power users.
 10. **Per-site option:** omit vs placeholder for private-note references in canvases.
+11. **Canvas search preview** is empty (text IS indexed; body is client-mounted) — subsumed by #5 SSR/prerender. (Phase 4 QA)
+12. **File-card "armed" affordance:** first click selects with no visual cue that the next click/button opens — add selected-state styling. (Phase 4 QA)
+13. **Link-card fallback face** when the embedded site fails to load (currently blank white) — favicon + URL + open link. (Phase 4 QA)
 
 ---
 
