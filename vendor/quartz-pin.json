@@ -1,0 +1,5 @@
+{
+  "repo": "https://github.com/jackyzha0/quartz.git",
+  "commit": "9cf87ff1c248a8ca551093214b0fec3b31415009",
+  "note": "Quartz 5.0.0 - exact commit validated hands-on by the Phase 0 spikes (docs/spikes/spike-A-quartz-plugin-api.md). Bump deliberately, re-running spikes' assumptions."
+}

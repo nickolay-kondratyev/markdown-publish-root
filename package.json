@@ -1,0 +1,24 @@
+{
+  "name": "vintrin-markdown-publish",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Obsidian-Publish replacement: pure build engine (vault + site config -> static site) with a thin CLI. Quartz 5 is an internal, vendored build tool.",
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "scripts": {
+    "setup": "node scripts/setup-quartz.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "node --test \"engine/test/unit/*.test.ts\"",
+    "test:integration": "node --test \"engine/test/integration/*.test.ts\""
+  },
+  "dependencies": {
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.8.0"
+  }
+}

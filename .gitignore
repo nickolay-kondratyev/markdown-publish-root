@@ -6,9 +6,16 @@
 # Node
 node_modules/
 
+# Vendored Quartz checkout (managed by `npm run setup`, pinned by vendor/quartz-pin.json)
+vendor/quartz/
+
 # Build output
 public/
 .quartz-cache/
+.build/
+
+# Agent working notes (not deliverables)
+IMPLEMENTATION__PRIVATE.md
 
 # IDE
 .idea/workspace.xml
