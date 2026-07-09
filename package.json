@@ -7,6 +7,9 @@
   "engines": {
     "node": ">=22.6.0"
   },
+  "bin": {
+    "publish": "cli/bin/publish.mjs"
+  },
   "scripts": {
     "setup": "node scripts/setup-quartz.mjs",
     "typecheck": "tsc --noEmit",
