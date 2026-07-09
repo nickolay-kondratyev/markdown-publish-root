@@ -1,0 +1,5 @@
+{
+  "title": "My Site",
+  "baseUrl": "notes.example.com",
+  "publishFilter": { "includeFolders": ["notes", "canvases", "attachments"] }
+}
