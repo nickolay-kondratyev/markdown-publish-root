@@ -1,8 +1,8 @@
 # Dev convenience targets (glue only — real logic lives in cli/). See docs/current/usage.md.
 SHELL := /bin/bash
 
-# Quartz requires Node >= 22 (see docs/current/dev.md); system default is v20.
-NODE_ENV := source ~/.nvm/nvm.sh && nvm use 26 >/dev/null
+# Quartz requires Node >= 22 (see docs/current/dev.md);
+NODE_ENV := source ~/.nvm/nvm.sh && nvm use 25 >/dev/null
 
 TEST_VAULT   := test-vault
 SITE_CONFIG  := docs/current/config/minimal-site.json
