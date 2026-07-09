@@ -1,0 +1,18 @@
+{
+  "name": "vintrin-canvas-page",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Quartz 5 pageType+emitter plugin: publishes Obsidian .canvas files as interactive pages (build-time rewritten JSON Canvas + self-hosted hesprs viewer bundle).",
+  "type": "module",
+  "main": "index.js",
+  "quartz": {
+    "name": "vintrin-canvas-page",
+    "displayName": "Vintrin Canvas Page",
+    "category": ["pageType", "emitter"],
+    "version": "0.1.0",
+    "quartzVersion": ">=5.0.0",
+    "dependencies": [],
+    "defaultOrder": 55,
+    "defaultEnabled": true
+  }
+}

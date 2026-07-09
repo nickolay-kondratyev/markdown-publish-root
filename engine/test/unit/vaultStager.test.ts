@@ -21,10 +21,11 @@ describe("VaultStager", () => {
     writeFile(vaultDir, "notes/broken.md", "---\npublish: [unclosed\n---\nbody\n")
     writeFile(vaultDir, "attachments/img.png", "png-bytes")
     writeFile(vaultDir, "boards/main.canvas", "{}")
+    writeFile(vaultDir, "drafts/wip.canvas", "{}")
     writeFile(vaultDir, ".obsidian/app.json", "{}")
 
-    // WHEN staging
-    const filter = new PublishFilter({ includeFolders: [], excludeFolders: [] })
+    // WHEN staging with boards included (canvases are default-deny without folder rules)
+    const filter = new PublishFilter({ includeFolders: ["boards"], excludeFolders: [] })
     result = new VaultStager(filter).stage(vaultDir, stagingDir)
   })
 
@@ -50,8 +51,16 @@ describe("VaultStager", () => {
     assert.equal(fs.existsSync(path.join(stagingDir, "attachments/img.png")), true)
   })
 
-  test("THEN the canvas file is NOT copied (Phase 1)", () => {
-    assert.equal(fs.existsSync(path.join(stagingDir, "boards/main.canvas")), false)
+  test("THEN the canvas under an includeFolder is copied", () => {
+    assert.equal(fs.existsSync(path.join(stagingDir, "boards/main.canvas")), true)
+  })
+
+  test("THEN the staging result reports the staged canvas", () => {
+    assert.deepEqual(result.stagedCanvasFiles, ["boards/main.canvas"])
+  })
+
+  test("THEN a canvas outside includeFolders is NOT copied (default deny)", () => {
+    assert.equal(fs.existsSync(path.join(stagingDir, "drafts/wip.canvas")), false)
   })
 
   test("THEN hidden config dirs are NOT copied", () => {

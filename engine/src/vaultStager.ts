@@ -1,11 +1,12 @@
 import fs from "node:fs"
 import path from "node:path"
 import { FrontmatterReader } from "./frontmatter.ts"
-import { PublishFilter, isMarkdownPath } from "./publishFilter.ts"
+import { PublishFilter, isCanvasPath, isMarkdownPath } from "./publishFilter.ts"
 
 /** What got staged (vault-relative "/"-separated paths). */
 export interface StagingResult {
   stagedMarkdownFiles: string[]
+  stagedCanvasFiles: string[]
   stagedAssetFiles: string[]
   excludedFiles: string[]
   /** Human-readable issues that did not stop the build (e.g. malformed frontmatter, fail-closed). */
@@ -30,6 +31,7 @@ export class VaultStager {
   stage(vaultDir: string, stagingDir: string): StagingResult {
     const result: StagingResult = {
       stagedMarkdownFiles: [],
+      stagedCanvasFiles: [],
       stagedAssetFiles: [],
       excludedFiles: [],
       warnings: [],
@@ -46,6 +48,13 @@ export class VaultStager {
   }
 
   private decide(vaultDir: string, relPath: string, result: StagingResult): boolean {
+    if (isCanvasPath(relPath)) {
+      if (this.filter.isCanvasPublished(relPath)) {
+        result.stagedCanvasFiles.push(relPath)
+        return true
+      }
+      return false
+    }
     if (!isMarkdownPath(relPath)) {
       if (this.filter.isAssetPublished(relPath)) {
         result.stagedAssetFiles.push(relPath)

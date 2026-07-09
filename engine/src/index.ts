@@ -13,7 +13,7 @@ export {
   type PublishFilterRules,
   type ThemeSettings,
 } from "./siteConfig.ts"
-export { PublishFilter, PHASE1_EXCLUDED_EXTENSIONS } from "./publishFilter.ts"
+export { PublishFilter, isCanvasPath, isMarkdownPath } from "./publishFilter.ts"
 export { QuartzConfigGenerator } from "./quartzConfigGenerator.ts"
 export { NodePreflight } from "./nodePreflight.ts"
 export type { StagingResult } from "./vaultStager.ts"

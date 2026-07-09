@@ -77,8 +77,21 @@ describe("QuartzConfigGenerator — theme merging", () => {
 })
 
 describe("QuartzConfigGenerator — plugin set", () => {
-  test("GIVEN any site WHEN generating THEN official canvas-page plugin is disabled (Phase 1, ADR 0001)", () => {
+  test("GIVEN any site WHEN generating THEN official canvas-page plugin is disabled (ADR 0001)", () => {
     assert.equal(pluginEntry(generate(), "canvas-page")?.enabled, false)
+  })
+
+  test("GIVEN a canvas plugin dir WHEN generating THEN it is registered as an enabled local plugin source", () => {
+    const doc = QuartzConfigGenerator.generateConfigObject(
+      siteConfig(),
+      "/abs/path/canvas-plugin",
+    ) as ConfigDoc
+    const local = doc.plugins.find((p) => p.source === "/abs/path/canvas-plugin")
+    assert.deepEqual({ enabled: local?.enabled }, { enabled: true })
+  })
+
+  test("GIVEN any site WHEN generating THEN the layout declares the canvas pageType", () => {
+    assert.notEqual(generate().layout.byPageType.canvas, undefined)
   })
 
   test("GIVEN any site WHEN generating THEN remove-draft is disabled (PublishFilter is the only filter surface)", () => {

@@ -46,10 +46,18 @@ const STAGING_DIR_PREFIX = "publish-staging-"
  */
 export class SiteBuilder {
   private readonly runner: QuartzRunner
+  private readonly canvasPluginDir: string
 
-  /** @param quartzDir override for the vendored Quartz checkout (default: <repo>/vendor/quartz). */
-  constructor(quartzDir: string = defaultQuartzDir()) {
+  /**
+   * @param quartzDir override for the vendored Quartz checkout (default: <repo>/vendor/quartz).
+   * @param canvasPluginDir override for the canvas plugin dir (default: <repo>/canvas-plugin).
+   */
+  constructor(
+    quartzDir: string = defaultQuartzDir(),
+    canvasPluginDir: string = defaultCanvasPluginDir(),
+  ) {
     this.runner = new QuartzRunner(quartzDir)
+    this.canvasPluginDir = canvasPluginDir
   }
 
   /** Builds the static site. Throws (with actionable messages) on any failure. */
@@ -64,8 +72,13 @@ export class SiteBuilder {
     try {
       const filter = new PublishFilter(options.siteConfig.publishFilter)
       const staging = new VaultStager(filter).stage(options.vaultDir, stagingDir)
+      if (staging.stagedCanvasFiles.length > 0) {
+        this.assertViewerBundleReady()
+      }
 
-      this.runner.writeConfig(QuartzConfigGenerator.generateYaml(options.siteConfig))
+      this.runner.writeConfig(
+        QuartzConfigGenerator.generateYaml(options.siteConfig, this.canvasPluginDir),
+      )
       const buildOutput = this.runner.build(path.resolve(stagingDir), path.resolve(options.outDir))
       assertQuartzSawStagedContent(buildOutput.stdout, staging, stagingDir)
 
@@ -74,6 +87,20 @@ export class SiteBuilder {
       if (options.keepStaging !== true) {
         fs.rmSync(stagingDir, { recursive: true, force: true })
       }
+    }
+  }
+
+  /**
+   * Canvases are staged, so the plugin WILL emit pages that load the viewer —
+   * fail before the (slow) Quartz run if the bundle was never built.
+   */
+  private assertViewerBundleReady(): void {
+    const bundlePath = path.join(this.canvasPluginDir, "dist", "canvas-viewer.js")
+    if (!fs.existsSync(bundlePath)) {
+      throw new Error(
+        `canvas viewer bundle missing at ${bundlePath}.\n` +
+          `Fix: run \`npm run setup\` (or \`npm run bundle:viewer\`) from the repo root.`,
+      )
     }
   }
 }
@@ -101,4 +128,9 @@ function assertQuartzSawStagedContent(
 function defaultQuartzDir(): string {
   // engine/src/ -> repo root -> vendor/quartz
   return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "vendor", "quartz")
+}
+
+function defaultCanvasPluginDir(): string {
+  // engine/src/ -> repo root -> canvas-plugin
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "canvas-plugin")
 }

@@ -9,7 +9,11 @@
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
+    // canvas-plugin ships plain-Node ESM .js (Quartz loads it without a build
+    // step, gotcha G6); allowJs lets tsc infer its JSDoc types for .ts tests.
+    "allowJs": true,
+    "checkJs": false,
     "types": ["node"]
   },
-  "include": ["engine/**/*.ts", "cli/**/*.ts"]
+  "include": ["engine/**/*.ts", "cli/**/*.ts", "canvas-plugin/test/**/*.ts"]
 }

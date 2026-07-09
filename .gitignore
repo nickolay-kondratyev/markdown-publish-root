@@ -19,3 +19,6 @@ IMPLEMENTATION__PRIVATE.md
 
 # IDE
 .idea/workspace.xml
+
+# Canvas viewer bundle (built by `npm run bundle:viewer`)
+canvas-plugin/dist/

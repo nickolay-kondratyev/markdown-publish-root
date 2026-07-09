@@ -1,3 +1,5 @@
+import path from "node:path"
+import { fileURLToPath } from "node:url"
 import { stringify as stringifyYaml } from "yaml"
 import type { SiteConfig, ThemeColorOverrides, ThemeTypography } from "./siteConfig.ts"
 
@@ -10,13 +12,21 @@ import type { SiteConfig, ThemeColorOverrides, ThemeTypography } from "./siteCon
  * deliberate deviations from stock Quartz and why.
  */
 export class QuartzConfigGenerator {
-  /** YAML text ready to be written as `quartz.config.yaml` in the Quartz root. */
-  static generateYaml(site: SiteConfig): string {
-    return stringifyYaml(QuartzConfigGenerator.generateConfigObject(site))
+  /**
+   * YAML text ready to be written as `quartz.config.yaml` in the Quartz root.
+   * @param canvasPluginDir our local canvas plugin directory, registered as a
+   *   local plugin source (absolute path — the config is a per-build artifact,
+   *   machine-specific paths are fine and unambiguous).
+   */
+  static generateYaml(site: SiteConfig, canvasPluginDir: string = defaultCanvasPluginDir()): string {
+    return stringifyYaml(QuartzConfigGenerator.generateConfigObject(site, canvasPluginDir))
   }
 
   /** The config as a plain object (exposed for unit tests). */
-  static generateConfigObject(site: SiteConfig): Record<string, unknown> {
+  static generateConfigObject(
+    site: SiteConfig,
+    canvasPluginDir: string = defaultCanvasPluginDir(),
+  ): Record<string, unknown> {
     return {
       configuration: {
         pageTitle: site.title,
@@ -40,16 +50,26 @@ export class QuartzConfigGenerator {
           },
         },
       },
-      plugins: PLUGIN_ENTRIES.map(({ source, enabled, options, order, layout }) => ({
-        source: `github:quartz-community/${source}`,
-        enabled,
-        ...(options !== undefined ? { options } : {}),
-        ...(order !== undefined ? { order } : {}),
-        ...(layout !== undefined ? { layout } : {}),
-      })),
+      plugins: [
+        ...PLUGIN_ENTRIES.map(({ source, enabled, options, order, layout }) => ({
+          source: `github:quartz-community/${source}`,
+          enabled,
+          ...(options !== undefined ? { options } : {}),
+          ...(order !== undefined ? { order } : {}),
+          ...(layout !== undefined ? { layout } : {}),
+        })),
+        // Our canvas pageType+emitter plugin (ADR 0001). Local sources are
+        // symlinked by Quartz's loader — no publishing, no build step.
+        { source: canvasPluginDir, enabled: true, order: 55 },
+      ],
       layout: LAYOUT,
     }
   }
+}
+
+function defaultCanvasPluginDir(): string {
+  // engine/src/ -> repo root -> canvas-plugin
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "canvas-plugin")
 }
 
 /** Stock Quartz typography — the fallback when site.json overrides nothing. */
@@ -114,9 +134,8 @@ interface PluginEntry {
  * Curated plugin set. Baseline = Quartz 5 default config
  * (quartz.config.default.yaml at the pinned commit), with these deviations:
  *
- *   canvas-page       DISABLED  Phase 1 excludes `.canvas` from staging; the official
- *                               plugin must not claim them. Phase 2 replaces it with
- *                               our own pageType plugin (ADR 0001).
+ *   canvas-page       DISABLED  replaced by OUR canvas plugin (ADR 0001) — two
+ *                               claimants for `.canvas` would be ambiguous.
  *   favicon, og-image DISABLED  sharp's postinstall is blocked in our build sandbox
  *                               (Phase 0 gotcha G9); revisit for production hosts.
  *   cname             DISABLED  hosting (domains/CNAME) is outside the engine's
@@ -229,7 +248,7 @@ const PLUGIN_ENTRIES: PluginEntry[] = [
   { source: "unlisted-pages", enabled: true, options: {}, order: 45 },
 ]
 
-/** Layout groups + per-pageType tweaks (mirrors Quartz defaults, minus canvas/bases). */
+/** Layout groups + per-pageType tweaks (mirrors Quartz defaults, minus bases). */
 const LAYOUT: Record<string, unknown> = {
   groups: {
     toolbar: { priority: 35, direction: "row", gap: "0.5rem" },
@@ -239,5 +258,9 @@ const LAYOUT: Record<string, unknown> = {
     content: {},
     folder: { exclude: ["reader-mode"], positions: { right: [] } },
     tag: { exclude: ["reader-mode"], positions: { right: [] } },
+    // Our canvas pageType (layout name declared in canvas-plugin/index.js).
+    // Keeps default chrome — graph + backlinks on canvas pages is a
+    // differentiator (plan §4.1); reader-mode makes no sense on a canvas.
+    canvas: { exclude: ["reader-mode", "table-of-contents"] },
   },
 }

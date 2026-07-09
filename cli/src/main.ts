@@ -4,7 +4,7 @@ import { SiteBuilder, SiteConfigError, SiteConfigParser } from "../../engine/src
 const USAGE = `Usage:
   publish build <vault-dir> --config <site.json> --out <output-dir>
 
-Builds an Obsidian vault into a static site (markdown-only in Phase 1).
+Builds an Obsidian vault (markdown + canvases) into a static site.
   <vault-dir>          Path to the Obsidian vault.
   --config <file>      Site settings JSON (see engine/README.md for the schema).
   --out <dir>          Output directory for the static site.
@@ -40,7 +40,8 @@ export class CliMain {
         console.warn(`publish: WARNING: ${warning}`)
       }
       console.log(
-        `publish: built ${result.staging.stagedMarkdownFiles.length} page(s) and ` +
+        `publish: built ${result.staging.stagedMarkdownFiles.length} page(s), ` +
+          `${result.staging.stagedCanvasFiles.length} canvas(es) and ` +
           `${result.staging.stagedAssetFiles.length} asset(s) ` +
           `(${result.staging.excludedFiles.length} file(s) filtered out) -> ${result.outDir}`,
       )

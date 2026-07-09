@@ -73,14 +73,27 @@ describe("PublishFilter — assets", () => {
     assert.equal(filter.isAssetPublished(".trash/old.png"), false)
   })
 
-  test("GIVEN canvas file WHEN deciding THEN not published (Phase 1 exclusion)", () => {
+})
+
+describe("PublishFilter — canvases (content-bearing, default deny; frontmatter N/A)", () => {
+  test("GIVEN canvas with no includeFolders WHEN deciding THEN not published (default deny)", () => {
     const filter = new PublishFilter(NO_RULES)
-    assert.equal(filter.isAssetPublished("canvases/main.canvas"), false)
+    assert.equal(filter.isCanvasPublished("canvases/main.canvas"), false)
   })
 
-  test("GIVEN canvas file under includeFolder WHEN deciding THEN still not published", () => {
+  test("GIVEN canvas under includeFolder WHEN deciding THEN published", () => {
     const filter = new PublishFilter({ includeFolders: ["canvases"], excludeFolders: [] })
-    assert.equal(filter.isAssetPublished("canvases/main.canvas"), false)
+    assert.equal(filter.isCanvasPublished("canvases/main.canvas"), true)
+  })
+
+  test("GIVEN canvas under both include and exclude folders WHEN deciding THEN not published (exclude wins)", () => {
+    const filter = new PublishFilter({ includeFolders: ["canvases"], excludeFolders: ["canvases"] })
+    assert.equal(filter.isCanvasPublished("canvases/main.canvas"), false)
+  })
+
+  test("GIVEN canvas in hidden folder under includeFolder WHEN deciding THEN not published", () => {
+    const filter = new PublishFilter({ includeFolders: [".trash"], excludeFolders: [] })
+    assert.equal(filter.isCanvasPublished(".trash/old.canvas"), false)
   })
 })
 
