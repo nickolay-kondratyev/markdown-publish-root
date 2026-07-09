@@ -19,6 +19,10 @@ Options:
 | `--out <dir>` | Output directory for the static site |
 | `--keep-staging` | Keep the temporary staging dir (debugging) |
 
+Canvases are published when covered by `publishFilter.includeFolders` in the
+site config (canvas JSON has no frontmatter — see engine/README.md filter
+semantics). The success line reports pages, canvases and assets separately.
+
 Exit codes: `0` success, `1` build/config failure, `2` usage error.
 
 `bin/publish.mjs` is plain JS on purpose: it preflights the Node version and
