@@ -17,3 +17,16 @@ export { PublishFilter, isCanvasPath, isMarkdownPath } from "./publishFilter.ts"
 export { QuartzConfigGenerator } from "./quartzConfigGenerator.ts"
 export { NodePreflight } from "./nodePreflight.ts"
 export type { StagingResult } from "./vaultStager.ts"
+export {
+  SiteValidator,
+  PrivateContentLeakError,
+  BrokenInternalLinksError,
+  type ValidationInput,
+  type ValidationResult,
+} from "./validation/siteValidator.ts"
+export type { LeakFinding } from "./validation/leakChecker.ts"
+export {
+  formatBrokenLinkReport,
+  type BrokenLink,
+  type BrokenLinkReport,
+} from "./validation/linkChecker.ts"

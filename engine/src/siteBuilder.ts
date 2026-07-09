@@ -6,6 +6,12 @@ import { PublishFilter } from "./publishFilter.ts"
 import { QuartzConfigGenerator } from "./quartzConfigGenerator.ts"
 import { QuartzRunner } from "./quartzRunner.ts"
 import type { SiteConfig } from "./siteConfig.ts"
+import {
+  BrokenInternalLinksError,
+  PrivateContentLeakError,
+  SiteValidator,
+  type ValidationResult,
+} from "./validation/siteValidator.ts"
 import { VaultStager, type StagingResult } from "./vaultStager.ts"
 
 /** Input to a site build. */
@@ -25,6 +31,12 @@ export interface BuildSiteOptions {
   stagingDir?: string
   /** Keep the staging directory after the build (debugging). Default: delete it. */
   keepStaging?: boolean
+  /**
+   * Escalate broken internal links from a report to a build FAILURE
+   * (BrokenInternalLinksError). Default: false — the report is returned in
+   * BuildSiteResult.validation either way. Leak findings ALWAYS fail the build.
+   */
+  strictLinks?: boolean
 }
 
 /** Result of a successful build. */
@@ -33,6 +45,8 @@ export interface BuildSiteResult {
   staging: StagingResult
   /** Where publishable files were staged (deleted unless keepStaging). */
   stagingDir: string
+  /** Validation-pass outcome. leaks is always empty here (leaks throw instead). */
+  validation: ValidationResult
 }
 
 const STAGING_DIR_PREFIX = "publish-staging-"
@@ -82,7 +96,21 @@ export class SiteBuilder {
       const buildOutput = this.runner.build(path.resolve(stagingDir), path.resolve(options.outDir))
       assertQuartzSawStagedContent(buildOutput.stdout, staging, stagingDir)
 
-      return { outDir: path.resolve(options.outDir), staging, stagingDir }
+      // Final stage: validation pass (plan §6 Phase 3). Leaks ALWAYS fail the
+      // build (§4.4 backstop); broken links fail only under strictLinks.
+      const validation = new SiteValidator().validate({
+        vaultDir: options.vaultDir,
+        outDir: path.resolve(options.outDir),
+        excludedFiles: staging.excludedFiles,
+      })
+      if (validation.leaks.length > 0) {
+        throw new PrivateContentLeakError(validation.leaks)
+      }
+      if (options.strictLinks === true && validation.brokenLinks.totalBroken > 0) {
+        throw new BrokenInternalLinksError(validation.brokenLinks)
+      }
+
+      return { outDir: path.resolve(options.outDir), staging, stagingDir, validation }
     } finally {
       if (options.keepStaging !== true) {
         fs.rmSync(stagingDir, { recursive: true, force: true })
