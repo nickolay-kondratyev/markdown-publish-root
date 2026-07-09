@@ -16,8 +16,12 @@ const result = await new SiteBuilder().buildSite({
   vaultDir: "/path/to/vault",
   siteConfig,
   outDir: "/path/to/public",
+  strictLinks: false, // optional: broken internal links fail the build (default: report only)
 })
 // result.staging: what was staged/excluded + warnings
+// result.validation: { leaks: LeakFinding[], brokenLinks: BrokenLinkReport }
+//   - leaks is always [] on success: any leak throws PrivateContentLeakError
+//   - brokenLinks: grouped by source page; render with formatBrokenLinkReport()
 ```
 
 Everything exported from `src/index.ts` is public; everything else is an
@@ -31,6 +35,27 @@ implementation detail.
    ("config inversion": users never see Quartz config).
 3. **QuartzRunner** runs the vendored, pinned Quartz CLI (see ADR 0002) against
    staging and writes the site to `outDir`.
+4. **SiteValidator** (final stage, `src/validation/`) inspects the emitted
+   output:
+   - **Leak check** (`LeakChecker`) — the plan §4.4 backstop. Every excluded
+     text file (md/canvas) is fingerprinted (whitespace-normalized content
+     lines of >= 20 chars; canvas files fingerprint their AUTHORED strings, not
+     JSON syntax) and every emitted text file (html/xml/json/js/css/txt) is
+     scanned. Any hit throws `PrivateContentLeakError` naming the private file
+     and the emitted file — the build FAILS. Limitation (accepted): this
+     catches VERBATIM content; markdown-transformed lines may not match. The
+     primary enforcement remains staging exclusion; this pass catches
+     mechanism regressions.
+   - **Broken-internal-link check** (`LinkChecker`) — verifies every internal
+     `href`/`src`/`data-viewer-src` in emitted HTML, plus canvas payloads
+     (attachments map, open-note hrefs, text-card links), against the output
+     dir. Note fragments are rebased to their canvas page (their HTML is
+     injected into that page's DOM). External URLs, `mailto:`, and same-page
+     `#anchors` are skipped. Result is REPORTED in
+     `BuildSiteResult.validation.brokenLinks`; pass `strictLinks: true`
+     (CLI: `--strict-links`) to escalate findings to a build failure
+     (`BrokenInternalLinksError`). Strictness is a build-invocation policy,
+     deliberately NOT a site.json field (that schema grows reluctantly).
 
 ## site.json schema
 
@@ -100,10 +125,13 @@ Notes:
   publishable files — private content is not reachable by the build, so it
   cannot leak by construction. A corollary: private and missing references
   are indistinguishable, so the placeholder is no existence oracle.
-- **Backstop (Phase 3):** a validation pass greps the emitted output and
-  FAILS the build if content from any unpublished file appears (the fixture
-  vault's `LEAK-SENTINEL-9f3a72` exercises this; the integration tests already
-  assert it today).
+- **Backstop (built in Phase 3):** the validation pass (pipeline step 4 above)
+  FAILS the build if content from any unpublished file appears in the emitted
+  output (the fixture vault's `LEAK-SENTINEL-9f3a72` plus a seeded-leak
+  integration test exercise both directions).
+- **Known, deliberate degradation:** a MARKDOWN wikilink to an unpublished
+  note (e.g. `[[private-secret]]`) emits a dead href — only canvas cards get
+  placeholders. The broken-link report surfaces these to the site owner.
 
 ## Canvas publishing (Phase 2)
 
@@ -118,9 +146,11 @@ See `canvas-plugin/README.md`.
 ## Stable vs evolving
 
 - **Stable:** the sacred boundary; `buildSite()` shape; site.json schema
-  (grows compatibly, never breaks); publish-filter precedence; the privacy rule.
+  (grows compatibly, never breaks); publish-filter precedence; the privacy
+  rule; leaks-always-fail-the-build.
 - **Evolving:** the generated Quartz plugin set; staging internals;
-  `StagingResult` details.
+  `StagingResult` details; `ValidationResult` details (fingerprint heuristics,
+  link-check coverage).
 
 ## Gotchas (hard-won, do not rediscover)
 

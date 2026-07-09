@@ -5,10 +5,13 @@ canvas** files) into a static website ready to host. The wedge feature is
 canvas publishing — official Obsidian Publish does not support `.canvas`
 files; we do. See `plan/main.md` for the full product plan.
 
-**Status: Phase 2** — markdown AND canvas builds work end to end: canvas pages
+**Status: Phase 3** — markdown AND canvas builds work end to end: canvas pages
 render interactively (pan/zoom/minimap, prebaked markdown, note/canvas/media
 cards, privacy placeholders) and participate in wikilinks, backlinks, graph
-and search. Validation + deploy land in Phase 3.
+and search. Every build ends with a validation pass (private-content leak
+check FAILS the build; broken-internal-link report, `--strict-links` to
+escalate), and `publish deploy` ships the output to S3 + CloudFront with
+cache-classed headers. Next: Phase 4 dogfood.
 
 ## Quick start
 
@@ -20,6 +23,9 @@ npm run setup        # one-time: clones pinned Quartz + installs its deps/plugin
 
 node cli/bin/publish.mjs build test-vault --config site.json --out ./public
 python3 -m http.server -d ./public 8080   # note: real hosting maps /page -> page.html
+
+# Ship it (needs AWS CLI v2 + credentials; --dry-run previews the aws commands):
+node cli/bin/publish.mjs deploy ./public --deploy-config deploy.json --dry-run
 ```
 
 Minimal `site.json` (full schema: `engine/README.md`; canvases publish via
@@ -40,7 +46,7 @@ opt-in surface):
 |------|------|
 | `engine/` | Pure build engine: `(vault, site config) -> static site dir`. No AWS/auth/tenancy — the sacred boundary. |
 | `canvas-plugin/` | Our Quartz pageType+emitter plugin for `.canvas` pages + the isolated hesprs viewer wrapper (ADR 0001). |
-| `cli/` | Thin CLI (`publish build`), stand-in for the future Obsidian plugin. |
+| `cli/` | Thin CLI (`publish build` / `publish deploy`), stand-in for the future Obsidian plugin. ALL AWS lives here (deploy.json schema: `cli/README.md`). |
 | `vendor/quartz-pin.json` | Pinned Quartz commit; `vendor/quartz/` is the gitignored managed checkout (ADR 0002). |
 | `scripts/setup-quartz.mjs` | The `npm run setup` bootstrap. |
 | `test-vault/` | Fixture vault exercising the parity checklist (incl. a private-note leak sentinel). |
