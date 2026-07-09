@@ -1,0 +1,19 @@
+{
+	"nodes":[
+		{"id":"group-intro","type":"group","x":-520,"y":-420,"width":1040,"height":360,"label":"Intro Group","color":"6"},
+		{"id":"text-welcome","type":"text","x":-480,"y":-380,"width":440,"height":280,"color":"1","text":"# Main Canvas\n\nThis card tests **markdown rendering** inside a text card:\n\n- a wikilink to a note: [[getting-started]]\n- a wikilink to a canvas: [[second.canvas]]\n- `inline code` and *emphasis*\n\n> Blockquotes should render too."},
+		{"id":"text-colors","type":"text","x":40,"y":-380,"width":420,"height":280,"color":"#8a2be2","text":"## Hex color card\n\nThis card uses a custom **hex color** instead of a preset."},
+		{"id":"file-note-full","type":"file","x":-520,"y":40,"width":480,"height":360,"file":"notes/architecture.md"},
+		{"id":"file-note-subpath","type":"file","x":40,"y":40,"width":480,"height":360,"file":"notes/getting-started.md","subpath":"#Installation","color":"4"},
+		{"id":"file-image","type":"file","x":-520,"y":480,"width":400,"height":300,"file":"attachments/diagram.png"},
+		{"id":"file-private","type":"file","x":-40,"y":480,"width":400,"height":300,"file":"notes/private-secret.md","color":"2"},
+		{"id":"file-canvas-card","type":"file","x":440,"y":480,"width":400,"height":300,"file":"canvases/second.canvas","color":"5"},
+		{"id":"link-card","type":"link","x":600,"y":40,"width":400,"height":360,"url":"https://jsoncanvas.org/"}
+	],
+	"edges":[
+		{"id":"edge-welcome-note","fromNode":"text-welcome","fromSide":"bottom","toNode":"file-note-full","toSide":"top","toEnd":"arrow","label":"embeds note","color":"3"},
+		{"id":"edge-subpath","fromNode":"text-colors","fromSide":"bottom","toNode":"file-note-subpath","toSide":"top","toEnd":"arrow","label":"only #Installation"},
+		{"id":"edge-to-canvas","fromNode":"file-note-subpath","fromSide":"bottom","toNode":"file-canvas-card","toSide":"top","fromEnd":"none","toEnd":"arrow","label":"go to second canvas","color":"5"},
+		{"id":"edge-private","fromNode":"file-image","fromSide":"right","toNode":"file-private","toSide":"left","label":"private placeholder"}
+	]
+}

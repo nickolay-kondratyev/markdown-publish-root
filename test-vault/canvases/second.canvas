@@ -1,0 +1,9 @@
+{
+	"nodes":[
+		{"id":"text-second","type":"text","x":-300,"y":-200,"width":600,"height":200,"color":"3","text":"# Second Canvas\n\nYou navigated here from [[main.canvas]]. Back-navigation must work too.\n\nA note link: [[architecture]]"},
+		{"id":"file-back","type":"file","x":-300,"y":80,"width":600,"height":300,"file":"canvases/main.canvas","color":"1"}
+	],
+	"edges":[
+		{"id":"edge-back","fromNode":"text-second","fromSide":"bottom","toNode":"file-back","toSide":"top","toEnd":"arrow","label":"back to main"}
+	]
+}

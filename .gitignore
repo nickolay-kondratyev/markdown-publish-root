@@ -1,0 +1,14 @@
+# Temp / scratch
+.tmp/
+.out/
+*.log
+
+# Node
+node_modules/
+
+# Build output
+public/
+.quartz-cache/
+
+# IDE
+.idea/workspace.xml
