@@ -144,6 +144,8 @@ interface PluginEntry {
  *                               a second frontmatter flag (`draft`) would surprise.
  *   analytics         null      see configuration above.
  *   bases-page        DISABLED  .base files are out of MVP scope.
+ *   footer            DISABLED  only renders "Created with Quartz vX (c) YEAR"
+ *                               branding (we configure no links) — unwanted.
  *
  * Plugins that are disabled in stock Quartz (citations, hard-line-breaks,
  * ox-hugo, roam, comments, recent-notes, stacked-pages, tag-list) plus
@@ -222,7 +224,7 @@ const PLUGIN_ENTRIES: PluginEntry[] = [
     enabled: true,
     layout: { position: "beforeBody", priority: 5, condition: "not-index" },
   },
-  { source: "footer", enabled: true, options: { links: {} } },
+  { source: "footer", enabled: false },
   {
     source: "spacer",
     enabled: true,
