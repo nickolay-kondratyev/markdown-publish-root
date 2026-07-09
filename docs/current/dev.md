@@ -8,7 +8,7 @@ High-level map for engineers/agents. Deep detail lives in each module's README; 
 vault ──> engine (pure: stage -> generate Quartz config -> run Quartz -> validate) ──> static site dir
                                     │
                                     └─ canvas-plugin (Quartz pageType) renders .canvas pages
-cli ──> thin boundary: `build` wraps the engine; `deploy` (AWS) lives ONLY here
+cli ──> thin boundary: `build` wraps the engine; `preview` (local server) and `deploy` (AWS) live ONLY here
 ```
 
 Two inviolable rules:
@@ -22,7 +22,7 @@ Two inviolable rules:
 |---|---|---|
 | `engine/` | `SiteBuilder.buildSite({vaultDir, siteConfig, outDir})`: VaultStager (publish filter → staging dir), QuartzConfigGenerator (config inversion), QuartzRunner (vendored pinned Quartz), SiteValidator (leak check fails build; broken-link report) | `engine/README.md` |
 | `canvas-plugin/` | Quartz 5 pageType plugin: claims `.canvas`, registers links (graph/backlinks/search), rewrites canvas JSON at build time (markdown cards via shared resolver, subpath slicing, private placeholders, canvas→canvas cards), emits pages mounting the viewer | `canvas-plugin/README.md` |
-| `cli/` | `publish build` / `publish deploy` (pure DeployPlanner + executor, `--dry-run`) | `cli/README.md` |
+| `cli/` | `publish build` / `publish preview` (pure PreviewPathResolver + node:http wiring; implements the URL-routing contract of `docs/hosting.md`) / `publish deploy` (pure DeployPlanner + executor, `--dry-run`) | `cli/README.md` |
 | `test-vault/` | Canonical fixture; exercises the full parity checklist; private note carries leak sentinel `LEAK-SENTINEL-9f3a72` — do not break its invariants | `test-vault/README.md` |
 | `vendor/quartz/` | Gitignored pinned Quartz checkout; pin in `vendor/quartz-pin.json`; managed by `npm run setup` (ADR 0002) | — |
 
@@ -38,8 +38,8 @@ Two inviolable rules:
 ```bash
 source ~/.nvm/nvm.sh && nvm use 26        # Node >= 22 required
 npm install && npm run setup              # idempotent Quartz bootstrap
-npm run typecheck && npm test             # 181 unit + 34 integration (node:test, BDD GIVEN/WHEN/THEN)
-npm run test:e2e                          # curl + headless Chromium smoke (28 checks)
+npm run typecheck && npm test             # 220 unit + 34 integration (node:test, BDD GIVEN/WHEN/THEN)
+npm run test:e2e                          # HTTP + headless Chromium smoke via the real preview server (36 checks)
 ```
 
 Gotchas (hard-won, see `docs/status/phase-*.md`):
@@ -50,4 +50,4 @@ Gotchas (hard-won, see `docs/status/phase-*.md`):
 
 ## Current state / what's next
 
-MVP complete, DoD verified by browser QA (38/38): `plan/done/mvp-execution-summary.md`. Pending: real-vault dogfood, real AWS deploy (+ manual CloudFront extensionless→`.html` Function), follow-ups in plan §7 (incl. SSR canvas prerender, file-card "armed" affordance, link-card fallback).
+MVP complete, DoD verified by browser QA (38/38): `plan/done/mvp-execution-summary.md`. Local preview: `publish preview` (URL-routing contract + CloudFront Function recipe: `docs/hosting.md`). Pending: real-vault dogfood, real AWS deploy (+ manual CloudFront Function per `docs/hosting.md`), follow-ups in plan §7 (incl. SSR canvas prerender, file-card "armed" affordance, link-card fallback).

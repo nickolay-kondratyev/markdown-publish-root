@@ -29,6 +29,25 @@ check always fails the build** on findings; the **broken-internal-link report**
 is printed as a warning (grouped by source page) unless `--strict-links`
 escalates it to a failure.
 
+## preview
+
+```bash
+node cli/bin/publish.mjs preview ./public [--port 8080]
+```
+
+Serves a built site locally with the SAME URL routing production hosting must
+implement (the contract lives in `docs/hosting.md`): extensionless page URLs
+(`/notes/foo`, `/canvases/X.canvas`) map to their `.html` files, directory
+URLs serve their `index.html` (redirecting `/dir` → `/dir/`), misses serve the
+themed `404.html` with status 404, and traversal/dotfile paths are rejected.
+
+Binds `127.0.0.1` only — a LOCAL preview, **not a production server** (no TLS,
+no caching). Default port 8080 (`--port 0` lets the OS pick). Ctrl+C stops it.
+
+Routing is a pure, unit-tested module (`src/preview/previewPathResolver.ts`);
+`src/preview/previewServer.ts` is thin `node:http` wiring around it (same
+split as DeployPlanner/DeployExecutor).
+
 ## deploy
 
 ```bash
@@ -72,14 +91,14 @@ the first failure.
 ### CloudFront prerequisites (manual for MVP, plan §5)
 
 - Distribution + OAC pointing at the bucket/prefix: set up manually.
-- Quartz links pages WITHOUT `.html` (`/notes/foo`), but emits `foo.html`
-  objects. Map extensionless URLs to `.html` with a CloudFront Function on
-  viewer-request (or equivalent). This is a hosting concern by design — the
-  build output and validation pass both treat `foo` and `foo.html` as the
-  same target.
+- The distribution MUST implement the site's URL-routing contract
+  (extensionless → `.html`, 404 wiring): **see `docs/hosting.md`** for the
+  contract and a paste-ready CloudFront Function. This is a hosting concern
+  by design — the build output and validation pass both treat `foo` and
+  `foo.html` as the same target.
 
-Exit codes (both commands): `0` success, `1` build/config/deploy failure,
-`2` usage error.
+Exit codes (all commands): `0` success, `1` build/config/deploy/preview
+failure, `2` usage error.
 
 `bin/publish.mjs` is plain JS on purpose: it preflights the Node version and
 prints an actionable message even on a Node too old to load the TypeScript
@@ -87,8 +106,9 @@ sources.
 
 ## Stable vs evolving
 
-- **Stable:** `build <vault> --config <site.json> --out <dir>` and
+- **Stable:** `build <vault> --config <site.json> --out <dir>`,
+  `preview <site-dir> [--port <n>]` and
   `deploy <site-dir> --deploy-config <deploy.json>` shapes; deploy.json grows
-  compatibly.
+  compatibly; the URL-routing contract (docs/hosting.md).
 - **Evolving:** cache-class tuning; deletion semantics (`deleteStale`);
   invalidation granularity (manifest-diff paths are a hosted-service concern).
