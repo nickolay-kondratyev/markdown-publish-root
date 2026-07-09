@@ -7,9 +7,12 @@ import {
 } from "../../engine/src/index.ts"
 import { requireValue } from "./argv.ts"
 import { DeployCommand } from "./deploy/deployCommand.ts"
+import { PreviewCommand } from "./preview/previewCommand.ts"
+import { DEFAULT_PREVIEW_PORT } from "./preview/previewPathResolver.ts"
 
 const USAGE = `Usage:
   publish build <vault-dir> --config <site.json> --out <output-dir>
+  publish preview <site-dir> [--port <n>]
   publish deploy <site-dir> --deploy-config <deploy.json> [--dry-run]
 
 build: builds an Obsidian vault (markdown + canvases) into a static site.
@@ -19,6 +22,12 @@ build: builds an Obsidian vault (markdown + canvases) into a static site.
   --keep-staging       Keep the temporary staging directory (debugging).
   --strict-links       Fail the build if the validation pass finds broken
                        internal links (leak findings ALWAYS fail the build).
+
+preview: serves a built site locally with production URL routing
+         (extensionless page URLs, canvas pages, 404 page — docs/hosting.md).
+  <site-dir>           A directory produced by \`publish build\`.
+  --port <n>           Port to listen on (default ${DEFAULT_PREVIEW_PORT}). Binds 127.0.0.1:
+                       LOCAL preview only, not a production server.
 
 deploy: uploads a built site to S3 and invalidates CloudFront.
   <site-dir>           A directory produced by \`publish build\`.
@@ -31,6 +40,7 @@ export class CliMain {
   /** Returns the process exit code. */
   static async run(argv: string[]): Promise<number> {
     if (argv[0] === "build") return CliMain.runBuild(argv.slice(1))
+    if (argv[0] === "preview") return PreviewCommand.run(argv.slice(1), USAGE)
     if (argv[0] === "deploy") return DeployCommand.run(argv.slice(1), USAGE)
     console.error(argv.length === 0 ? USAGE : `publish: unknown command "${argv[0]}"\n\n${USAGE}`)
     return 2

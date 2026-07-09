@@ -1,6 +1,6 @@
-import fs from "node:fs"
 import path from "node:path"
 import { requireValue } from "../argv.ts"
+import { assertLooksLikeBuiltSite } from "../builtSiteDir.ts"
 import { DeployConfigError, DeployConfigParser } from "./deployConfig.ts"
 import { DeployExecutor } from "./deployExecutor.ts"
 import { DeployPlanner, formatCommandLine } from "./deployPlanner.ts"
@@ -56,23 +56,6 @@ export class DeployCommand {
       }
       return 1
     }
-  }
-}
-
-/**
- * Cheap sanity gate before touching the bucket: a `publish build` output
- * always contains index.html. Catches pointing deploy at the wrong directory
- * (e.g. the vault) — which with deleteStale could wipe the site.
- */
-function assertLooksLikeBuiltSite(siteDir: string): void {
-  if (!fs.existsSync(siteDir) || !fs.statSync(siteDir).isDirectory()) {
-    throw new Error(`site directory not found: ${siteDir}`)
-  }
-  if (!fs.existsSync(path.join(siteDir, "index.html"))) {
-    throw new Error(
-      `${siteDir} does not look like a built site (no index.html). ` +
-        `Run \`publish build\` first and pass its --out directory.`,
-    )
   }
 }
 
