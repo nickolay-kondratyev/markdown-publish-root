@@ -2,7 +2,7 @@ GOAL: Create MVP to be able have INPUT: an Obsidian vault that contains markdown
 
 # Obsidian Publish Replacement: MVP Plan (Nexus Document)
 
-**Status:** Planning complete, ready for implementation
+**Status:** Phase 0 complete. Deviations discovered by spikes are recorded in `docs/status/phase-0.md` and `docs/decisions/0001-own-pagetype-plugin-with-hesprs-viewer.md` (notably: Quartz 5 DOES ship an official canvas-page plugin — we build our own pageType plugin with hesprs and disable it; Quartz is not on npm; Node >= 22 required).
 **Owner:** Nickolay
 **Audience:** Implementation agent. This document contains all required context. Read fully before writing code.
 
