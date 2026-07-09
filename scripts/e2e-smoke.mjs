@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 /**
- * Phase 2 e2e smoke: build test-vault (canvases included) through the real
- * engine, serve the output, then verify over HTTP + headless Chromium that the
- * canvas viewer actually mounts and renders build-time-rewritten content.
+ * E2e smoke: build test-vault (canvases included) through the real engine,
+ * serve the output, then verify over HTTP + headless Chromium that the canvas
+ * viewer actually mounts and renders build-time-rewritten content. Phase 3
+ * adds: validation-pass assertions on the build result and a `publish deploy
+ * --dry-run` exercise through the real CLI (no aws CLI / credentials needed).
  *
  * Run: `npm run test:e2e` (Node >= 22 via nvm; system Chromium at /usr/bin/chromium).
  * Exits non-zero on any failed check. Screenshot -> .out/phase-2-canvas-smoke.png.
  */
+import { spawnSync } from "node:child_process"
 import { createServer } from "node:http"
 import fs from "node:fs"
 import path from "node:path"
@@ -34,11 +37,61 @@ const siteConfig = SiteConfigParser.parse({
   baseUrl: "e2e.example.com",
   publishFilter: { includeFolders: ["canvases"] },
 })
-await new SiteBuilder().buildSite({
+const buildResult = await new SiteBuilder().buildSite({
   vaultDir: path.join(repoRoot, "test-vault"),
   siteConfig,
   outDir: siteDir,
 })
+
+// --- 1b. Validation pass (Phase 3) ------------------------------------------
+check("validation: no private-content leaks", buildResult.validation.leaks.length === 0)
+check(
+  "validation: only broken link is the fixture's deliberate private-note wikilink",
+  buildResult.validation.brokenLinks.totalBroken === 1 &&
+    buildResult.validation.brokenLinks.brokenBySourcePage.index?.[0]?.resolvedSitePath ===
+      "private-secret",
+  JSON.stringify(buildResult.validation.brokenLinks),
+)
+
+// --- 1c. Deploy dry-run through the real CLI (no aws CLI needed) -------------
+const deployConfigPath = path.join(repoRoot, ".build", "e2e-deploy.json")
+fs.writeFileSync(
+  deployConfigPath,
+  JSON.stringify({
+    bucket: "e2e-smoke-bucket",
+    region: "us-east-1",
+    prefix: "sites/e2e",
+    distributionId: "E2ESMOKE123",
+    deleteStale: true,
+  }),
+)
+const dryRun = spawnSync(
+  process.execPath,
+  [
+    path.join(repoRoot, "cli/bin/publish.mjs"),
+    "deploy",
+    siteDir,
+    "--deploy-config",
+    deployConfigPath,
+    "--dry-run",
+  ],
+  { encoding: "utf-8" },
+)
+const dryRunOutput = `${dryRun.stdout}\n${dryRun.stderr}`
+check("deploy dry-run exits 0", dryRun.status === 0, `status=${dryRun.status}`)
+check(
+  "deploy dry-run prints three cache-classed sync passes",
+  (dryRunOutput.match(/aws s3 sync /g) ?? []).length === 3 &&
+    dryRunOutput.includes("max-age=300") &&
+    dryRunOutput.includes("max-age=3600") &&
+    dryRunOutput.includes("max-age=31536000, immutable"),
+)
+check(
+  "deploy dry-run targets the prefixed bucket and invalidates CloudFront",
+  dryRunOutput.includes("s3://e2e-smoke-bucket/sites/e2e") &&
+    dryRunOutput.includes("cloudfront create-invalidation --distribution-id E2ESMOKE123"),
+)
+check("deploy dry-run executes nothing", dryRunOutput.includes("nothing was executed"))
 
 // --- 2. Serve (extensionless -> .html mapping is a hosting concern; mimic it) ---
 const MIME = {
