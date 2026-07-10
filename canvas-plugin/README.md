@@ -34,8 +34,8 @@ The client receives NO resolution or markdown work — everything is prebaked:
 | group / link / edges | untouched |
 
 Invariants: node ids + coordinates always preserved (future commenting anchors);
-the attachments map is complete for every remaining file node (the hesprs viewer
-renders fetch-404 bodies otherwise).
+the attachments map is complete for every remaining file node (the viewer shows
+"Failed to load content." otherwise).
 
 **Privacy:** the plugin only ever sees the staging directory (publishable files
 only), so it CANNOT distinguish a private note from a missing one — both get
@@ -50,24 +50,33 @@ crawl-links' canonicalization recipe for `data.links` registration. Canvas-side
 resolution is therefore byte-identical to markdown-side resolution. Never
 reimplement slugging; only compose these utils.
 
-## Renderer isolation (plan §4.3) — the React Flow escape hatch
+## Renderer isolation (plan §4.3) — React Flow viewer (ADR 0003)
 
-`viewer/canvasView.js` is the ONLY module in the repo that imports the hesprs
-`json-canvas-viewer`. Its interface: `mountCanvasView(container, {canvas,
-attachments, noteLinks})` + `setTheme` + `dispose`. Everything upstream is
-renderer-agnostic JSON. Swapping to React Flow (escalation path, plan §2.1)
-means rewriting that one file and rebundling — nothing else changes.
+`viewer/` is the ONLY module tree in the repo that imports the renderer
+(`@xyflow/react` + `react`/`react-dom`; migrated from hesprs per ADR 0003).
+The interface: `mountCanvasView(container, {canvas, attachments, noteLinks})`
++ `setTheme` + `dispose` (`viewer/canvasView.jsx`). Everything upstream is
+renderer-agnostic JSON. Swapping the renderer again means rewriting `viewer/`
+and rebundling — nothing else changes.
+
+Inside `viewer/`: `canvasToFlow.js` (PURE payload -> React Flow graph
+conversion, unit-tested in Node: handles/side inference, arrow endpoints,
+preset+hex colors, z-order), `flowNodes.jsx` (text/note/media/link/group card
+components), `canvasApp.jsx` (minimap, controls, fullscreen, mistouch wheel
+gate), `canvasView.jsx` (mount/theme/dispose + fullscreen retention).
 
 The bundle is self-hosted (no CDN): `npm run bundle:viewer` (part of
-`npm run setup`) esbuilds it to `dist/canvas-viewer.js` (~64 KB min; marked/
-dompurify tree-shake out because no client-side parser is used — the identity
-default injects prebaked HTML).
+`npm run setup`) esbuilds `viewer/canvasView.jsx` to `dist/canvas-viewer.js`
+(~397 KB min — React + React Flow; loaded lazily on canvas pages only). CSS
+(React Flow base + `viewer/viewer.css`) is bundled as text and rendered inside
+the mount so Quartz SPA DOM swaps cannot strip it.
 
 Client behavior: viewer mounts via the page's loader script (Quartz SPA
 `nav`/`render` events + `window.addCleanup`, mirroring the official plugin's
 pattern); theme follows `<html saved-theme>` and the `themechange` event; note
 cards get a sticky header with the open-note link (first click on a card still
-only SELECTS it, Obsidian-Publish-like — the header link is what navigates).
+only SELECTS it, Obsidian-Publish-like — the header link is what navigates;
+implemented as a click-guard overlay that lifts on selection).
 
 ## How it is loaded
 
@@ -79,10 +88,9 @@ ESM `.js` (G6) — no build step, no TypeScript entry.
 
 ## Stable vs evolving
 
-- **Stable:** renderer isolation boundary (`viewer/canvasView.js` owns hesprs);
+- **Stable:** renderer isolation boundary (`viewer/` owns React Flow);
   rewriter invariants (ids/coords preserved, complete attachments, privacy
-  placeholder); the shared-resolver rule.
-- **Evolving:** card chrome/CSS; hesprs gap fixes as upstream moves (edge
-  `toEnd:none`/`fromEnd`, group background images — cosmetic, accepted for MVP);
-  inline canvas-in-canvas previews and non-image embeds in text cards
-  (follow-ups, plan §7.6).
+  placeholder); the shared-resolver rule; the `mountCanvasView` contract.
+- **Evolving:** card chrome/CSS; group background images (cosmetic gap,
+  accepted for MVP); inline canvas-in-canvas previews and non-image embeds in
+  text cards (follow-ups, plan §7.6).

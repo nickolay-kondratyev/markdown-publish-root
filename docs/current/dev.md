@@ -14,7 +14,7 @@ cli ──> thin boundary: `build` wraps the engine; `preview` (local server) an
 Two inviolable rules:
 
 1. **Sacred boundary** (plan §3): `engine/` never touches AWS/auth/tenancy. Deploy code is `cli/src/deploy/` only.
-2. **Renderer isolation** (plan §4.3): exactly one module owns the hesprs viewer dependency — `canvas-plugin/viewer/canvasView.js`. Everything else emits JSON Canvas + URL maps, renderer-agnostic (React Flow escape hatch stays cheap).
+2. **Renderer isolation** (plan §4.3): exactly one module tree owns the viewer dependency — `canvas-plugin/viewer/` owning React Flow (`@xyflow/react`, ADR 0003; migrated from hesprs). Everything else emits JSON Canvas + URL maps, renderer-agnostic (the next renderer swap stays cheap).
 
 ## Modules
 
@@ -38,14 +38,14 @@ Two inviolable rules:
 ```bash
 source ~/.nvm/nvm.sh && nvm use 26        # Node >= 22 required
 npm install && npm run setup              # idempotent Quartz bootstrap
-npm run typecheck && npm test             # 220 unit + 34 integration (node:test, BDD GIVEN/WHEN/THEN)
-npm run test:e2e                          # HTTP + headless Chromium smoke via the real preview server (36 checks)
+npm run typecheck && npm test             # 255 unit + 34 integration (node:test, BDD GIVEN/WHEN/THEN)
+npm run test:e2e                          # smoke (36 checks) + extensive canvas viewer e2e (47 checks), headless Chromium via the real preview server
 ```
 
 Gotchas (hard-won, see `docs/status/phase-*.md`):
 - Quartz's content glob honors `.gitignore` — never stage a vault under a gitignored dir (staging defaults to `os.tmpdir()`; SiteBuilder fails loudly on 0 files).
 - Integration tests run builds SERIALLY — concurrent builds corrupt the shared vendored `.quartz-cache`.
-- hesprs `attachments` mutates `node.file` in place; extension dispatch uses the original filename (the fragment-remap trick relies on this).
+- The note-card "fragment-remap trick": extension dispatch uses the ORIGINAL `.md` filename while the fetch uses the `attachments`-remapped fragment URL — keep both when touching the rewriter or `canvasToFlow.js`.
 - Local shell profile is noisy — redirect verbose command output to `.tmp/` logs.
 
 ## Current state / what's next

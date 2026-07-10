@@ -2,7 +2,7 @@
  * Build-time canvas JSON rewriting (renderer-agnostic — plan/main.md §4.3).
  *
  * Input:  parsed JSON Canvas + the shared resolver context.
- * Output: a rewritten canvas the hesprs viewer can render withOUT any client-side
+ * Output: a rewritten canvas the viewer can render withOUT any client-side
  * resolution, plus everything the page/emitter needs (attachments map, note-card
  * link metadata, outbound links for backlinks/graph, fragments to emit, search text).
  *
@@ -121,7 +121,7 @@ export class CanvasRewriter {
         return structuredClone(node)
       default:
         // PDF + unsupported extensions: navigable card linking the published
-        // asset (plan §5 MVP fallback; hesprs renders neither natively).
+        // asset (plan §5 MVP fallback; the viewer renders neither natively).
         return cardNode(node, {
           kindLabel: kind === FileTargetKind.PDF ? "PDF" : "File",
           href: resolved.relativeUrl,

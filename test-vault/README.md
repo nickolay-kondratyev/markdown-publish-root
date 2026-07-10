@@ -13,7 +13,7 @@ It deliberately exercises the full canvas parity checklist from
 | `notes/architecture.md` | Note with a `^engine-def` block anchor; embedded whole in a canvas card. |
 | `notes/private-secret.md` | `publish: false`. Contains leak sentinel `LEAK-SENTINEL-9f3a72` — the validation pass MUST fail the build if this string appears anywhere in emitted output. |
 | `attachments/diagram.png` | Image used by markdown embed and a canvas image card. |
-| `canvases/main.canvas` | Primary test canvas: text cards (markdown, wikilinks to note AND to `second.canvas`), full note card, `#Installation` subpath note card, image card, private-note card, canvas→canvas card, web link card, group, labeled/colored edges, preset + hex colors. |
+| `canvases/main.canvas` | Primary test canvas: text cards (markdown, wikilinks to note AND to `second.canvas`), full note card, `#Installation` subpath note card, image card, private-note card, canvas→canvas card, web link card, group, labeled/colored edges, preset + hex colors, edge endpoint variants (`fromEnd:"arrow"` / `toEnd:"none"`). |
 | `canvases/second.canvas` | Navigation target; links back to `main.canvas`. |
 
 ## Invariants (do not break when editing)

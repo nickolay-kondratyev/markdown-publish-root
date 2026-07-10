@@ -9,6 +9,10 @@
  * credentials needed). Preview routing checks (extensionless URLs, 404 page,
  * traversal rejection) run against this real output too.
  *
+ * Viewer interactions (selection, pan/zoom, fullscreen, navigation) are
+ * covered in depth by scripts/e2e-canvas-flow.mjs — this smoke only proves
+ * the viewer MOUNTS and shows build-time-rewritten content.
+ *
  * Run: `npm run test:e2e` (Node >= 22 via nvm; system Chromium at /usr/bin/chromium).
  * Exits non-zero on any failed check. Screenshot -> .out/phase-2-canvas-smoke.png.
  */
@@ -16,36 +20,20 @@ import { spawnSync } from "node:child_process"
 import http from "node:http"
 import fs from "node:fs"
 import path from "node:path"
-import { fileURLToPath } from "node:url"
-import { SiteBuilder, SiteConfigParser } from "../engine/src/index.ts"
-import { PreviewServer } from "../cli/src/preview/previewServer.ts"
+import {
+  buildTestVaultSite,
+  filterOwnErrors,
+  launchBrowserPage,
+  makeChecker,
+  repoRoot,
+  startPreview,
+} from "./lib/e2eHarness.mjs"
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
-const siteDir = path.join(repoRoot, ".build", "e2e-canvas-site")
-const CHROMIUM_PATH = "/usr/bin/chromium"
-// External hosts stock Quartz references (fonts/katex CDNs); unreachable in a
-// sandboxed/offline run, so failures for THEM are not our defects.
-const EXTERNAL_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com", "cdn.jsdelivr.net", "cdnjs.cloudflare.com"]
-
-const results = []
-const check = (name, ok, detail = "") => {
-  results.push({ name, ok })
-  console.log(`${ok ? "PASS" : "FAIL"}: ${name}${detail ? ` — ${detail}` : ""}`)
-}
+const { check, summarize } = makeChecker()
 
 // --- 1. Build --------------------------------------------------------------
 console.log("building test-vault (canvases included)...")
-fs.rmSync(siteDir, { recursive: true, force: true })
-const siteConfig = SiteConfigParser.parse({
-  title: "E2E Canvas Smoke",
-  baseUrl: "e2e.example.com",
-  publishFilter: { includeFolders: ["canvases"] },
-})
-const buildResult = await new SiteBuilder().buildSite({
-  vaultDir: path.join(repoRoot, "test-vault"),
-  siteConfig,
-  outDir: siteDir,
-})
+const { siteDir, buildResult } = await buildTestVaultSite("e2e-canvas-site")
 
 // --- 1b. Validation pass (Phase 3) ------------------------------------------
 check("validation: no private-content leaks", buildResult.validation.leaks.length === 0)
@@ -99,9 +87,7 @@ check("deploy dry-run executes nothing", dryRunOutput.includes("nothing was exec
 
 // --- 2. Serve with the REAL preview server (the same URL-routing contract
 // production hosting implements — docs/hosting.md) --------------------------
-const server = new PreviewServer(siteDir)
-const address = await server.start(0)
-const base = `http://127.0.0.1:${address.port}`
+const { server, base } = await startPreview(siteDir)
 console.log(`serving ${siteDir} at ${base} (publish preview server)`)
 
 // --- 3. HTTP checks ----------------------------------------------------------
@@ -120,7 +106,7 @@ check("private note 404", (await status("/notes/private-secret.html")) === 404)
 const rawGet = (rawPath) =>
   new Promise((resolve, reject) => {
     const request = http.request(
-      { host: "127.0.0.1", port: address.port, path: rawPath, method: "GET" },
+      { host: "127.0.0.1", port: new URL(base).port, path: rawPath, method: "GET" },
       (response) => {
         let body = ""
         response.on("data", (chunk) => (body += chunk))
@@ -168,44 +154,34 @@ check("no leak sentinel on canvas page", !mainHtml.includes("LEAK-SENTINEL-9f3a7
 check("no private path on canvas page", !mainHtml.includes("private-secret"))
 
 // --- 4. Headless browser smoke ----------------------------------------------
-if (!fs.existsSync(CHROMIUM_PATH)) {
-  console.log(`SKIP: headless browser smoke (${CHROMIUM_PATH} not found)`)
+const launched = await launchBrowserPage()
+if (launched === undefined) {
+  console.log("SKIP: headless browser smoke (chromium not found)")
 } else {
-  const { chromium } = await import("playwright-core")
-  const browser = await chromium.launch({
-    executablePath: CHROMIUM_PATH,
-    args: ["--no-sandbox", "--disable-dev-shm-usage"],
-  })
-  const page = await browser.newPage({ viewport: { width: 1400, height: 900 } })
-  const consoleErrors = []
-  page.on("console", (message) => {
-    if (message.type() === "error") consoleErrors.push(message.text())
-  })
-  const pageErrors = []
-  // Keep the stack: it attributes the error to an origin (link cards embed
-  // third-party pages in sandboxed iframes; their own script errors are not ours).
-  page.on("pageerror", (error) => pageErrors.push(error.stack ?? String(error)))
+  const { browser, page, errors } = launched
 
   await page.goto(`${base}/canvases/main.canvas.html`)
-  await page.waitForSelector(".canvas-page-mount .JSON-Canvas-Viewer", { timeout: 10000 })
-  await page.waitForTimeout(1200) // async overlays (fragment fetches) settle
+  await page.waitForSelector(".canvas-page-mount .react-flow__node", { timeout: 10000 })
+  await page.waitForTimeout(1200) // async node bodies (fragment fetches) settle
 
   const dom = await page.evaluate(() => {
-    const overlay = (id) => document.querySelector(`.canvas-page-mount #${CSS.escape(id)}`)
+    const node = (id) => document.querySelector(`.canvas-page-mount .react-flow__node[data-id="${CSS.escape(id)}"]`)
     return {
-      overlayIds: [...document.querySelectorAll(".canvas-page-mount .JCV-overlay-container")].map((e) => e.id),
-      welcomeHtml: overlay("text-welcome")?.innerHTML ?? "",
-      noteFullText: overlay("file-note-full")?.textContent ?? "",
-      noteSubpathText: overlay("file-note-subpath")?.textContent ?? "",
-      privateText: overlay("file-private")?.textContent ?? "",
-      canvasCardHtml: overlay("file-canvas-card")?.innerHTML ?? "",
-      imageSrc: overlay("file-image")?.querySelector("img")?.getAttribute("src") ?? "",
-      openNoteHref: overlay("file-note-full")?.querySelector(".canvas-note-open")?.getAttribute("href") ?? "",
-      hasMinimap: document.querySelector(".canvas-page-mount .JCV-minimap") !== null,
+      nodeIds: [...document.querySelectorAll(".canvas-page-mount .react-flow__node")].map((e) =>
+        e.getAttribute("data-id"),
+      ),
+      welcomeHtml: node("text-welcome")?.innerHTML ?? "",
+      noteFullText: node("file-note-full")?.textContent ?? "",
+      noteSubpathText: node("file-note-subpath")?.textContent ?? "",
+      privateText: node("file-private")?.textContent ?? "",
+      canvasCardHtml: node("file-canvas-card")?.innerHTML ?? "",
+      imageSrc: node("file-image")?.querySelector("img")?.getAttribute("src") ?? "",
+      openNoteHref: node("file-note-full")?.querySelector(".canvas-note-open")?.getAttribute("href") ?? "",
+      hasMinimap: document.querySelector(".canvas-page-mount .react-flow__minimap") !== null,
     }
   })
 
-  check("viewer mounted with node overlays", dom.overlayIds.length >= 6, `overlays: ${dom.overlayIds.join(",")}`)
+  check("viewer mounted with rendered nodes", dom.nodeIds.length >= 6, `nodes: ${dom.nodeIds.join(",")}`)
   check("text card shows prebaked HTML with resolved wikilink", dom.welcomeHtml.includes('href="../notes/getting-started"'))
   check("note card fetched its prerendered fragment", dom.noteFullText.includes("pure build engine"))
   check(
@@ -218,25 +194,21 @@ if (!fs.existsSync(CHROMIUM_PATH)) {
   check("open-note affordance present on note card", dom.openNoteHref === "../notes/architecture")
   check("minimap present", dom.hasMinimap)
 
-  // Theme wiring: Quartz's darkmode toggle dispatches "themechange".
+  // Theme wiring: Quartz's darkmode toggle sets <html saved-theme> (drives the
+  // CSS vars our cards use) AND dispatches "themechange" (drives React Flow's
+  // colorMode) — mirror both, like the real toggle.
   const themedDark = await page.evaluate(async () => {
-    const viewerEl = document.querySelector(".canvas-page-mount .JSON-Canvas-Viewer")
-    const before = getComputedStyle(viewerEl).getPropertyValue("--background").trim()
+    const viewerEl = document.querySelector(".canvas-page-mount .canvas-flow-viewer .react-flow")
+    const before = getComputedStyle(viewerEl).backgroundColor
+    document.documentElement.setAttribute("saved-theme", "dark")
     document.dispatchEvent(new CustomEvent("themechange", { detail: { theme: "dark" } }))
     await new Promise((resolve) => setTimeout(resolve, 300))
-    const after = getComputedStyle(viewerEl).getPropertyValue("--background").trim()
+    const after = getComputedStyle(viewerEl).backgroundColor
     return { before, after }
   })
   check("viewer reacts to themechange", themedDark.before !== themedDark.after, JSON.stringify(themedDark))
 
-  const ownErrors = [...consoleErrors, ...pageErrors]
-    .filter((text) => !EXTERNAL_HOSTS.some((host) => text.includes(host)))
-    // Errors whose stack points at any non-local origin come from embedded
-    // third-party pages (link-card iframes) or blocked CDNs — not our code.
-    .filter((text) => {
-      const urls = text.match(/https?:\/\/[^\s):]+/g) ?? []
-      return urls.length === 0 || urls.some((url) => url.startsWith(base))
-    })
+  const ownErrors = filterOwnErrors(errors, base)
   check("no console/page errors from our origin", ownErrors.length === 0, ownErrors.join(" | "))
 
   fs.mkdirSync(path.join(repoRoot, ".out"), { recursive: true })
@@ -246,6 +218,4 @@ if (!fs.existsSync(CHROMIUM_PATH)) {
 
 // --- 5. Summary ----------------------------------------------------------------
 await server.stop()
-const failed = results.filter((r) => !r.ok)
-console.log(`\n${results.length - failed.length}/${results.length} checks passed`)
-process.exit(failed.length === 0 ? 0 : 1)
+process.exit(summarize())

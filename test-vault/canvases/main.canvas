@@ -14,6 +14,7 @@
 		{"id":"edge-welcome-note","fromNode":"text-welcome","fromSide":"bottom","toNode":"file-note-full","toSide":"top","toEnd":"arrow","label":"embeds note","color":"3"},
 		{"id":"edge-subpath","fromNode":"text-colors","fromSide":"bottom","toNode":"file-note-subpath","toSide":"top","toEnd":"arrow","label":"only #Installation"},
 		{"id":"edge-to-canvas","fromNode":"file-note-subpath","fromSide":"bottom","toNode":"file-canvas-card","toSide":"top","fromEnd":"none","toEnd":"arrow","label":"go to second canvas","color":"5"},
-		{"id":"edge-private","fromNode":"file-image","fromSide":"right","toNode":"file-private","toSide":"left","label":"private placeholder"}
+		{"id":"edge-private","fromNode":"file-image","fromSide":"right","toNode":"file-private","toSide":"left","label":"private placeholder"},
+		{"id":"edge-both-ends","fromNode":"text-welcome","fromSide":"right","toNode":"text-colors","toSide":"left","fromEnd":"arrow","toEnd":"none","label":"reversed arrow"}
 	]
 }
