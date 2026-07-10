@@ -33,6 +33,19 @@ const check = (name, ok, detail = "") => {
   console.log(`${ok ? "PASS" : "FAIL"}: ${name}${detail ? ` — ${detail}` : ""}`)
 }
 
+// Doc pages live at stable-id URLs (plan/id-based-publishing.md); read the
+// ids from the stamped fixtures — the vault is the source of truth.
+const docIdOf = (vaultRelPath) => {
+  const content = fs.readFileSync(path.join(repoRoot, "test-vault", vaultRelPath), "utf-8")
+  if (vaultRelPath.endsWith(".canvas")) return JSON.parse(content).metadata.frontmatter.id
+  return content.match(/^id: (docid_[0-9a-z]{21}_e)$/m)[1]
+}
+const MAIN_CANVAS_SLUG = `n/${docIdOf("canvases/main.canvas")}.canvas`
+const SECOND_CANVAS_SLUG = `n/${docIdOf("canvases/second.canvas")}.canvas`
+const GETTING_STARTED_SLUG = `n/${docIdOf("notes/getting-started.md")}`
+const ARCHITECTURE_SLUG = `n/${docIdOf("notes/architecture.md")}`
+const PRIVATE_NOTE_SLUG = `n/${docIdOf("notes/private-secret.md")}`
+
 // --- 1. Build --------------------------------------------------------------
 console.log("building test-vault (canvases included)...")
 fs.rmSync(siteDir, { recursive: true, force: true })
@@ -106,13 +119,14 @@ console.log(`serving ${siteDir} at ${base} (publish preview server)`)
 
 // --- 3. HTTP checks ----------------------------------------------------------
 const status = async (p) => (await fetch(base + p)).status
-check("canvas page (main) 200", (await status("/canvases/main.canvas.html")) === 200)
-check("canvas page (second) 200", (await status("/canvases/second.canvas.html")) === 200)
+check("canvas page (main) 200", (await status(`/${MAIN_CANVAS_SLUG}.html`)) === 200)
+check("canvas page (second) 200", (await status(`/${SECOND_CANVAS_SLUG}.html`)) === 200)
 check("viewer bundle 200", (await status("/static/canvas-viewer.js")) === 200)
-check("note fragment (full) 200", (await status("/canvases/main.canvas.fragments/file-note-full.html")) === 200)
-check("note fragment (subpath) 200", (await status("/canvases/main.canvas.fragments/file-note-subpath.html")) === 200)
+check("note fragment (full) 200", (await status(`/${MAIN_CANVAS_SLUG}.fragments/file-note-full.html`)) === 200)
+check("note fragment (subpath) 200", (await status(`/${MAIN_CANVAS_SLUG}.fragments/file-note-subpath.html`)) === 200)
 check("image asset 200", (await status("/attachments/diagram.png")) === 200)
-check("private note 404", (await status("/notes/private-secret.html")) === 404)
+check("private note 404 (id URL)", (await status(`/${PRIVATE_NOTE_SLUG}.html`)) === 404)
+check("private note 404 (legacy path URL)", (await status("/notes/private-secret.html")) === 404)
 
 // --- 3b. Preview-server routing contract over REAL build output ---------------
 // Raw request that sends the path VERBATIM: fetch()/WHATWG URL normalize `..`
@@ -132,9 +146,9 @@ const rawGet = (rawPath) =>
   })
 
 check("preview: site root / 200", (await status("/")) === 200)
-check("preview: extensionless canvas URL 200 (the exact URL that 404'd on plain servers)", (await status("/canvases/main.canvas")) === 200)
-check("preview: extensionless note URL 200", (await status("/notes/architecture")) === 200)
-check("preview: folder URL without slash redirects to slashed folder index", (await fetch(`${base}/notes`, { redirect: "manual" })).status === 302)
+check("preview: extensionless canvas URL 200 (the exact URL that 404'd on plain servers)", (await status(`/${MAIN_CANVAS_SLUG}`)) === 200)
+check("preview: extensionless note URL 200", (await status(`/${ARCHITECTURE_SLUG}`)) === 200)
+check("preview: folder URL without slash redirects to slashed folder index", (await fetch(`${base}/n`, { redirect: "manual" })).status === 302)
 check("preview: missing URL serves themed 404 page with status 404", await (async () => {
   const response = await fetch(`${base}/definitely/not/here`)
   return response.status === 404 && (await response.text()).includes("<html")
@@ -158,12 +172,12 @@ check(
   `status=${traversalNested.status}`,
 )
 
-const mainHtml = await (await fetch(base + "/canvases/main.canvas.html")).text()
+const mainHtml = await (await fetch(`${base}/${MAIN_CANVAS_SLUG}.html`)).text()
 check(
   "canvas JSON embeds rewritten fragment URL",
-  mainHtml.includes("main.canvas.fragments/file-note-full.html"),
+  mainHtml.includes(`${docIdOf("canvases/main.canvas")}.canvas.fragments/file-note-full.html`),
 )
-check("canvas JSON embeds rewritten wikilink URL", mainHtml.includes("../notes/getting-started"))
+check("canvas JSON embeds rewritten wikilink URL", mainHtml.includes(`../${GETTING_STARTED_SLUG}`))
 check("no leak sentinel on canvas page", !mainHtml.includes("LEAK-SENTINEL-9f3a72"))
 check("no private path on canvas page", !mainHtml.includes("private-secret"))
 
@@ -186,7 +200,7 @@ if (!fs.existsSync(CHROMIUM_PATH)) {
   // third-party pages in sandboxed iframes; their own script errors are not ours).
   page.on("pageerror", (error) => pageErrors.push(error.stack ?? String(error)))
 
-  await page.goto(`${base}/canvases/main.canvas.html`)
+  await page.goto(`${base}/${MAIN_CANVAS_SLUG}.html`)
   await page.waitForSelector(".canvas-page-mount .JSON-Canvas-Viewer", { timeout: 10000 })
   await page.waitForTimeout(1200) // async overlays (fragment fetches) settle
 
@@ -206,16 +220,16 @@ if (!fs.existsSync(CHROMIUM_PATH)) {
   })
 
   check("viewer mounted with node overlays", dom.overlayIds.length >= 6, `overlays: ${dom.overlayIds.join(",")}`)
-  check("text card shows prebaked HTML with resolved wikilink", dom.welcomeHtml.includes('href="../notes/getting-started"'))
+  check("text card shows prebaked HTML with resolved wikilink", dom.welcomeHtml.includes(`href="../${GETTING_STARTED_SLUG}"`))
   check("note card fetched its prerendered fragment", dom.noteFullText.includes("pure build engine"))
   check(
     "subpath card shows ONLY the Installation section",
     dom.noteSubpathText.includes("Installation is easy") && !dom.noteSubpathText.includes("Advanced tips"),
   )
   check("private card is a contentless placeholder", dom.privateText.trim() === "Private note")
-  check("canvas->canvas card links the second canvas", dom.canvasCardHtml.includes('href="../canvases/second.canvas"'))
+  check("canvas->canvas card links the second canvas", dom.canvasCardHtml.includes(`href="../${SECOND_CANVAS_SLUG}"`))
   check("image card resolved through attachments map", dom.imageSrc.includes("attachments/diagram.png"))
-  check("open-note affordance present on note card", dom.openNoteHref === "../notes/architecture")
+  check("open-note affordance present on note card", dom.openNoteHref === `../${ARCHITECTURE_SLUG}`)
   check("minimap present", dom.hasMinimap)
 
   // Theme wiring: Quartz's darkmode toggle dispatches "themechange".
