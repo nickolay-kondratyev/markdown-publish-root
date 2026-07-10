@@ -17,15 +17,24 @@ export class QuartzConfigGenerator {
    * @param canvasPluginDir our local canvas plugin directory, registered as a
    *   local plugin source (absolute path — the config is a per-build artifact,
    *   machine-specific paths are fine and unambiguous).
+   * @param zenModePluginDir our local zen-mode toolbar-toggle plugin directory,
+   *   registered the same way.
    */
-  static generateYaml(site: SiteConfig, canvasPluginDir: string = defaultCanvasPluginDir()): string {
-    return stringifyYaml(QuartzConfigGenerator.generateConfigObject(site, canvasPluginDir))
+  static generateYaml(
+    site: SiteConfig,
+    canvasPluginDir: string = defaultLocalPluginDir("canvas-plugin"),
+    zenModePluginDir: string = defaultLocalPluginDir("zen-mode"),
+  ): string {
+    return stringifyYaml(
+      QuartzConfigGenerator.generateConfigObject(site, canvasPluginDir, zenModePluginDir),
+    )
   }
 
   /** The config as a plain object (exposed for unit tests). */
   static generateConfigObject(
     site: SiteConfig,
-    canvasPluginDir: string = defaultCanvasPluginDir(),
+    canvasPluginDir: string = defaultLocalPluginDir("canvas-plugin"),
+    zenModePluginDir: string = defaultLocalPluginDir("zen-mode"),
   ): Record<string, unknown> {
     return {
       configuration: {
@@ -61,15 +70,23 @@ export class QuartzConfigGenerator {
         // Our canvas pageType+emitter plugin (ADR 0001). Local sources are
         // symlinked by Quartz's loader — no publishing, no build step.
         { source: canvasPluginDir, enabled: true, order: 55 },
+        // Our zen-mode toolbar toggle (plan/zen-mode.md): hides sidebar chrome
+        // AND collapses the grid so content reclaims the sidebar width.
+        // Priority 40 = immediately after reader-mode (35) in the toolbar row.
+        {
+          source: zenModePluginDir,
+          enabled: true,
+          layout: { position: "left", priority: 40, group: "toolbar" },
+        },
       ],
       layout: LAYOUT,
     }
   }
 }
 
-function defaultCanvasPluginDir(): string {
-  // engine/src/ -> repo root -> canvas-plugin
-  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "canvas-plugin")
+/** Local plugin dirs live at the repo root (engine/src/ -> repo root -> <dirName>). */
+function defaultLocalPluginDir(dirName: string): string {
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", dirName)
 }
 
 /** Stock Quartz typography — the fallback when site.json overrides nothing. */

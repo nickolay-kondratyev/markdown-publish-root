@@ -1,4 +1,6 @@
 import assert from "node:assert/strict"
+import fs from "node:fs"
+import path from "node:path"
 import { describe, test } from "node:test"
 import { parse as parseYaml } from "yaml"
 import { QuartzConfigGenerator, DEFAULT_LIGHT_MODE_COLORS } from "../../src/quartzConfigGenerator.ts"
@@ -108,6 +110,32 @@ describe("QuartzConfigGenerator — plugin set", () => {
     const enabledCore = ["obsidian-flavored-markdown", "crawl-links", "content-page", "search", "graph"]
       .map((name) => pluginEntry(doc, name)?.enabled)
     assert.deepEqual(enabledCore, [true, true, true, true, true])
+  })
+})
+
+describe("QuartzConfigGenerator — zen-mode plugin", () => {
+  function zenEntry(doc: ConfigDoc) {
+    return doc.plugins.find((p) => typeof p.source === "string" && p.source.endsWith("/zen-mode"))
+  }
+
+  test("GIVEN a zen-mode plugin dir WHEN generating THEN it is an enabled local source", () => {
+    const doc = QuartzConfigGenerator.generateConfigObject(
+      siteConfig(),
+      "/abs/path/canvas-plugin",
+      "/abs/path/zen-mode",
+    ) as ConfigDoc
+    assert.equal(doc.plugins.find((p) => p.source === "/abs/path/zen-mode")?.enabled, true)
+  })
+
+  test("GIVEN any site WHEN generating THEN zen-mode sits in the toolbar right after reader-mode (priority 40)", () => {
+    const entry = zenEntry(generate()) as { layout?: Record<string, unknown> } | undefined
+    assert.deepEqual(entry?.layout, { position: "left", priority: 40, group: "toolbar" })
+  })
+
+  test("GIVEN the default zen-mode dir WHEN inspected THEN it is a component-category quartz plugin", () => {
+    const source = zenEntry(generate())?.source as string
+    const pkg = JSON.parse(fs.readFileSync(path.join(source, "package.json"), "utf-8"))
+    assert.equal(pkg.quartz?.category, "component")
   })
 })
 

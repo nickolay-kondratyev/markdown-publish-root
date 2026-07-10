@@ -1,0 +1,24 @@
+{
+  "name": "vintrin-zen-mode",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Quartz 5 component plugin: toolbar toggle that hides ALL sidebar chrome and collapses the layout grid so note content reclaims the sidebar width (plan/zen-mode.md).",
+  "type": "module",
+  "main": "index.js",
+  "quartz": {
+    "name": "zen-mode",
+    "displayName": "Zen Mode",
+    "category": "component",
+    "version": "0.1.0",
+    "quartzVersion": ">=5.0.0",
+    "dependencies": [],
+    "defaultEnabled": true,
+    "components": {
+      "ZenMode": {
+        "displayName": "Zen Mode",
+        "defaultPosition": "left",
+        "defaultPriority": 40
+      }
+    }
+  }
+}

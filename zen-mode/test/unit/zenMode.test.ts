@@ -1,0 +1,59 @@
+import assert from "node:assert/strict"
+import { describe, test } from "node:test"
+// Loading through the loader's fallback path proves the whole import chain is
+// plain-Node-importable ESM (gotcha G6) — no TS/JSX anywhere.
+import { ZenMode } from "../../components/index.js"
+
+const component = ZenMode() as ((props: Record<string, unknown>) => unknown) & {
+  css: string
+  beforeDOMLoaded: string
+}
+
+describe("ZenMode component — rendering", () => {
+  test("GIVEN the constructor WHEN instantiated THEN it renders a button with the zenmode class", () => {
+    const vnode = component({ displayClass: undefined }) as { type: string; props: { class: string } }
+    assert.deepEqual({ type: vnode.type, class: vnode.props.class }, { type: "button", class: "zenmode" })
+  })
+
+  test("GIVEN a displayClass WHEN rendering THEN it is appended to the button class", () => {
+    const vnode = component({ displayClass: "desktop-only" }) as { props: { class: string } }
+    assert.equal(vnode.props.class, "zenmode desktop-only")
+  })
+})
+
+describe("ZenMode component — CSS (the width reclaim)", () => {
+  test("GIVEN the css WHEN inspected THEN rules key on the zen-mode root attribute", () => {
+    assert.equal(component.css.includes(':root[zen-mode="on"]'), true)
+  })
+
+  test("GIVEN the css WHEN inspected THEN the grid collapses to a single column", () => {
+    assert.equal(component.css.includes("grid-template-columns: auto"), true)
+  })
+
+  test("GIVEN the css WHEN inspected THEN .sidebar.left ITSELF is never display:none (would hide the exit button)", () => {
+    // Child-filter selectors (`.sidebar.left > ...`) may hide children; a rule
+    // whose selector ENDS at .sidebar.left must not contain display: none.
+    const sidebarLeftRules = [...component.css.matchAll(/\.sidebar\.left\s*\{([^}]*)\}/g)]
+    assert.equal(
+      sidebarLeftRules.some(([, body]) => body.includes("display: none")),
+      false,
+    )
+  })
+})
+
+describe("ZenMode component — toggle script", () => {
+  test("GIVEN beforeDOMLoaded WHEN inspected THEN it persists via localStorage under the zen-mode key", () => {
+    const script = component.beforeDOMLoaded
+    assert.equal(script.includes('localStorage.getItem("zen-mode")') && script.includes('localStorage.setItem("zen-mode"'), true)
+  })
+
+  test("GIVEN beforeDOMLoaded WHEN inspected THEN it re-binds on SPA nav/render with cleanup", () => {
+    const script = component.beforeDOMLoaded
+    assert.equal(
+      script.includes('addEventListener("nav"') &&
+        script.includes('addEventListener("render"') &&
+        script.includes("window.addCleanup"),
+      true,
+    )
+  })
+})
