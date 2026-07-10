@@ -11,6 +11,21 @@
  * (no CDN at runtime); loaded by the page's loader script (src/pageBody.js).
  */
 import { Controls, JSONCanvasViewer, Minimap, MistouchPreventer } from "json-canvas-viewer"
+import { FullscreenRetention } from "./fullscreenRetention.js"
+
+// Module-level state survives SPA navigations: this bundle is dynamic-imported
+// once and cached, while CanvasView instances are disposed/recreated per page.
+const fullscreenRetention = new FullscreenRetention()
+if (typeof document !== "undefined") {
+  // Quartz fires "prenav" right before it swaps the DOM (which force-exits
+  // native fullscreen). Recomputed on every nav — see FullscreenRetention.
+  document.addEventListener("prenav", () => {
+    fullscreenRetention.capture(
+      document.fullscreenElement !== null &&
+        document.fullscreenElement.closest("[data-canvas-mount]") !== null,
+    )
+  })
+}
 
 /**
  * @typedef {object} CanvasViewPayload
@@ -56,6 +71,14 @@ export class CanvasView {
     )
     // Quartz's darkmode toggle dispatches this document-level event.
     document.addEventListener("themechange", this.onThemeChange)
+
+    if (fullscreenRetention.consume()) {
+      // Re-enter fullscreen dropped by the SPA DOM swap. This relies on the
+      // transient user activation of the click that triggered the navigation
+      // still being valid; if the browser rejects (e.g. a slow fetch outlived
+      // the activation window), degrade gracefully to windowed mode.
+      this.viewer.toggleFullscreen("enter").catch(() => {})
+    }
   }
 
   /** @param {"light" | "dark"} theme */
