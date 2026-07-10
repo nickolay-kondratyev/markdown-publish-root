@@ -53,3 +53,7 @@ Requires AWS CLI v2 + credentials. `deploy.json`: `bucket`, `region` (required);
 ## Canvas features on the published site
 
 Pan/zoom/minimap; markdown text cards with working `[[wikilinks]]`; embedded note cards (incl. `#heading` / `#^block` subpaths) with an open-note button (first click selects the card, then links/button are active); image/audio/video cards; canvas→canvas navigation cards; web link cards; groups, labeled edges, colors; light/dark follows the site theme toggle. Canvases appear in search, graph view, and backlinks.
+
+## Zen mode (published-site reading view)
+
+Every published page has a lotus icon in the toolbar (next to the reader-mode book icon). It toggles **zen mode**: the file explorer, graph, backlinks, and TOC disappear AND the note content reclaims their width (stock reader-mode only fades the sidebars out; the ~640px of grid columns stay). The toolbar stays reachable to exit, and the state persists across page navigation and reloads (localStorage, like the theme toggle).

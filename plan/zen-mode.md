@@ -1,6 +1,6 @@
 # Zen Mode: hide sidebars AND reclaim their width (no Quartz fork)
 
-**Status:** PLANNED — investigation complete (2026-07-10), verified against vendored Quartz at pinned commit `9cf87ff`.
+**Status:** IMPLEMENTED (2026-07-10) — see `zen-mode/`, `scripts/e2e-zen-mode.mjs`, `docs/tickets/0002`. Implementation correction to §3.3: base sidebar rules nest under `.page > #quartz-body` (an **ID**), so zen sidebar selectors must carry `#quartz-body` too or they lose the cascade — the "root-attribute selectors out-specify base" claim below was wrong for those rules (the full-width-frame precedent works only because frames drop sidebars from the DOM).
 **Owner:** Nickolay
 **Audience:** Implementation agent. All extension points below were verified by reading the vendored source; file refs are exact.
 
