@@ -1,7 +1,11 @@
 import fs from "node:fs"
 import path from "node:path"
 import { CanvasStagingTransformer } from "./canvasStagingTransform.ts"
-import { FrontmatterReader, type DocFrontmatterRead } from "./frontmatter.ts"
+import {
+  FrontmatterReader,
+  VINTRIN_PATH_FRONTMATTER_KEY,
+  type DocFrontmatterRead,
+} from "./frontmatter.ts"
 import { IdMap, type HarvestedDoc } from "./idMap.ts"
 import { MarkdownStagingTransformer } from "./markdownStagingTransform.ts"
 import { PublishFilter, isCanvasPath, isMarkdownPath } from "./publishFilter.ts"
@@ -25,6 +29,26 @@ interface DocToStage {
   vaultPath: string
   content: string
   kind: "markdown" | "canvas"
+}
+
+/**
+ * A publishable vault doc declares a frontmatter key the engine injects at
+ * staging (`vintrinPath`) — the build MUST fail before anything is written,
+ * naming every offender (plan/folder-nav-over-id-urls.md §4.1).
+ */
+export class ReservedFrontmatterKeyError extends Error {
+  readonly offendingFiles: string[]
+
+  constructor(offendingFiles: string[]) {
+    super(
+      `reserved frontmatter key "${VINTRIN_PATH_FRONTMATTER_KEY}" declared by ` +
+        `${offendingFiles.length} publishable doc(s) — the engine injects it at staging:\n` +
+        offendingFiles.map((file) => `  - ${file}`).join("\n") +
+        `\nFix: rename the key in these vault files.`,
+    )
+    this.name = "ReservedFrontmatterKeyError"
+    this.offendingFiles = offendingFiles
+  }
 }
 
 /**
@@ -57,16 +81,21 @@ export class VaultStager {
       warnings: [],
       stagedPathByVaultPath: {},
     }
-    // Pass 1: decide + harvest. No writes yet — id validation must be able to
+    // Pass 1: decide + harvest. No writes yet — validation must be able to
     // fail the build before ANY staging output exists.
     const docs: DocToStage[] = []
     const harvested: HarvestedDoc[] = []
+    const reservedKeyOffenders: string[] = []
     for (const relPath of listFilesRecursively(vaultDir)) {
-      const doc = this.decide(vaultDir, relPath, result, harvested)
+      const doc = this.decide(vaultDir, relPath, result, harvested, reservedKeyOffenders)
       if (doc !== undefined) docs.push(doc)
     }
 
-    // Pass 2: validate ids (throws DocIdValidationError listing every problem).
+    // Pass 2: validate (each throws listing every offender): reserved keys,
+    // then ids (DocIdValidationError).
+    if (reservedKeyOffenders.length > 0) {
+      throw new ReservedFrontmatterKeyError(reservedKeyOffenders)
+    }
     const idMap = IdMap.build(harvested)
 
     // Pass 3: transform + write.
@@ -84,11 +113,13 @@ export class VaultStager {
         doc.kind === "markdown"
           ? MarkdownStagingTransformer.transform(doc.content, {
               titleWhenAbsent: basenameWithoutExtension(doc.vaultPath),
+              vintrinPath: doc.vaultPath,
               rewriteBody: (body) => rewriter.rewrite(body),
             })
           : CanvasStagingTransformer.transform(doc.content, {
               idMap,
               originalBasename: basenameWithoutExtension(doc.vaultPath),
+              vintrinPath: doc.vaultPath,
               rewriteText: (text) => rewriter.rewrite(text),
             })
       writeStagedFile(stagingDir, stagedPath, transformed)
@@ -102,13 +133,15 @@ export class VaultStager {
 
   /**
    * Classifies one file: publishable doc (returned for staging), publishable
-   * asset (recorded), or excluded. Publishable docs get their id harvested.
+   * asset (recorded), or excluded. Publishable docs get their id harvested
+   * and reserved-key (`vintrinPath`) declarations recorded.
    */
   private decide(
     vaultDir: string,
     relPath: string,
     result: StagingResult,
     harvested: HarvestedDoc[],
+    reservedKeyOffenders: string[],
   ): DocToStage | undefined {
     if (isCanvasPath(relPath)) {
       if (!this.filter.isCanvasPublished(relPath)) {
@@ -116,16 +149,17 @@ export class VaultStager {
         return undefined
       }
       const content = fs.readFileSync(path.join(vaultDir, relPath), "utf-8")
-      const idValue = readCanvasIdValue(content)
-      if (idValue === MALFORMED_CANVAS) {
+      const metadata = readCanvasDocMetadata(content)
+      if (metadata === MALFORMED_CANVAS) {
         // Fail closed, mirroring malformed md frontmatter: unreadable JSON
         // cannot prove it is publishable — exclude it, do not hard-fail.
         result.warnings.push(`${relPath}: malformed canvas JSON — treated as NOT publishable`)
         result.excludedFiles.push(relPath)
         return undefined
       }
+      if (metadata.declaresVintrinPath) reservedKeyOffenders.push(relPath)
       result.stagedCanvasFiles.push(relPath)
-      harvested.push({ vaultPath: relPath, idValue })
+      harvested.push({ vaultPath: relPath, idValue: metadata.idValue })
       return { vaultPath: relPath, content, kind: "canvas" }
     }
     if (!isMarkdownPath(relPath)) {
@@ -148,6 +182,7 @@ export class VaultStager {
       result.excludedFiles.push(relPath)
       return undefined
     }
+    if (fields.declaresVintrinPath) reservedKeyOffenders.push(relPath)
     result.stagedMarkdownFiles.push(relPath)
     harvested.push({ vaultPath: relPath, idValue: fields.idValue })
     return { vaultPath: relPath, content, kind: "markdown" }
@@ -157,13 +192,23 @@ export class VaultStager {
 /** Sentinel: canvas JSON could not be parsed (distinct from "id absent"). */
 const MALFORMED_CANVAS = Symbol("malformed-canvas")
 
-function readCanvasIdValue(content: string): unknown {
+/** Engine-relevant canvas metadata (canvas analogue of DocFrontmatterRead). */
+interface CanvasDocMetadata {
+  idValue: unknown
+  declaresVintrinPath: boolean
+}
+
+function readCanvasDocMetadata(content: string): CanvasDocMetadata | typeof MALFORMED_CANVAS {
   try {
     const parsed = JSON.parse(content)
     if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
       return MALFORMED_CANVAS
     }
-    return parsed.metadata?.frontmatter?.id
+    const frontmatter = parsed.metadata?.frontmatter
+    return {
+      idValue: frontmatter?.id,
+      declaresVintrinPath: frontmatter?.[VINTRIN_PATH_FRONTMATTER_KEY] !== undefined,
+    }
   } catch {
     return MALFORMED_CANVAS
   }

@@ -6,6 +6,12 @@ export interface CanvasTransformOptions {
   idMap: IdMap
   /** Original canvas basename (no extension) — injected as metadata title when absent. */
   originalBasename: string
+  /**
+   * ORIGINAL vault-relative path incl. extension — ALWAYS injected as the
+   * reserved `metadata.frontmatter.vintrinPath` key (folder navigation, plan
+   * folder-nav-over-id-urls.md §4.1). Reserved-key validation ran first.
+   */
+  vintrinPath: string
   /** Wikilink rewriting applied to every text node. */
   rewriteText: (text: string) => string
 }
@@ -29,6 +35,7 @@ export class CanvasStagingTransformer {
     canvas.metadata ??= {}
     canvas.metadata.frontmatter ??= {}
     canvas.metadata.frontmatter.title ??= options.originalBasename
+    canvas.metadata.frontmatter.vintrinPath = options.vintrinPath
     for (const node of canvas.nodes ?? []) {
       if (node?.type === "file" && typeof node.file === "string") {
         if (options.idMap.docIdOf(node.file) !== undefined) {

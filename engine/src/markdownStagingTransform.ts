@@ -1,4 +1,4 @@
-import { FrontmatterReader } from "./frontmatter.ts"
+import { FrontmatterReader, VINTRIN_PATH_FRONTMATTER_KEY } from "./frontmatter.ts"
 
 /** Options for one markdown staging transform. */
 export interface MarkdownTransformOptions {
@@ -8,13 +8,21 @@ export interface MarkdownTransformOptions {
    * An existing `title` always wins; this transform then injects nothing.
    */
   titleWhenAbsent: string
+  /**
+   * ORIGINAL vault-relative path incl. extension (e.g. "notes/foo.md") —
+   * ALWAYS injected as the reserved `vintrinPath` key; the folder-navigation
+   * components derive tree/crumb placement from it
+   * (plan/folder-nav-over-id-urls.md §4.1). Precondition: the vault doc does
+   * not declare the key itself (reserved-key validation ran first).
+   */
+  vintrinPath: string
   /** Wikilink rewriting applied to the body ONLY (frontmatter is never rewritten). */
   rewriteBody: (body: string) => string
 }
 
 /**
  * Transforms one publishable markdown doc on its way into the staging dir:
- * title injection + body wikilink rewrite. Pure text transform.
+ * title + vintrinPath injection + body wikilink rewrite. Pure text transform.
  *
  * Precondition: the doc passed id validation, so frontmatter EXISTS (the id
  * lives there) — enforced by IdMap.build before any transform runs.
@@ -25,18 +33,23 @@ export class MarkdownStagingTransformer {
     if (split === undefined) {
       throw new Error("markdown staging transform requires frontmatter (id validation ran first)")
     }
-    let frontmatterRegion = split.frontmatterRegion
+    const frontmatterRegion = split.frontmatterRegion
+    const opener = frontmatterRegion.match(/^---[^\S\r\n]*\r?\n/)
+    if (opener === null) throw new Error("frontmatter opener not found (inconsistent parse)")
+    const eol = frontmatterRegion.includes("\r\n") ? "\r\n" : "\n"
+    // JSON.stringify = safe YAML double-quoted scalar for arbitrary basenames/paths.
+    const injectedLines: string[] = []
     if (!FrontmatterReader.readDocFields(markdown).hasTitle) {
-      const opener = frontmatterRegion.match(/^---[^\S\r\n]*\r?\n/)
-      if (opener === null) throw new Error("frontmatter opener not found (inconsistent parse)")
-      const eol = frontmatterRegion.includes("\r\n") ? "\r\n" : "\n"
-      // JSON.stringify = safe YAML double-quoted scalar for arbitrary basenames.
-      frontmatterRegion =
-        frontmatterRegion.slice(0, opener[0].length) +
-        `title: ${JSON.stringify(options.titleWhenAbsent)}${eol}` +
-        frontmatterRegion.slice(opener[0].length)
+      injectedLines.push(`title: ${JSON.stringify(options.titleWhenAbsent)}`)
     }
-    return frontmatterRegion + options.rewriteBody(split.body)
+    injectedLines.push(
+      `${VINTRIN_PATH_FRONTMATTER_KEY}: ${JSON.stringify(options.vintrinPath)}`,
+    )
+    const injected =
+      frontmatterRegion.slice(0, opener[0].length) +
+      injectedLines.map((line) => line + eol).join("") +
+      frontmatterRegion.slice(opener[0].length)
+    return injected + options.rewriteBody(split.body)
   }
 }
 

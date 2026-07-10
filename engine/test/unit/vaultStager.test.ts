@@ -5,7 +5,11 @@ import path from "node:path"
 import { after, before, describe, test } from "node:test"
 import { DocIdValidationError } from "../../src/idMap.ts"
 import { PublishFilter } from "../../src/publishFilter.ts"
-import { VaultStager, type StagingResult } from "../../src/vaultStager.ts"
+import {
+  ReservedFrontmatterKeyError,
+  VaultStager,
+  type StagingResult,
+} from "../../src/vaultStager.ts"
 
 const ID_INDEX = "docid_iiiiiiiiiiiiiiiiiiiii_e"
 const ID_NOTE = "docid_nnnnnnnnnnnnnnnnnnnnn_e"
@@ -67,6 +71,23 @@ describe("VaultStager", () => {
   test("THEN a title is injected from the original basename when absent", () => {
     const staged = fs.readFileSync(path.join(stagingDir, `n/${ID_NOTE}.md`), "utf-8")
     assert.equal(staged.includes(`title: "note"`), true)
+  })
+
+  test("THEN the note's ORIGINAL vault path is injected as vintrinPath", () => {
+    const staged = fs.readFileSync(path.join(stagingDir, `n/${ID_NOTE}.md`), "utf-8")
+    assert.equal(staged.includes(`vintrinPath: "notes/note.md"`), true)
+  })
+
+  test("THEN the root index.md gets vintrinPath like any other doc", () => {
+    const staged = fs.readFileSync(path.join(stagingDir, "index.md"), "utf-8")
+    assert.equal(staged.includes(`vintrinPath: "index.md"`), true)
+  })
+
+  test("THEN the staged canvas carries its ORIGINAL vault path as metadata vintrinPath", () => {
+    const staged = JSON.parse(
+      fs.readFileSync(path.join(stagingDir, `n/${ID_CANVAS}.canvas`), "utf-8"),
+    )
+    assert.equal(staged.metadata.frontmatter.vintrinPath, "boards/main.canvas")
   })
 
   test("THEN the private note is NOT copied", () => {
@@ -132,6 +153,56 @@ describe("VaultStager id validation", () => {
     writeFile(vaultDir, "notes/no-id.md", "---\npublish: true\n---\nBody\n")
     assert.throws(() => new VaultStager(FILTER).stage(vaultDir, stagingDir))
     assert.equal(fs.existsSync(stagingDir), false)
+    fs.rmSync(workDir, { recursive: true, force: true })
+  })
+})
+
+describe("VaultStager reserved-key validation (vintrinPath)", () => {
+  test("GIVEN publishable docs already declaring vintrinPath WHEN staging THEN the build fails listing EVERY offender", () => {
+    const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "stager-reserved-"))
+    const vaultDir = path.join(workDir, "vault")
+    writeFile(
+      vaultDir,
+      "notes/claims-path.md",
+      `---\nid: ${ID_NOTE}\npublish: true\nvintrinPath: fake\n---\nBody\n`,
+    )
+    writeFile(
+      vaultDir,
+      "boards/claims-path.canvas",
+      `{"nodes":[],"edges":[],"metadata":{"frontmatter":{"id":"${ID_CANVAS}","vintrinPath":"fake"}}}`,
+    )
+    assert.throws(
+      () => new VaultStager(FILTER).stage(vaultDir, path.join(workDir, "staging")),
+      (error: unknown) =>
+        error instanceof ReservedFrontmatterKeyError &&
+        error.message.includes("notes/claims-path.md") &&
+        error.message.includes("boards/claims-path.canvas"),
+    )
+    fs.rmSync(workDir, { recursive: true, force: true })
+  })
+
+  test("GIVEN a reserved-key offender WHEN staging THEN NOTHING has been written to the staging dir", () => {
+    const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "stager-reserved2-"))
+    const vaultDir = path.join(workDir, "vault")
+    const stagingDir = path.join(workDir, "staging")
+    writeFile(vaultDir, "notes/good.md", `---\nid: ${ID_NOTE}\npublish: true\n---\nBody\n`)
+    writeFile(
+      vaultDir,
+      "notes/claims-path.md",
+      `---\nid: ${ID_INDEX}\npublish: true\nvintrinPath: fake\n---\nBody\n`,
+    )
+    assert.throws(() => new VaultStager(FILTER).stage(vaultDir, stagingDir))
+    assert.equal(fs.existsSync(stagingDir), false)
+    fs.rmSync(workDir, { recursive: true, force: true })
+  })
+
+  test("GIVEN an UNPUBLISHED doc declaring vintrinPath WHEN staging THEN the build succeeds (only publishable docs are validated)", () => {
+    const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "stager-reserved3-"))
+    const vaultDir = path.join(workDir, "vault")
+    writeFile(vaultDir, "notes/good.md", `---\nid: ${ID_NOTE}\npublish: true\n---\nBody\n`)
+    writeFile(vaultDir, "notes/private.md", "---\npublish: false\nvintrinPath: fake\n---\nBody\n")
+    const result = new VaultStager(FILTER).stage(vaultDir, path.join(workDir, "staging"))
+    assert.deepEqual(result.stagedMarkdownFiles, ["notes/good.md"])
     fs.rmSync(workDir, { recursive: true, force: true })
   })
 })

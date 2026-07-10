@@ -11,24 +11,32 @@ describe("MarkdownStagingTransformer", () => {
   test("GIVEN no title WHEN transforming THEN the original basename is injected as title", () => {
     const output = MarkdownStagingTransformer.transform(
       `---\nid: ${ID_A}\npublish: true\n---\nBody\n`,
-      { titleWhenAbsent: "some-note", rewriteBody: (body) => body },
+      { titleWhenAbsent: "some-note", vintrinPath: "notes/some-note.md", rewriteBody: (body) => body },
     )
-    assert.equal(output, `---\ntitle: "some-note"\nid: ${ID_A}\npublish: true\n---\nBody\n`)
+    assert.equal(
+      output,
+      `---\ntitle: "some-note"\nvintrinPath: "notes/some-note.md"\nid: ${ID_A}\npublish: true\n---\nBody\n`,
+    )
   })
 
-  test("GIVEN an existing title WHEN transforming THEN frontmatter is untouched", () => {
+  test("GIVEN an existing title WHEN transforming THEN only vintrinPath is injected", () => {
     const input = `---\ntitle: My Title\nid: ${ID_A}\n---\nBody\n`
     const output = MarkdownStagingTransformer.transform(input, {
       titleWhenAbsent: "some-note",
+      vintrinPath: "notes/some-note.md",
       rewriteBody: (body) => body,
     })
-    assert.equal(output, input)
+    assert.equal(
+      output,
+      `---\nvintrinPath: "notes/some-note.md"\ntitle: My Title\nid: ${ID_A}\n---\nBody\n`,
+    )
   })
 
   test("WHEN transforming THEN only the body is passed to the link rewriter (frontmatter excluded)", () => {
     const seen: string[] = []
     MarkdownStagingTransformer.transform(`---\ntitle: T\nid: ${ID_A}\n---\nBody [[x]]\n`, {
       titleWhenAbsent: "t",
+      vintrinPath: "notes/t.md",
       rewriteBody: (body) => {
         seen.push(body)
         return body
@@ -40,9 +48,19 @@ describe("MarkdownStagingTransformer", () => {
   test("GIVEN a rewriting body transform WHEN transforming THEN its output lands in the result", () => {
     const output = MarkdownStagingTransformer.transform(`---\ntitle: T\nid: ${ID_A}\n---\nlink\n`, {
       titleWhenAbsent: "t",
+      vintrinPath: "notes/t.md",
       rewriteBody: () => "REWRITTEN\n",
     })
-    assert.equal(output, `---\ntitle: T\nid: ${ID_A}\n---\nREWRITTEN\n`)
+    assert.equal(output, `---\nvintrinPath: "notes/t.md"\ntitle: T\nid: ${ID_A}\n---\nREWRITTEN\n`)
+  })
+
+  test("GIVEN a path needing YAML quoting WHEN transforming THEN vintrinPath is a safe scalar", () => {
+    const output = MarkdownStagingTransformer.transform(`---\nid: ${ID_A}\n---\nBody\n`, {
+      titleWhenAbsent: "a: b",
+      vintrinPath: 'notes/a: "b" #c.md',
+      rewriteBody: (body) => body,
+    })
+    assert.equal(output.includes(`vintrinPath: "notes/a: \\"b\\" #c.md"`), true)
   })
 })
 
@@ -67,6 +85,7 @@ describe("CanvasStagingTransformer", () => {
     CanvasStagingTransformer.transform(raw, {
       idMap,
       originalBasename: "x",
+      vintrinPath: "canvases/x.canvas",
       rewriteText: (text) => text.replace("[[foo]]", `[[${ID_A}|foo]]`),
     }),
   )
@@ -94,6 +113,10 @@ describe("CanvasStagingTransformer", () => {
     assert.equal(transformed.metadata.frontmatter.title, "x")
   })
 
+  test("THEN the original vault path is injected as metadata vintrinPath", () => {
+    assert.equal(transformed.metadata.frontmatter.vintrinPath, "canvases/x.canvas")
+  })
+
   test("GIVEN an existing metadata title THEN it is preserved", () => {
     const withTitle = JSON.stringify({
       nodes: [],
@@ -104,6 +127,7 @@ describe("CanvasStagingTransformer", () => {
       CanvasStagingTransformer.transform(withTitle, {
         idMap,
         originalBasename: "x",
+        vintrinPath: "canvases/x.canvas",
         rewriteText: (text) => text,
       }),
     )
@@ -120,6 +144,7 @@ describe("CanvasStagingTransformer", () => {
       CanvasStagingTransformer.transform(withExtras, {
         idMap,
         originalBasename: "x",
+        vintrinPath: "canvases/x.canvas",
         rewriteText: (text) => text,
       }),
     )
