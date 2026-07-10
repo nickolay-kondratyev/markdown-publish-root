@@ -22,6 +22,27 @@ No fork needed; plan proceeds as written. No deviations.
   297 unit / 43 integration / typecheck green.
 - Deviations: none.
 
+## Phase 2 — vintrin-explorer (DONE, 2026-07-10)
+
+- New local component plugin `vintrin-explorer/`: pure `VaultTreeBuilder`
+  (11 unit tests: nesting, title labels, canvas leaves, root-index + no-path
+  exclusion, stock sort order) + server-side rendered component with stock
+  DOM classes, ported styles, and the stock inline script minus fetch/trie
+  (SPA body-swap delivers per-page active/open state; script does collapse
+  persistence, mobile toggle, scroll restore).
+- Config generator: stock `explorer` off, `vintrin-explorer` local source on
+  (left, priority 50). `LocalPluginDirs` object replaces the positional
+  canvasPluginDir param.
+- Verified hands-on in a real build: folder-shaped tree with title labels and
+  `n/<docid>` hrefs on every page, active link + open ancestor server-side.
+- **Deviation (sequencing only):** `folder-page` stays ENABLED until Phase 3 —
+  stock breadcrumbs still links its "n" crumb to the `/n/` listing; disabling
+  folder-page alone broke the link-checker (caught by integration tests).
+  Both flip together with vintrin-breadcrumbs. End state per plan unchanged.
+- Note: canvases appear in the tree only after the Phase 3 canvas-plugin
+  passthrough (§4.4) — their virtual pages don't carry vintrinPath yet.
+- 310 unit / 43 integration / typecheck green.
+
 ## Environment note (this workstation)
 
 No nvm on this box (`~/.nvm` absent) and the profile's `node()`/`npm()` shell

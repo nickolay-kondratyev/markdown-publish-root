@@ -11,22 +11,32 @@ import type { SiteConfig, ThemeColorOverrides, ThemeTypography } from "./siteCon
  * The plugin list is our curated default set — see PLUGIN_ENTRIES for the
  * deliberate deviations from stock Quartz and why.
  */
+/**
+ * Absolute dirs of OUR local Quartz plugins, registered as local plugin
+ * sources (the config is a per-build artifact — machine-specific paths are
+ * fine and unambiguous). Defaults resolve relative to this repo.
+ */
+export interface LocalPluginDirs {
+  /** Canvas pageType+emitter plugin (ADR 0001). */
+  canvasPluginDir: string
+  /** Folder-shaped Explorer component (plan/folder-nav-over-id-urls.md §4.2). */
+  explorerPluginDir: string
+}
+
 export class QuartzConfigGenerator {
-  /**
-   * YAML text ready to be written as `quartz.config.yaml` in the Quartz root.
-   * @param canvasPluginDir our local canvas plugin directory, registered as a
-   *   local plugin source (absolute path — the config is a per-build artifact,
-   *   machine-specific paths are fine and unambiguous).
-   */
-  static generateYaml(site: SiteConfig, canvasPluginDir: string = defaultCanvasPluginDir()): string {
-    return stringifyYaml(QuartzConfigGenerator.generateConfigObject(site, canvasPluginDir))
+  /** YAML text ready to be written as `quartz.config.yaml` in the Quartz root. */
+  static generateYaml(site: SiteConfig, localPlugins: Partial<LocalPluginDirs> = {}): string {
+    return stringifyYaml(QuartzConfigGenerator.generateConfigObject(site, localPlugins))
   }
 
   /** The config as a plain object (exposed for unit tests). */
   static generateConfigObject(
     site: SiteConfig,
-    canvasPluginDir: string = defaultCanvasPluginDir(),
+    localPlugins: Partial<LocalPluginDirs> = {},
   ): Record<string, unknown> {
+    const canvasPluginDir = localPlugins.canvasPluginDir ?? defaultLocalPluginDir("canvas-plugin")
+    const explorerPluginDir =
+      localPlugins.explorerPluginDir ?? defaultLocalPluginDir("vintrin-explorer")
     return {
       configuration: {
         pageTitle: site.title,
@@ -61,15 +71,22 @@ export class QuartzConfigGenerator {
         // Our canvas pageType+emitter plugin (ADR 0001). Local sources are
         // symlinked by Quartz's loader — no publishing, no build step.
         { source: canvasPluginDir, enabled: true, order: 55 },
+        // Folder-shaped Explorer over stable-id URLs; replaces the stock
+        // explorer disabled above (plan/folder-nav-over-id-urls.md, spike C).
+        {
+          source: explorerPluginDir,
+          enabled: true,
+          layout: { position: "left", priority: 50 },
+        },
       ],
       layout: LAYOUT,
     }
   }
 }
 
-function defaultCanvasPluginDir(): string {
-  // engine/src/ -> repo root -> canvas-plugin
-  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "canvas-plugin")
+function defaultLocalPluginDir(dirName: string): string {
+  // engine/src/ -> repo root -> <dirName>
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", dirName)
 }
 
 /** Stock Quartz typography — the fallback when site.json overrides nothing. */
@@ -146,6 +163,8 @@ interface PluginEntry {
  *   bases-page        DISABLED  .base files are out of MVP scope.
  *   footer            DISABLED  only renders "Created with Quartz vX (c) YEAR"
  *                               branding (we configure no links) — unwanted.
+ *   explorer          DISABLED  slug-trie tree = flat /n/ listing; replaced by
+ *                               OUR vintrin-explorer (folder-nav plan §3.1).
  *
  * Plugins that are disabled in stock Quartz (citations, hard-line-breaks,
  * ox-hugo, roam, comments, recent-notes, stacked-pages, tag-list) plus
@@ -196,9 +215,14 @@ const PLUGIN_ENTRIES: PluginEntry[] = [
   { source: "cname", enabled: false },
   { source: "canvas-page", enabled: false },
   { source: "content-page", enabled: true },
+  // folder-page still ON until Phase 3: stock breadcrumbs (below) links its
+  // "n" crumb to the /n/ listing — both flip together with vintrin-breadcrumbs
+  // (plan/folder-nav-over-id-urls.md §4.5).
   { source: "folder-page", enabled: true },
   { source: "tag-page", enabled: true },
-  { source: "explorer", enabled: true, layout: { position: "left", priority: 50 } },
+  // explorer DISABLED: builds its tree from slugs -> flat n/ listing; replaced
+  // by our vintrin-explorer local plugin (plan/folder-nav-over-id-urls.md §3.1).
+  { source: "explorer", enabled: false },
   { source: "graph", enabled: true, layout: { position: "right", priority: 10 } },
   {
     source: "search",
