@@ -69,7 +69,11 @@ export function filterOwnErrors(errors, base) {
   return errors
     .filter((text) => !EXTERNAL_HOSTS.some((host) => text.includes(host)))
     .filter((text) => {
-      const urls = text.match(/https?:\/\/[^\s):]+/g) ?? []
+      // `:` must stay IN the match: `base` always carries a port
+      // (http://127.0.0.1:<port>), and startsWith is unharmed by a trailing
+      // stack-trace `:line:col`. Excluding it silently dropped ALL own-origin
+      // errors — the checks passed while real viewer errors went unseen.
+      const urls = text.match(/https?:\/\/[^\s)]+/g) ?? []
       return urls.length === 0 || urls.some((url) => url.startsWith(base))
     })
 }
