@@ -11,31 +11,39 @@ import type { SiteConfig, ThemeColorOverrides, ThemeTypography } from "./siteCon
  * The plugin list is our curated default set — see PLUGIN_ENTRIES for the
  * deliberate deviations from stock Quartz and why.
  */
+/**
+ * Absolute dirs of OUR local Quartz plugins, registered as local plugin
+ * sources (the config is a per-build artifact — machine-specific paths are
+ * fine and unambiguous). Defaults resolve relative to this repo.
+ */
+export interface LocalPluginDirs {
+  /** Canvas pageType+emitter plugin (ADR 0001). */
+  canvasPluginDir: string
+  /** Folder-shaped Explorer component (plan/folder-nav-over-id-urls.md §4.2). */
+  explorerPluginDir: string
+  /** Folder-shaped Breadcrumbs component (plan/folder-nav-over-id-urls.md §4.3). */
+  breadcrumbsPluginDir: string
+  /** Zen-mode toolbar toggle (plan/zen-mode.md). */
+  zenModePluginDir: string
+}
+
 export class QuartzConfigGenerator {
-  /**
-   * YAML text ready to be written as `quartz.config.yaml` in the Quartz root.
-   * @param canvasPluginDir our local canvas plugin directory, registered as a
-   *   local plugin source (absolute path — the config is a per-build artifact,
-   *   machine-specific paths are fine and unambiguous).
-   * @param zenModePluginDir our local zen-mode toolbar-toggle plugin directory,
-   *   registered the same way.
-   */
-  static generateYaml(
-    site: SiteConfig,
-    canvasPluginDir: string = defaultLocalPluginDir("canvas-plugin"),
-    zenModePluginDir: string = defaultLocalPluginDir("zen-mode"),
-  ): string {
-    return stringifyYaml(
-      QuartzConfigGenerator.generateConfigObject(site, canvasPluginDir, zenModePluginDir),
-    )
+  /** YAML text ready to be written as `quartz.config.yaml` in the Quartz root. */
+  static generateYaml(site: SiteConfig, localPlugins: Partial<LocalPluginDirs> = {}): string {
+    return stringifyYaml(QuartzConfigGenerator.generateConfigObject(site, localPlugins))
   }
 
   /** The config as a plain object (exposed for unit tests). */
   static generateConfigObject(
     site: SiteConfig,
-    canvasPluginDir: string = defaultLocalPluginDir("canvas-plugin"),
-    zenModePluginDir: string = defaultLocalPluginDir("zen-mode"),
+    localPlugins: Partial<LocalPluginDirs> = {},
   ): Record<string, unknown> {
+    const canvasPluginDir = localPlugins.canvasPluginDir ?? defaultLocalPluginDir("canvas-plugin")
+    const zenModePluginDir = localPlugins.zenModePluginDir ?? defaultLocalPluginDir("zen-mode")
+    const explorerPluginDir =
+      localPlugins.explorerPluginDir ?? defaultLocalPluginDir("vintrin-explorer")
+    const breadcrumbsPluginDir =
+      localPlugins.breadcrumbsPluginDir ?? defaultLocalPluginDir("vintrin-breadcrumbs")
     return {
       configuration: {
         pageTitle: site.title,
@@ -77,6 +85,20 @@ export class QuartzConfigGenerator {
           source: zenModePluginDir,
           enabled: true,
           layout: { position: "left", priority: 40, group: "toolbar" },
+        },
+        // Folder-shaped Explorer over stable-id URLs; replaces the stock
+        // explorer disabled above (plan/folder-nav-over-id-urls.md, spike C).
+        {
+          source: explorerPluginDir,
+          enabled: true,
+          layout: { position: "left", priority: 50 },
+        },
+        // Folder-shaped breadcrumbs; replaces the stock breadcrumbs disabled
+        // above (plan/folder-nav-over-id-urls.md §4.3).
+        {
+          source: breadcrumbsPluginDir,
+          enabled: true,
+          layout: { position: "beforeBody", priority: 5, condition: "not-index" },
         },
       ],
       layout: LAYOUT,
@@ -163,6 +185,12 @@ interface PluginEntry {
  *   bases-page        DISABLED  .base files are out of MVP scope.
  *   footer            DISABLED  only renders "Created with Quartz vX (c) YEAR"
  *                               branding (we configure no links) — unwanted.
+ *   explorer          DISABLED  slug-trie tree = flat /n/ listing; replaced by
+ *                               OUR vintrin-explorer (folder-nav plan §3.1).
+ *   breadcrumbs       DISABLED  slug-trie crumbs; replaced by OUR
+ *                               vintrin-breadcrumbs (folder-nav plan §4.3).
+ *   folder-page       DISABLED  collapse-only folders have no URLs; its only
+ *                               output was a flat listing at /n/.
  *
  * Plugins that are disabled in stock Quartz (citations, hard-line-breaks,
  * ox-hugo, roam, comments, recent-notes, stacked-pages, tag-list) plus
@@ -213,9 +241,13 @@ const PLUGIN_ENTRIES: PluginEntry[] = [
   { source: "cname", enabled: false },
   { source: "canvas-page", enabled: false },
   { source: "content-page", enabled: true },
-  { source: "folder-page", enabled: true },
+  // folder-page DISABLED: no folder URLs with collapse-only folders; its only
+  // output was a flat meaningless listing at /n/ (folder-nav plan §2).
+  { source: "folder-page", enabled: false },
   { source: "tag-page", enabled: true },
-  { source: "explorer", enabled: true, layout: { position: "left", priority: 50 } },
+  // explorer DISABLED: builds its tree from slugs -> flat n/ listing; replaced
+  // by our vintrin-explorer local plugin (plan/folder-nav-over-id-urls.md §3.1).
+  { source: "explorer", enabled: false },
   { source: "graph", enabled: true, layout: { position: "right", priority: 10 } },
   {
     source: "search",
@@ -236,11 +268,9 @@ const PLUGIN_ENTRIES: PluginEntry[] = [
     enabled: true,
     layout: { position: "left", priority: 35, group: "toolbar" },
   },
-  {
-    source: "breadcrumbs",
-    enabled: true,
-    layout: { position: "beforeBody", priority: 5, condition: "not-index" },
-  },
+  // breadcrumbs DISABLED: slug-trie crumbs (Home > n > docid); replaced by OUR
+  // vintrin-breadcrumbs local plugin (folder-nav plan §3.1, §4.3).
+  { source: "breadcrumbs", enabled: false },
   { source: "footer", enabled: false },
   {
     source: "spacer",
@@ -275,7 +305,7 @@ const LAYOUT: Record<string, unknown> = {
   byPageType: {
     "404": { positions: { beforeBody: [], left: [], right: [] } },
     content: {},
-    folder: { exclude: ["reader-mode"], positions: { right: [] } },
+    // No `folder` entry: folder-page is disabled (collapse-only folders).
     tag: { exclude: ["reader-mode"], positions: { right: [] } },
     // Our canvas pageType (layout name declared in canvas-plugin/index.js).
     // Keeps default chrome — graph + backlinks on canvas pages is a

@@ -36,11 +36,14 @@ export default function VintrinCanvasPage() {
 
     /** pageType phase: one VirtualPage per staged canvas. */
     generate({ ctx, content }) {
-      return processAllCanvases(ctx, content).map(({ slug, title, rewrite }) => ({
+      return processAllCanvases(ctx, content).map(({ slug, title, vintrinPath, rewrite }) => ({
         slug,
         title,
         data: {
-          frontmatter: { title, tags: [] },
+          // vintrinPath (engine-injected ORIGINAL vault path) passes through
+          // so folder-shaped explorer/breadcrumbs place canvases correctly
+          // (plan/folder-nav-over-id-urls.md §4.4).
+          frontmatter: { title, tags: [], vintrinPath },
           // Outbound links register the canvas in backlinks/graph/contentIndex.
           links: rewrite.links,
           // Text-card plain text -> search index (contentIndex `content`).
@@ -94,7 +97,11 @@ function processAllCanvases(ctx, content) {
   const contentBySlug = new Map(
     content.map(([tree, file]) => [file.data.slug, { tree, data: file.data }]),
   )
-  const results = []
+  // Pass 1: parse every staged canvas and collect titles. Staged canvas
+  // basenames are docids (plan/id-based-publishing.md), so display titles come
+  // from metadata.frontmatter.title (engine-injected), basename as fallback.
+  const parsedCanvases = []
+  const titleBySlug = new Map()
   for (const filePath of ctx.allFiles) {
     if (!filePath.endsWith(CANVAS_EXTENSION)) continue
     let canvas
@@ -106,16 +113,25 @@ function processAllCanvases(ctx, content) {
       continue
     }
     const slug = vaultPathToSlug(filePath)
+    const title =
+      canvas.metadata?.frontmatter?.title ?? path.basename(filePath, CANVAS_EXTENSION)
+    titleBySlug.set(slug, title)
+    parsedCanvases.push({ filePath, slug, title, canvas })
+  }
+  // Pass 2: rewrite, with cross-canvas titles available for canvas cards.
+  const results = []
+  for (const { filePath, slug, title, canvas } of parsedCanvases) {
+    const vintrinPath = canvas.metadata?.frontmatter?.vintrinPath
     const rewrite = new CanvasRewriter({
       canvasSlug: slug,
       allSlugs: ctx.allSlugs,
       noteLookup: (noteSlug) => contentBySlug.get(noteSlug),
+      canvasTitleLookup: (canvasSlug) => titleBySlug.get(canvasSlug),
     }).rewrite(canvas)
     for (const warning of rewrite.warnings) {
       console.warn(`[vintrin-canvas-page] ${warning}`)
     }
-    const title = path.basename(filePath, CANVAS_EXTENSION)
-    results.push({ filePath, slug, title, rewrite })
+    results.push({ filePath, slug, title, vintrinPath, rewrite })
   }
   return results
 }

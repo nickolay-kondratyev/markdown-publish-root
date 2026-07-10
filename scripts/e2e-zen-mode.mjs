@@ -13,6 +13,7 @@ import fs from "node:fs"
 import path from "node:path"
 import {
   buildTestVaultSite,
+  docIdOf,
   filterOwnErrors,
   launchBrowserPage,
   makeChecker,
@@ -64,8 +65,9 @@ const measure = () =>
   })
 
 // The long-form fixture (test-vault/notes/deep-dive.md): TOC, table, code —
-// the page zen mode is FOR.
-const NOTE_URL = `${base}/notes/deep-dive`
+// the page zen mode is FOR. Pages live at stable-id URLs (plan/id-based-publishing.md).
+const GETTING_STARTED_ID = docIdOf("notes/getting-started.md")
+const NOTE_URL = `${base}/n/${docIdOf("notes/deep-dive.md")}`
 await page.goto(NOTE_URL)
 await page.waitForSelector("button.zenmode")
 
@@ -116,8 +118,8 @@ check("breadcrumbs restored", restored.breadcrumbsVisible)
 
 // --- 4. Persistence: SPA navigation, then full reload ------------------------
 await page.click("button.zenmode") // zen back ON
-await page.click('article a[href*="getting-started"]') // Quartz SPA nav
-await page.waitForURL("**/notes/getting-started")
+await page.click(`article a[href*="${GETTING_STARTED_ID}"]`) // Quartz SPA nav
+await page.waitForURL(`**/n/${GETTING_STARTED_ID}`)
 await page.waitForSelector("button.zenmode")
 const afterNav = await measure()
 check("zen survives SPA navigation", afterNav.mode === "on")

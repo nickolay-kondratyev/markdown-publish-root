@@ -17,8 +17,14 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const VAULT_DIR = path.join(REPO_ROOT, "test-vault")
 const OUT_DIR = path.join(REPO_ROOT, ".build", "integration-canvas-out")
 
-const MAIN_CANVAS_PAGE = "canvases/main.canvas.html"
-const SECOND_CANVAS_PAGE = "canvases/second.canvas.html"
+// Stable-id slugs (plan/id-based-publishing.md): read from the stamped fixtures.
+const MAIN_CANVAS_SLUG = `n/${docIdOf("canvases/main.canvas")}.canvas`
+const SECOND_CANVAS_SLUG = `n/${docIdOf("canvases/second.canvas")}.canvas`
+const GETTING_STARTED_SLUG = `n/${docIdOf("notes/getting-started.md")}`
+const ARCHITECTURE_SLUG = `n/${docIdOf("notes/architecture.md")}`
+
+const MAIN_CANVAS_PAGE = `${MAIN_CANVAS_SLUG}.html`
+const SECOND_CANVAS_PAGE = `${SECOND_CANVAS_SLUG}.html`
 
 interface CanvasPayload {
   canvas: { nodes: any[]; edges: any[] }
@@ -40,7 +46,7 @@ describe("SiteBuilder integration — builds test-vault WITH canvases", () => {
 
   after(() => fs.rmSync(OUT_DIR, { recursive: true, force: true }))
 
-  test("THEN a page is emitted for each canvas", () => {
+  test("THEN a page is emitted for each canvas under its stable-id URL", () => {
     assert.deepEqual(
       [MAIN_CANVAS_PAGE, SECOND_CANVAS_PAGE].map((p) => fs.existsSync(path.join(OUT_DIR, p))),
       [true, true],
@@ -54,15 +60,19 @@ describe("SiteBuilder integration — builds test-vault WITH canvases", () => {
   test("THEN the content index lists both canvases (graph/search)", () => {
     const contentIndex = readContentIndex()
     assert.deepEqual(
-      ["canvases/main.canvas", "canvases/second.canvas"].map((slug) => slug in contentIndex),
+      [MAIN_CANVAS_SLUG, SECOND_CANVAS_SLUG].map((slug) => slug in contentIndex),
       [true, true],
     )
   })
 
+  test("THEN the canvas page title is the original basename, NOT the docid", () => {
+    assert.equal(readContentIndex()[MAIN_CANVAS_SLUG].title, "main")
+  })
+
   test("THEN the main canvas registers its outbound links (backlinks/graph)", () => {
-    const links: string[] = readContentIndex()["canvases/main.canvas"].links
+    const links: string[] = readContentIndex()[MAIN_CANVAS_SLUG].links
     assert.deepEqual(
-      ["notes/getting-started", "notes/architecture", "canvases/second.canvas"].map((slug) =>
+      [GETTING_STARTED_SLUG, ARCHITECTURE_SLUG, SECOND_CANVAS_SLUG].map((slug) =>
         links.includes(slug),
       ),
       [true, true, true],
@@ -70,21 +80,25 @@ describe("SiteBuilder integration — builds test-vault WITH canvases", () => {
   })
 
   test("THEN the canvas does NOT register a link to the private note", () => {
-    const links: string[] = readContentIndex()["canvases/main.canvas"].links
+    const links: string[] = readContentIndex()[MAIN_CANVAS_SLUG].links
     assert.equal(links.some((l) => l.includes(PRIVATE_PATH_MARKER)), false)
   })
 
   test("THEN a markdown note's [[main.canvas]] wikilink resolves to the emitted canvas page", () => {
-    const html = fs.readFileSync(path.join(OUT_DIR, "notes/getting-started.html"), "utf-8")
-    const href = html.match(/href="([^"]*main\.canvas[^"#]*)"/)?.[1]
-    assert.notEqual(href, undefined, "expected a main.canvas href in notes/getting-started.html")
-    const target = resolveFromPage("notes/getting-started", href as string)
+    const html = fs.readFileSync(path.join(OUT_DIR, `${GETTING_STARTED_SLUG}.html`), "utf-8")
+    const escapedSlugTail = `${docIdOf("canvases/main.canvas")}\\.canvas`
+    const href = html.match(new RegExp(`href="([^"]*${escapedSlugTail}[^"#]*)"`))?.[1]
+    assert.notEqual(href, undefined, "expected a main-canvas href in the getting-started page")
+    const target = resolveFromPage(GETTING_STARTED_SLUG, href as string)
     assert.equal(fs.existsSync(path.join(OUT_DIR, `${target}.html`)), true)
   })
 
   test("THEN the second canvas page lists the main canvas in its backlinks", () => {
     const html = fs.readFileSync(path.join(OUT_DIR, SECOND_CANVAS_PAGE), "utf-8")
-    assert.match(html, /href="\.\.\/canvases\/main\.canvas"/)
+    const backlink = [...html.matchAll(/href="([^"#]+)"/g)]
+      .map((m) => resolveFromPage(SECOND_CANVAS_SLUG, m[1] as string))
+      .includes(path.normalize(MAIN_CANVAS_SLUG))
+    assert.equal(backlink, true)
   })
 
   test("THEN the leak sentinel appears NOWHERE in the output", () => {
@@ -113,7 +127,7 @@ describe("SiteBuilder integration — builds test-vault WITH canvases", () => {
   })
 
   test("THEN every content URL (attachments + per-node fragmentUrls) resolves to an emitted file (viewer renders 404 bodies otherwise)", () => {
-    for (const page of ["canvases/main.canvas", "canvases/second.canvas"]) {
+    for (const page of [MAIN_CANVAS_SLUG, SECOND_CANVAS_SLUG]) {
       const payload = readCanvasPayload(`${page}.html`)
       const urls = [
         ...Object.values(payload.attachments),
@@ -137,7 +151,7 @@ describe("SiteBuilder integration — builds test-vault WITH canvases", () => {
 
   test("THEN the #Installation subpath fragment contains ONLY that section", () => {
     const fragment = fs.readFileSync(
-      path.join(OUT_DIR, "canvases/main.canvas.fragments/file-note-subpath.html"),
+      path.join(OUT_DIR, `${MAIN_CANVAS_SLUG}.fragments/file-note-subpath.html`),
       "utf-8",
     )
     assert.deepEqual(
@@ -152,7 +166,7 @@ describe("SiteBuilder integration — builds test-vault WITH canvases", () => {
 
   test("THEN the full-note fragment carries Quartz-rendered content with the block anchor", () => {
     const fragment = fs.readFileSync(
-      path.join(OUT_DIR, "canvases/main.canvas.fragments/file-note-full.html"),
+      path.join(OUT_DIR, `${MAIN_CANVAS_SLUG}.fragments/file-note-full.html`),
       "utf-8",
     )
     assert.match(fragment, /id="engine-def"/)
@@ -160,57 +174,79 @@ describe("SiteBuilder integration — builds test-vault WITH canvases", () => {
 
   test("THEN note-fragment links resolve to emitted pages from the CANVAS page's URL", () => {
     const fragment = fs.readFileSync(
-      path.join(OUT_DIR, "canvases/main.canvas.fragments/file-note-full.html"),
+      path.join(OUT_DIR, `${MAIN_CANVAS_SLUG}.fragments/file-note-full.html`),
       "utf-8",
     )
     // architecture.md links [[getting-started]]; injected into the canvas page,
-    // its rebased href must land on the note page.
+    // its rebased href must land on the note's stable-id page.
     const hrefs = [...fragment.matchAll(/href="([^"#]+)"/g)]
       .map((m) => m[1] as string)
       .filter((href) => !href.startsWith("http"))
-    const resolved = hrefs.map((href) => resolveFromPage("canvases/main.canvas", href))
+    const resolved = hrefs.map((href) => resolveFromPage(MAIN_CANVAS_SLUG, href))
     assert.equal(
-      resolved.includes(path.normalize("notes/getting-started")),
+      resolved.includes(path.normalize(GETTING_STARTED_SLUG)),
       true,
-      `expected a rebased link to notes/getting-started, got: ${resolved.join(", ")}`,
+      `expected a rebased link to ${GETTING_STARTED_SLUG}, got: ${resolved.join(", ")}`,
     )
   })
 
   test("THEN the open-note affordance targets resolve to emitted pages", () => {
     const payload = readCanvasPayload(MAIN_CANVAS_PAGE)
     const broken = Object.values(payload.noteLinks)
-      .map((link) => resolveFromPage("canvases/main.canvas", link.href.split("#")[0] as string))
+      .map((link) => resolveFromPage(MAIN_CANVAS_SLUG, link.href.split("#")[0] as string))
       .filter((sitePath) => !fs.existsSync(path.join(OUT_DIR, `${sitePath}.html`)))
     assert.deepEqual(broken, [])
   })
 
-  test("THEN text cards carry prebaked HTML with resolved wikilinks", () => {
+  test("THEN the open-note affordance shows the human title, not the docid", () => {
+    const payload = readCanvasPayload(MAIN_CANVAS_PAGE)
+    const titles = Object.values(payload.noteLinks).map((link) => link.title)
+    assert.equal(titles.includes("Architecture"), true, `titles: ${titles.join(", ")}`)
+  })
+
+  test("THEN text cards carry prebaked HTML with resolved stable-id wikilinks", () => {
     const node = mainCanvasNode("text-welcome")
     assert.deepEqual(
       {
         renderedHeading: /<h1[^>]*>/.test(node.text),
-        noteLink: node.text.includes("../notes/getting-started"),
-        canvasLink: node.text.includes("../canvases/second.canvas"),
+        noteLink: node.text.includes(docIdOf("notes/getting-started.md")),
+        canvasLink: node.text.includes(`${docIdOf("canvases/second.canvas")}.canvas`),
+        displayText: node.text.includes(">getting-started<"),
       },
-      { renderedHeading: true, noteLink: true, canvasLink: true },
+      { renderedHeading: true, noteLink: true, canvasLink: true, displayText: true },
     )
   })
 
   test("THEN the canvas->canvas card is a navigable link card to the second canvas", () => {
     const node = mainCanvasNode("file-canvas-card")
     assert.deepEqual(
-      { type: node.type, navigable: node.text.includes('href="../canvases/second.canvas"') },
-      { type: "text", navigable: true },
+      {
+        type: node.type,
+        navigable: node.text.includes(`${docIdOf("canvases/second.canvas")}.canvas`),
+        humanTitle: node.text.includes(">second<"),
+      },
+      { type: "text", navigable: true, humanTitle: true },
     )
   })
 
   test("THEN canvas search text (text cards) lands in the content index", () => {
-    const entry = readContentIndex()["canvases/main.canvas"]
+    const entry = readContentIndex()[MAIN_CANVAS_SLUG]
     assert.match(entry.content, /Main Canvas/)
   })
 })
 
 // --- helpers -----------------------------------------------------------------
+
+/** Stable id of a fixture doc, read from the stamped vault (source of truth). */
+function docIdOf(vaultRelPath: string): string {
+  const content = fs.readFileSync(path.join(VAULT_DIR, vaultRelPath), "utf-8")
+  if (vaultRelPath.endsWith(".canvas")) {
+    return JSON.parse(content).metadata.frontmatter.id
+  }
+  const match = content.match(/^id: (docid_[0-9a-z]{21}_e)$/m)
+  assert.notEqual(match, null, `no docid in fixture ${vaultRelPath}`)
+  return (match as RegExpMatchArray)[1] as string
+}
 
 function readContentIndex(): Record<string, any> {
   return JSON.parse(fs.readFileSync(path.join(OUT_DIR, "static/contentIndex.json"), "utf-8"))

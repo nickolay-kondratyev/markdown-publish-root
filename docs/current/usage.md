@@ -7,6 +7,20 @@ Publish an Obsidian vault (markdown + `.canvas`) as a static website.
 - Node >= 22 (`source ~/.nvm/nvm.sh && nvm use 26`)
 - One-time bootstrap: `npm install && npm run setup` (clones the pinned Quartz build engine)
 
+## Stamp stable ids (once per vault, then idempotent)
+
+Every published doc page is served at a stable-id URL (`/n/<docid>`,
+`/n/<docid>.canvas`) read from md frontmatter `id:` / canvas
+`metadata.frontmatter.id` — renames never change published URLs. A publishable
+doc without an id **fails the build early** with the file named. Stamp ids:
+
+```bash
+make vault-add-ids VAULT=<vault-dir>    # or: node scripts/add-doc-ids.mjs <vault-dir> [--dry-run]
+```
+
+Idempotent; existing valid ids are never touched; malformed ids error out
+instead of being overwritten.
+
 ## Build
 
 ```bash

@@ -91,7 +91,9 @@ export class SiteBuilder {
       }
 
       this.runner.writeConfig(
-        QuartzConfigGenerator.generateYaml(options.siteConfig, this.canvasPluginDir),
+        QuartzConfigGenerator.generateYaml(options.siteConfig, {
+          canvasPluginDir: this.canvasPluginDir,
+        }),
       )
       const buildOutput = this.runner.build(path.resolve(stagingDir), path.resolve(options.outDir))
       assertQuartzSawStagedContent(buildOutput.stdout, staging, stagingDir)

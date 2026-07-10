@@ -38,6 +38,18 @@ the attachments map is complete for every remaining MEDIA file node, and every
 note card carries its own `fragmentUrl` (the viewer shows "Failed to load
 content." otherwise).
 
+**Id-based publishing (ADR 0004):** staged canvas basenames are docids, so
+display names come from `metadata.frontmatter.title` (engine-injected from the
+original basename; `parseCanvas` preserves top-level `metadata`). The canvas
+page title and canvas->canvas card labels use it — basename is only a fallback.
+The plugin itself stays id-unaware: it renders whatever staged names/links the
+engine baked.
+
+**Folder navigation (ADR 0005):** `generate()` passes the engine-injected
+`metadata.frontmatter.vintrinPath` (ORIGINAL vault path) through into each
+virtual page's frontmatter, so the folder-shaped `vintrin-explorer` /
+`vintrin-breadcrumbs` components place canvas pages like any doc.
+
 **Privacy:** the plugin only ever sees the staging directory (publishable files
 only), so it CANNOT distinguish a private note from a missing one — both get
 the same placeholder, which also means the output is no oracle for whether an

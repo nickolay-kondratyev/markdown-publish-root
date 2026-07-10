@@ -4,6 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { after, before, describe, test } from "node:test"
+import { DocIdValidationError } from "../../src/idMap.ts"
 import { SiteBuilder } from "../../src/siteBuilder.ts"
 import { SiteConfigParser, type SiteConfig } from "../../src/siteConfig.ts"
 import {
@@ -74,6 +75,38 @@ describe("Validation pass integration — strictLinks escalates the known dead l
       }),
       (error: Error) =>
         error instanceof BrokenInternalLinksError && /private-secret/.test(error.message),
+    )
+  })
+})
+
+describe("Id validation integration — a publishable doc without an id FAILS the build early", () => {
+  let workDir: string
+
+  // GIVEN a COPY of the fixture vault where one note's id line was removed
+  before(() => {
+    workDir = fs.mkdtempSync(path.join(os.tmpdir(), "missing-id-integration-test-"))
+    const vaultDir = path.join(workDir, "vault")
+    fs.cpSync(VAULT_DIR, vaultDir, { recursive: true })
+    const notePath = path.join(vaultDir, "notes/getting-started.md")
+    const withoutId = fs
+      .readFileSync(notePath, "utf-8")
+      .replace(/^id: docid_[0-9a-z]{21}_e\r?\n/m, "")
+    fs.writeFileSync(notePath, withoutId)
+  })
+
+  after(() => fs.rmSync(workDir, { recursive: true, force: true }))
+
+  test("WHEN building THEN DocIdValidationError names the offending file", async () => {
+    await assert.rejects(
+      new SiteBuilder().buildSite({
+        vaultDir: path.join(workDir, "vault"),
+        siteConfig: fullSiteConfig(),
+        outDir: path.join(workDir, "out"),
+      }),
+      (error: Error) =>
+        error instanceof DocIdValidationError &&
+        error.message.includes("notes/getting-started.md") &&
+        error.message.includes("missing id"),
     )
   })
 })

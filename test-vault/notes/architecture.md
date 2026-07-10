@@ -1,4 +1,5 @@
 ---
+id: docid_4we0he3ljgl9ste90pl2m_e
 title: Architecture
 publish: true
 ---

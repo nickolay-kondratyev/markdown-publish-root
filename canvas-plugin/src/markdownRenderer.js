@@ -19,13 +19,7 @@ import remarkParse from "remark-parse"
 import remarkRehype from "remark-rehype"
 import { unified } from "unified"
 import { visit, SKIP } from "unist-util-visit"
-
-// Obsidian wikilink syntax (equivalent to Quartz ofm's parser):
-//   (!?)          optional embed marker
-//   ([^\[\]|#\\]+) target (required here; bare "[[#h]]" self-references are out of MVP scope)
-//   (#[^\[\]|\\]*)? optional "#anchor" (heading text or ^block-id)
-//   (?:\|([^\[\]]*))? optional "|alias"
-const WIKILINK_REGEX = /(!?)\[\[([^\[\]|#\\]+)(#[^\[\]|\\]*)?(?:\|([^\[\]]*))?\]\]/g
+import { WIKILINK_REGEX } from "./wikilinkGrammar.js"
 
 const IMAGE_EMBED_REGEX = /\.(png|jpg|jpeg|gif|svg|webp|avif|bmp|ico)$/i
 

@@ -264,7 +264,12 @@ describe("parseCanvas", () => {
   })
 
   test("GIVEN an empty object WHEN parsing THEN empty arrays are defaulted", () => {
-    assert.deepEqual(parseCanvas("{}"), { nodes: [], edges: [] })
+    assert.deepEqual(parseCanvas("{}"), { nodes: [], edges: [], metadata: undefined })
+  })
+
+  test("GIVEN top-level metadata WHEN parsing THEN it is preserved (docid/title carrier)", () => {
+    const parsed = parseCanvas('{"nodes":[],"edges":[],"metadata":{"frontmatter":{"id":"x"}}}')
+    assert.deepEqual(parsed.metadata, { frontmatter: { id: "x" } })
   })
 
   test("GIVEN invalid JSON WHEN parsing THEN a CanvasParseError is thrown", () => {

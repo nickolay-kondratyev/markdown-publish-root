@@ -11,6 +11,16 @@ import { SiteBuilder, SiteConfigParser } from "../../engine/src/index.ts"
 import { PreviewServer } from "../../cli/src/preview/previewServer.ts"
 
 export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..")
+
+/**
+ * Doc pages live at stable-id URLs (plan/id-based-publishing.md); read the
+ * ids from the stamped test-vault fixtures — the vault is the source of truth.
+ */
+export function docIdOf(vaultRelPath) {
+  const content = fs.readFileSync(path.join(repoRoot, "test-vault", vaultRelPath), "utf-8")
+  if (vaultRelPath.endsWith(".canvas")) return JSON.parse(content).metadata.frontmatter.id
+  return content.match(/^id: (docid_[0-9a-z]{21}_e)$/m)[1]
+}
 export const CHROMIUM_PATH = "/usr/bin/chromium"
 // External hosts stock Quartz / embedded link-card pages reference (fonts/katex
 // CDNs); unreachable in a sandboxed/offline run, so failures for THEM are not

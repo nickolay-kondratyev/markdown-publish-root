@@ -84,12 +84,56 @@ describe("QuartzConfigGenerator — plugin set", () => {
   })
 
   test("GIVEN a canvas plugin dir WHEN generating THEN it is registered as an enabled local plugin source", () => {
-    const doc = QuartzConfigGenerator.generateConfigObject(
-      siteConfig(),
-      "/abs/path/canvas-plugin",
-    ) as ConfigDoc
+    const doc = QuartzConfigGenerator.generateConfigObject(siteConfig(), {
+      canvasPluginDir: "/abs/path/canvas-plugin",
+    }) as ConfigDoc
     const local = doc.plugins.find((p) => p.source === "/abs/path/canvas-plugin")
     assert.deepEqual({ enabled: local?.enabled }, { enabled: true })
+  })
+
+  test("GIVEN any site WHEN generating THEN stock explorer is disabled (replaced by vintrin-explorer)", () => {
+    assert.equal(pluginEntry(generate(), "explorer")?.enabled, false)
+  })
+
+  test("GIVEN an explorer plugin dir WHEN generating THEN it is an enabled LEFT-sidebar local source", () => {
+    const doc = QuartzConfigGenerator.generateConfigObject(siteConfig(), {
+      explorerPluginDir: "/abs/path/vintrin-explorer",
+    }) as ConfigDoc
+    const local = doc.plugins.find((p) => p.source === "/abs/path/vintrin-explorer") as
+      | { enabled: boolean; layout?: { position: string; priority: number } }
+      | undefined
+    assert.deepEqual(
+      { enabled: local?.enabled, layout: local?.layout },
+      { enabled: true, layout: { position: "left", priority: 50 } },
+    )
+  })
+
+  test("GIVEN any site WHEN generating THEN stock breadcrumbs is disabled (replaced by vintrin-breadcrumbs)", () => {
+    assert.equal(pluginEntry(generate(), "breadcrumbs")?.enabled, false)
+  })
+
+  test("GIVEN a breadcrumbs plugin dir WHEN generating THEN it is an enabled beforeBody local source excluded on the home page", () => {
+    const doc = QuartzConfigGenerator.generateConfigObject(siteConfig(), {
+      breadcrumbsPluginDir: "/abs/path/vintrin-breadcrumbs",
+    }) as ConfigDoc
+    const local = doc.plugins.find((p) => p.source === "/abs/path/vintrin-breadcrumbs") as
+      | { enabled: boolean; layout?: Record<string, unknown> }
+      | undefined
+    assert.deepEqual(
+      { enabled: local?.enabled, layout: local?.layout },
+      {
+        enabled: true,
+        layout: { position: "beforeBody", priority: 5, condition: "not-index" },
+      },
+    )
+  })
+
+  test("GIVEN any site WHEN generating THEN folder-page is disabled (no folder URLs, collapse-only folders)", () => {
+    assert.equal(pluginEntry(generate(), "folder-page")?.enabled, false)
+  })
+
+  test("GIVEN any site WHEN generating THEN the layout has NO folder pageType entry", () => {
+    assert.equal(generate().layout.byPageType.folder, undefined)
   })
 
   test("GIVEN any site WHEN generating THEN the layout declares the canvas pageType", () => {
@@ -119,11 +163,9 @@ describe("QuartzConfigGenerator — zen-mode plugin", () => {
   }
 
   test("GIVEN a zen-mode plugin dir WHEN generating THEN it is an enabled local source", () => {
-    const doc = QuartzConfigGenerator.generateConfigObject(
-      siteConfig(),
-      "/abs/path/canvas-plugin",
-      "/abs/path/zen-mode",
-    ) as ConfigDoc
+    const doc = QuartzConfigGenerator.generateConfigObject(siteConfig(), {
+      zenModePluginDir: "/abs/path/zen-mode",
+    }) as ConfigDoc
     assert.equal(doc.plugins.find((p) => p.source === "/abs/path/zen-mode")?.enabled, true)
   })
 

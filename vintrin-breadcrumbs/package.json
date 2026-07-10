@@ -1,0 +1,34 @@
+{
+  "name": "vintrin-breadcrumbs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Quartz 5 component plugin: folder-shaped breadcrumbs over stable-id URLs — Home > folder segments (plain text) > title, derived from the engine-injected vintrinPath frontmatter.",
+  "type": "module",
+  "quartz": {
+    "name": "vintrin-breadcrumbs",
+    "displayName": "Vintrin Breadcrumbs",
+    "category": "component",
+    "version": "0.1.0",
+    "quartzVersion": ">=5.0.0",
+    "dependencies": [],
+    "defaultEnabled": true,
+    "components": {
+      "VintrinBreadcrumbs": {
+        "displayName": "Vintrin Breadcrumbs",
+        "defaultPosition": "beforeBody",
+        "defaultPriority": 5
+      }
+    },
+    "optionSchema": {
+      "spacerSymbol": {
+        "type": "string"
+      },
+      "rootName": {
+        "type": "string"
+      },
+      "showCurrentPage": {
+        "type": "boolean"
+      }
+    }
+  }
+}

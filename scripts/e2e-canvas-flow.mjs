@@ -12,6 +12,7 @@ import fs from "node:fs"
 import path from "node:path"
 import {
   buildTestVaultSite,
+  docIdOf,
   filterOwnErrors,
   launchBrowserPage,
   makeChecker,
@@ -20,6 +21,13 @@ import {
 } from "./lib/e2eHarness.mjs"
 
 const { check, summarize } = makeChecker()
+
+// Stable-id slugs (plan/id-based-publishing.md) for every page this flow visits.
+const MAIN_CANVAS_SLUG = `n/${docIdOf("canvases/main.canvas")}.canvas`
+const SECOND_CANVAS_SLUG = `n/${docIdOf("canvases/second.canvas")}.canvas`
+const SPARSE_CANVAS_SLUG = `n/${docIdOf("canvases/sparse.canvas")}.canvas`
+const GETTING_STARTED_SLUG = `n/${docIdOf("notes/getting-started.md")}`
+const ARCHITECTURE_SLUG = `n/${docIdOf("notes/architecture.md")}`
 
 console.log("building test-vault (canvases included)...")
 const { siteDir } = await buildTestVaultSite("e2e-canvas-flow-site")
@@ -71,7 +79,7 @@ async function panPane(dx, dy) {
 }
 
 // === Phase 1: render fidelity (no interactions yet) ==========================
-await page.goto(`${base}/canvases/main.canvas`)
+await page.goto(`${base}/${MAIN_CANVAS_SLUG}`)
 await waitForCanvas("text-welcome")
 await page.evaluate(() => {
   window.__spaMarker = true
@@ -168,7 +176,7 @@ check(
 check("edge preset color '5' resolves to the cyan stroke", dom.toCanvasStroke.includes("#53dfdd") || dom.toCanvasStroke.includes("83, 223, 221"), dom.toCanvasStroke)
 check("node preset color '1' resolves on the card", dom.welcomeColorVar.trim() === "#fb464c", dom.welcomeColorVar)
 check("node hex color passes through", dom.hexColorVar.trim() === "#8a2be2", dom.hexColorVar)
-check("text card carries prebaked HTML with resolved wikilink", dom.welcomeHtml.includes('href="../notes/getting-started"'))
+check("text card carries prebaked HTML with resolved wikilink", dom.welcomeHtml.includes(`href="../${GETTING_STARTED_SLUG}"`))
 check("group renders its label", dom.groupLabel === "Intro Group")
 check("group stays behind its members (z-order = array order)", dom.groupZ < dom.welcomeZ, `${dom.groupZ} vs ${dom.welcomeZ}`)
 check("minimap present with node dots", dom.minimap && dom.minimapNodes >= 8, `nodes=${dom.minimapNodes}`)
@@ -188,7 +196,7 @@ check("private card is a contentless placeholder", dom.privateText === "Private 
 check("no private vault path anywhere in the DOM", !dom.bodyHasPrivatePath)
 check("no leak sentinel anywhere in the DOM", !dom.bodyHasSentinel)
 check("note card fetched its prerendered fragment", dom.noteFullText.includes("pure build engine"))
-check("open-note affordance targets the note page", dom.noteHeaderHref === "../notes/architecture")
+check("open-note affordance targets the note page", dom.noteHeaderHref === `../${ARCHITECTURE_SLUG}`)
 check("subpath header shows 'title > subpath'", dom.subpathHeader === "Getting Started > Installation")
 check(
   "subpath card renders ONLY the referenced section",
@@ -254,7 +262,7 @@ await page.waitForTimeout(300)
 await panPane(-250, -200) // clear file-canvas-card from under the minimap overlay
 await twoClickOn("file-canvas-card", "a.canvas-card-link")
 await waitForCanvas("text-second")
-check("canvas card navigates to the second canvas", page.url().endsWith("/canvases/second.canvas"))
+check("canvas card navigates to the second canvas", page.url().endsWith(`/${SECOND_CANVAS_SLUG}`))
 check("navigation was SPA (no full reload)", await page.evaluate(() => window.__spaMarker === true))
 await shot("second")
 
@@ -263,7 +271,7 @@ await page.click(".canvas-flow-fullscreen")
 await page.waitForTimeout(500)
 await twoClickOn("file-back", "a.canvas-card-link")
 await waitForCanvas("text-welcome")
-check("back-navigation lands on main", page.url().endsWith("/canvases/main.canvas"))
+check("back-navigation lands on main", page.url().endsWith(`/${MAIN_CANVAS_SLUG}`))
 check(
   "fullscreen RETAINED across canvas->canvas SPA navigation",
   await page.evaluate(() => document.fullscreenElement?.hasAttribute("data-canvas-mount") ?? false),
@@ -275,17 +283,17 @@ await page.waitForTimeout(400)
 // browser history: back button re-mounts the previous canvas via popstate
 await page.goBack()
 await waitForCanvas("text-second")
-check("browser back re-mounts the previous canvas", page.url().endsWith("/canvases/second.canvas"))
+check("browser back re-mounts the previous canvas", page.url().endsWith(`/${SECOND_CANVAS_SLUG}`))
 
 // wikilink INSIDE a text card navigates (two-click)
-await twoClickOn("text-second", 'a.internal[href*="main.canvas"]')
+await twoClickOn("text-second", `a.internal[href*="${docIdOf("canvases/main.canvas")}"]`)
 await waitForCanvas("text-welcome")
-check("wikilink inside a text card navigates to the linked canvas", page.url().endsWith("/canvases/main.canvas"))
+check("wikilink inside a text card navigates to the linked canvas", page.url().endsWith(`/${MAIN_CANVAS_SLUG}`))
 
 // open-note affordance leaves canvas -> viewer unmounts cleanly
 await twoClickOn("file-note-full", "a.canvas-note-open")
 await page.waitForTimeout(500)
-check("open-note affordance navigates to the note page", page.url().endsWith("/notes/architecture"))
+check("open-note affordance navigates to the note page", page.url().endsWith(`/${ARCHITECTURE_SLUG}`))
 check("viewer unmounts on non-canvas pages", await page.evaluate(() => document.querySelector(".react-flow") === null))
 await page.goBack()
 await waitForCanvas("text-welcome")
@@ -313,7 +321,7 @@ check("themechange -> light restores", (await canvasBg()) === lightBg)
 // A one-card canvas would fill the screen at React Flow's default maxZoom (20);
 // both the initial fit AND the Fit View control must cap at 1:1.
 const zoomOf = (transform) => Number(/scale\(([\d.]+)\)/.exec(transform)?.[1] ?? NaN)
-await page.goto(`${base}/canvases/sparse.canvas`)
+await page.goto(`${base}/${SPARSE_CANVAS_SLUG}`)
 await waitForCanvas("text-lonely")
 check("sparse canvas: initial fit capped at 1:1", zoomOf(await VIEWPORT_TRANSFORM()) <= 1, await VIEWPORT_TRANSFORM())
 await page.click('.react-flow__controls button[title="Zoom Out"]')
