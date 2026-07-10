@@ -1,0 +1,146 @@
+/*
+ * Canvas viewer chrome on top of React Flow's base stylesheet.
+ * Theming piggybacks on Quartz's CSS variables (--light/--lightgray/--gray/
+ * --darkgray/--dark), which Quartz swaps on its <html saved-theme> toggle —
+ * cards restyle automatically; React Flow chrome follows via its colorMode.
+ */
+.canvas-flow-viewer {
+  width: 100%;
+  height: 100%;
+}
+.canvas-flow-viewer .react-flow {
+  background-color: var(--light);
+}
+/* Fullscreen sizing of the mount div itself lives in the page CSS (pageBody.js). */
+
+/* Connection anchors exist only for edge routing — never visible/interactive. */
+.canvas-flow-handle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---- Shared card chrome ---------------------------------------------------- */
+.canvas-flow-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 2px solid color-mix(in srgb, var(--canvas-node-color, var(--lightgray)) 80%, transparent);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--canvas-node-color, transparent) 7%, var(--light));
+  color: var(--darkgray);
+  overflow: hidden;
+}
+.canvas-flow-card.is-selected {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--canvas-node-color, var(--gray)) 45%, transparent);
+}
+.canvas-node-content {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+/* First click selects; only then does the content become interactive. */
+.canvas-node-click-guard {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+/* ---- Text cards (markdown + rewritten canvas/pdf/placeholder cards) -------- */
+.canvas-text-node .canvas-node-html {
+  padding: 0.4rem 0.8rem;
+  height: 100%;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+}
+.canvas-text-node .canvas-node-html > *:first-child {
+  margin-top: 0.4rem;
+}
+
+/* ---- Media cards ------------------------------------------------------------ */
+.canvas-media-node .canvas-node-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.canvas-media-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Obsidian fits images inside cards */
+}
+.canvas-media-video {
+  width: 100%;
+  height: 100%;
+}
+.canvas-media-audio {
+  width: 90%;
+}
+.canvas-media-plaintext {
+  padding: 0.5rem 0.8rem;
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* ---- Link cards ------------------------------------------------------------- */
+.canvas-link-node .canvas-node-content {
+  display: flex;
+  flex-direction: column;
+}
+.canvas-link-header {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--lightgray);
+  background-color: var(--light);
+  font-size: 0.8em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.canvas-link-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background-color: white; /* pages assume a light default canvas */
+}
+
+/* ---- Groups ------------------------------------------------------------------ */
+.canvas-group-node {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 2px solid color-mix(in srgb, var(--canvas-node-color, var(--lightgray)) 55%, transparent);
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--canvas-node-color, var(--lightgray)) 7%, transparent);
+}
+.canvas-group-label {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--darkgray);
+  background-color: color-mix(in srgb, var(--canvas-node-color, var(--lightgray)) 22%, var(--light));
+  border-radius: 4px;
+  padding: 0.1rem 0.5rem;
+}
+
+/* ---- Edges -------------------------------------------------------------------- */
+.canvas-flow-viewer .react-flow__edge-path {
+  stroke-width: 2;
+}
+.canvas-flow-viewer .react-flow__edge-text {
+  fill: var(--dark);
+  font-size: 0.75rem;
+}
+.canvas-flow-viewer .react-flow__edge-textbg {
+  fill: var(--light);
+}
+
+/* ---- Controls / minimap tweaks ------------------------------------------------- */
+.canvas-flow-fullscreen {
+  font-size: 1rem;
+}

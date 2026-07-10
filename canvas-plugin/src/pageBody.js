@@ -99,9 +99,15 @@ const CANVAS_PAGE_CSS = `
   padding-top: 3rem;
   color: var(--gray);
 }
-/* Obsidian fits images inside cards; hesprs defaults to cover (Spike B gap list). */
+/* Obsidian fits images inside cards (also covers images inside note fragments). */
 .canvas-page-mount img {
   object-fit: contain;
+}
+/* Native fullscreen on the mount: fill the screen, drop the page-embed frame. */
+.canvas-page-mount:fullscreen {
+  height: 100%;
+  border: none;
+  border-radius: 0;
 }
 /* Rewritten cards: canvas->canvas, PDF, unsupported files, private placeholders. */
 .canvas-card {
