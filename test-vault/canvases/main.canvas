@@ -8,6 +8,7 @@
 		{"id":"file-image","type":"file","x":-520,"y":480,"width":400,"height":300,"file":"attachments/diagram.png"},
 		{"id":"file-private","type":"file","x":-40,"y":480,"width":400,"height":300,"file":"notes/private-secret.md","color":"2"},
 		{"id":"file-canvas-card","type":"file","x":440,"y":480,"width":400,"height":300,"file":"canvases/second.canvas","color":"5"},
+		{"id":"file-note-usage","type":"file","x":880,"y":480,"width":400,"height":300,"file":"notes/getting-started.md","subpath":"#Usage"},
 		{"id":"link-card","type":"link","x":600,"y":40,"width":400,"height":360,"url":"https://jsoncanvas.org/"}
 	],
 	"edges":[

@@ -38,8 +38,8 @@ Two inviolable rules:
 ```bash
 source ~/.nvm/nvm.sh && nvm use 26        # Node >= 22 required
 npm install && npm run setup              # idempotent Quartz bootstrap
-npm run typecheck && npm test             # 255 unit + 34 integration (node:test, BDD GIVEN/WHEN/THEN)
-npm run test:e2e                          # smoke (36 checks) + extensive canvas viewer e2e (47 checks), headless Chromium via the real preview server
+npm run typecheck && npm test             # unit + integration (node:test, BDD GIVEN/WHEN/THEN)
+npm run test:e2e                          # smoke + extensive canvas viewer e2e, headless Chromium via the real preview server
 ```
 
 Gotchas (hard-won, see `docs/status/phase-*.md`):

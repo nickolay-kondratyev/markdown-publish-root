@@ -1,0 +1,6 @@
+{
+	"nodes":[
+		{"id":"text-lonely","type":"text","x":-120,"y":-60,"width":240,"height":120,"text":"# Sparse\n\nOne small card. Fit View must NOT blow it up past 1:1."}
+	],
+	"edges":[]
+}

@@ -126,16 +126,17 @@ const dom = await page.evaluate(() => {
     noteHeaderHref: nodeEl("file-note-full")?.querySelector(".canvas-note-open")?.getAttribute("href") ?? "",
     subpathHeader: nodeEl("file-note-subpath")?.querySelector(".canvas-note-open")?.textContent ?? "",
     subpathText: nodeEl("file-note-subpath")?.textContent ?? "",
+    usageText: nodeEl("file-note-usage")?.textContent ?? "",
   }
 })
 
 check(
-  "all 9 nodes render with their JSON Canvas ids",
+  "all 10 nodes render with their JSON Canvas ids",
   JSON.stringify(dom.nodeIds) ===
     JSON.stringify(
       [
         "group-intro", "text-welcome", "text-colors", "file-note-full", "file-note-subpath",
-        "file-image", "file-private", "file-canvas-card", "link-card",
+        "file-note-usage", "file-image", "file-private", "file-canvas-card", "link-card",
       ].sort(),
     ),
   dom.nodeIds.join(","),
@@ -192,6 +193,12 @@ check("subpath header shows 'title > subpath'", dom.subpathHeader === "Getting S
 check(
   "subpath card renders ONLY the referenced section",
   dom.subpathText.includes("Installation is easy") && !dom.subpathText.includes("Advanced tips"),
+)
+// Two cards embed the SAME note with different subpaths — fragments are per
+// NODE, so each card must show its own section (regression: per-file map).
+check(
+  "same note twice: #Usage card renders ONLY its own section",
+  dom.usageText.includes("Basic usage instructions") && !dom.usageText.includes("Installation is easy"),
 )
 await shot("main")
 
@@ -302,7 +309,20 @@ await page.evaluate(() => {
 await page.waitForTimeout(400)
 check("themechange -> light restores", (await canvasBg()) === lightBg)
 
-// === Phase 6: our origin stayed error-free ===================================
+// === Phase 6: sparse canvas — fitting must never zoom IN past 1:1 ===========
+// A one-card canvas would fill the screen at React Flow's default maxZoom (20);
+// both the initial fit AND the Fit View control must cap at 1:1.
+const zoomOf = (transform) => Number(/scale\(([\d.]+)\)/.exec(transform)?.[1] ?? NaN)
+await page.goto(`${base}/canvases/sparse.canvas`)
+await waitForCanvas("text-lonely")
+check("sparse canvas: initial fit capped at 1:1", zoomOf(await VIEWPORT_TRANSFORM()) <= 1, await VIEWPORT_TRANSFORM())
+await page.click('.react-flow__controls button[title="Zoom Out"]')
+await page.waitForTimeout(300)
+await page.click('.react-flow__controls button[title="Fit View"]')
+await page.waitForTimeout(400)
+check("sparse canvas: RE-fit via the control capped at 1:1", zoomOf(await VIEWPORT_TRANSFORM()) <= 1, await VIEWPORT_TRANSFORM())
+
+// === Phase 7: our origin stayed error-free ===================================
 const ownErrors = filterOwnErrors(errors, base)
 check("no console/page errors from our origin", ownErrors.length === 0, ownErrors.join(" | "))
 

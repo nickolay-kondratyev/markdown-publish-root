@@ -30,7 +30,7 @@ const browser = await chromium.launch({ executablePath: "/usr/bin/chromium", arg
 - The viewer is React Flow (ADR 0003). Wait for `.canvas-page-mount .react-flow__node`, then ~900ms for async fragment fetches.
 - Nodes are addressable by JSON Canvas id: `.react-flow__node[data-id="text-welcome"]`.
 - Controls: `.react-flow__controls` buttons titled `Zoom In` / `Zoom Out` / `Fit View`; the fullscreen toggle is `.canvas-flow-fullscreen`. Minimap: `.react-flow__minimap`.
-- The extensive canvas e2e already covers most flows: `node scripts/e2e-canvas-flow.mjs` (47 checks).
+- The extensive canvas e2e already covers most flows: `node scripts/e2e-canvas-flow.mjs`.
 
 ## Gotchas
 - **Links inside canvas cards need TWO clicks**: a transparent `.canvas-node-click-guard` overlay intercepts the first click (card select, Obsidian-Publish behavior); it lifts once the node has the `selected` class. Playwright's `locator.click()` times out on "intercepts pointer events" — use two raw `page.mouse.click(x, y)` (~300ms apart): card center first, then the link's bounding-box center.

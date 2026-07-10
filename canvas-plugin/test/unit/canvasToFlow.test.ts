@@ -12,7 +12,10 @@ function payload({
   nodes = [] as any[],
   edges = [] as any[],
   attachments = {} as Record<string, string>,
-  noteLinks = {} as Record<string, { href: string; title: string; subpathLabel?: string }>,
+  noteLinks = {} as Record<
+    string,
+    { href: string; title: string; fragmentUrl: string; subpathLabel?: string }
+  >,
 } = {}) {
   return { canvas: { nodes, edges }, attachments, noteLinks }
 }
@@ -83,18 +86,22 @@ describe("canvasToFlow nodes", () => {
     assert.equal(nodes[0].data.colorValue, "#8a2be2")
   })
 
-  test("GIVEN a file node WITH a noteLinks entry WHEN converting THEN it is a note card wired to its fragment", () => {
-    const noteLink = { href: "../notes/architecture", title: "Architecture" }
+  test("GIVEN a file node WITH a noteLinks entry WHEN converting THEN it is a note card wired to its OWN per-node fragment", () => {
     const { nodes } = canvasToFlow(
       payload({
         nodes: [{ id: "n1", type: "file", x: 0, y: 0, width: 10, height: 10, file: "notes/architecture.md" }],
-        attachments: { "notes/architecture.md": "main.canvas.fragments/n1.html" },
-        noteLinks: { n1: noteLink },
+        noteLinks: {
+          n1: { href: "../notes/architecture", title: "Architecture", fragmentUrl: "main.canvas.fragments/n1.html" },
+        },
       }),
     )
     assert.deepEqual(
       { type: nodes[0].type, fragmentUrl: nodes[0].data.fragmentUrl, noteLink: nodes[0].data.noteLink },
-      { type: FlowNodeType.NOTE, fragmentUrl: "main.canvas.fragments/n1.html", noteLink },
+      {
+        type: FlowNodeType.NOTE,
+        fragmentUrl: "main.canvas.fragments/n1.html",
+        noteLink: { href: "../notes/architecture", title: "Architecture" },
+      },
     )
   })
 
@@ -196,7 +203,9 @@ describe("canvasToFlow edges", () => {
     assert.deepEqual({ from: edge.sourceHandle, to: edge.targetHandle }, { from: "bottom", to: "left" })
   })
 
-  test("GIVEN an edge to a missing node WHEN converting THEN it still converts with fallback sides", () => {
+  // Dangling edges are UNSUPPORTED (React Flow drops them at render time) —
+  // this only pins that conversion stays total instead of crashing.
+  test("GIVEN an edge to a missing node WHEN converting THEN conversion does not crash (edge is dropped at render)", () => {
     const { edges } = canvasToFlow(
       payload({ nodes: twoNodes(), edges: [{ id: "e1", fromNode: "from", toNode: "ghost" }] }),
     )
@@ -258,8 +267,8 @@ describe("canvasToFlow on the rewritten test-vault main canvas shape", () => {
           { id: "e1", fromNode: "t", toNode: "n", fromSide: "bottom", toSide: "top" },
           { id: "e2", fromNode: "n", toNode: "m" },
         ],
-        attachments: { "notes/a.md": "frag.html", "img.png": "../img.png" },
-        noteLinks: { n: { href: "../notes/a", title: "A" } },
+        attachments: { "img.png": "../img.png" },
+        noteLinks: { n: { href: "../notes/a", title: "A", fragmentUrl: "frag.html" } },
       }),
     )
     assert.deepEqual(

@@ -84,7 +84,7 @@ function useFetchedText(url) {
 /**
  * Note card: sticky header with the open-note affordance (the header link is
  * what navigates — whole-card navigation would prevent reading long cards)
- * above the prerendered fragment body fetched from the attachments-remapped URL.
+ * above the prerendered fragment body fetched from this node's own fragment URL.
  */
 export function CanvasNoteNode({ data, selected }) {
   const { noteLink } = data

@@ -90,7 +90,9 @@ export function CanvasApp({ flow, theme, fullscreenTarget, restoreFullscreen }) 
         preventScrolling={interacted}
       >
         <Background gap={24} />
-        <Controls showInteractive={false}>
+        {/* Same options as the initial fit: re-fit must honor the 1:1 cap too
+            (React Flow's default would zoom a sparse canvas up to maxZoom). */}
+        <Controls showInteractive={false} fitViewOptions={FIT_VIEW_OPTIONS}>
           <ControlButton
             className="canvas-flow-fullscreen"
             onClick={toggleFullscreen}

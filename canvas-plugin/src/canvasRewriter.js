@@ -9,8 +9,11 @@
  * Invariants:
  *   - Node ids and coordinates are ALWAYS preserved (future commenting anchors,
  *     plan/main.md §1).
- *   - The attachments map is COMPLETE for every remaining file node (the viewer
- *     renders fetch-404 bodies for missing entries — Spike B).
+ *   - The attachments map is COMPLETE for every remaining MEDIA file node (the
+ *     viewer renders fetch-404 bodies for missing entries — Spike B). Note
+ *     cards carry a per-NODE fragment URL in noteLinks instead: two nodes may
+ *     embed the SAME note with different subpaths, so a per-file map cannot
+ *     address their fragments.
  *   - PRIVACY (plan §4.4): a file node whose target is not a staged file becomes
  *     a contentless placeholder; the vault path is REMOVED from the emitted JSON
  *     (a filename is title-derived content). Private and missing targets are
@@ -26,9 +29,9 @@ import GithubSlugger from "github-slugger"
 /**
  * @typedef {object} RewriteResult
  * @property {{nodes: any[], edges: any[]}} canvas rewritten canvas JSON
- * @property {Record<string, string>} attachments original node.file -> URL relative to the canvas page
- * @property {Record<string, {href: string, title: string, subpathLabel?: string}>} noteLinks
- *   per note-card node id: open-note affordance target
+ * @property {Record<string, string>} attachments media node.file -> URL relative to the canvas page
+ * @property {Record<string, {href: string, title: string, fragmentUrl: string, subpathLabel?: string}>} noteLinks
+ *   per note-card node id: open-note affordance target + that node's own fragment URL
  * @property {string[]} links SimpleSlugs for Quartz `data.links` (backlinks/graph)
  * @property {string} searchText plain text of text cards (search index)
  * @property {{sitePath: string, html: string}[]} fragments prerendered note fragments to emit
@@ -156,12 +159,12 @@ export class CanvasRewriter {
       sitePath,
       html: `<div class="canvas-note-embed">${fragment.html}</div>`,
     })
-    // Remap trick (Spike B §3): extension dispatch uses the ORIGINAL .md name,
-    // the fetch uses the remapped fragment URL -> zero client-side markdown.
-    result.attachments[node.file] = this.resolver.relativeUrlTo(sitePath)
+    // Keyed by NODE id (not node.file): fragments are extracted per node, and
+    // two nodes may embed the same note with different subpaths.
     result.noteLinks[node.id] = {
       href: resolved.relativeUrl + subpathToAnchor(node.subpath),
       title: note.data.frontmatter?.title ?? titleFromPath(node.file),
+      fragmentUrl: this.resolver.relativeUrlTo(sitePath),
       ...(node.subpath ? { subpathLabel: node.subpath.replace(/^#\^?/, "") } : {}),
     }
     return structuredClone(node)

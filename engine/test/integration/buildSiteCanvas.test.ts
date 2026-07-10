@@ -23,7 +23,7 @@ const SECOND_CANVAS_PAGE = "canvases/second.canvas.html"
 interface CanvasPayload {
   canvas: { nodes: any[]; edges: any[] }
   attachments: Record<string, string>
-  noteLinks: Record<string, { href: string; title: string; subpathLabel?: string }>
+  noteLinks: Record<string, { href: string; title: string; fragmentUrl: string; subpathLabel?: string }>
 }
 
 describe("SiteBuilder integration — builds test-vault WITH canvases", () => {
@@ -112,21 +112,25 @@ describe("SiteBuilder integration — builds test-vault WITH canvases", () => {
     )
   })
 
-  test("THEN every attachments-map URL resolves to an emitted file (viewer renders 404 bodies otherwise)", () => {
+  test("THEN every content URL (attachments + per-node fragmentUrls) resolves to an emitted file (viewer renders 404 bodies otherwise)", () => {
     for (const page of ["canvases/main.canvas", "canvases/second.canvas"]) {
       const payload = readCanvasPayload(`${page}.html`)
-      const broken = Object.entries(payload.attachments)
-        .map(([, url]) => resolveFromPage(page, url))
+      const urls = [
+        ...Object.values(payload.attachments),
+        ...Object.values(payload.noteLinks).map((link) => link.fragmentUrl),
+      ]
+      const broken = urls
+        .map((url) => resolveFromPage(page, url))
         .filter((sitePath) => !fs.existsSync(path.join(OUT_DIR, sitePath)))
-      assert.deepEqual(broken, [], `broken attachment URLs on ${page}`)
+      assert.deepEqual(broken, [], `broken content URLs on ${page}`)
     }
   })
 
-  test("THEN every remaining file node has an attachments entry", () => {
+  test("THEN every remaining file node has a content URL (media: attachments, notes: per-node fragmentUrl)", () => {
     const payload = readCanvasPayload(MAIN_CANVAS_PAGE)
     const uncovered = payload.canvas.nodes
       .filter((n) => n.type === "file")
-      .filter((n) => !(n.file in payload.attachments))
+      .filter((n) => !(n.file in payload.attachments) && payload.noteLinks[n.id]?.fragmentUrl === undefined)
       .map((n) => n.id)
     assert.deepEqual(uncovered, [])
   })

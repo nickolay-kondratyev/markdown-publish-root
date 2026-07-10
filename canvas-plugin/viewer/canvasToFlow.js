@@ -52,8 +52,9 @@ export function resolveCanvasColor(color) {
 /**
  * @typedef {object} CanvasViewPayload
  * @property {{nodes: any[], edges: any[]}} canvas rewritten JSON Canvas (text cards are prebaked HTML)
- * @property {Record<string, string>} attachments original node.file -> page-relative URL
- * @property {Record<string, {href: string, title: string, subpathLabel?: string}>} noteLinks
+ * @property {Record<string, string>} attachments media node.file -> page-relative URL
+ * @property {Record<string, {href: string, title: string, fragmentUrl: string, subpathLabel?: string}>} noteLinks
+ *   per note-card node id (fragments are per NODE — same note, different subpaths)
  */
 
 /**
@@ -113,12 +114,15 @@ function nodeData(node, attachments, noteLinks, colorValue) {
     case "text":
       return { colorValue, html: node.text ?? "" }
     case "file": {
-      const url = attachments[node.file]
-      const noteLink = noteLinks[node.id]
-      if (noteLink !== undefined) return { colorValue, fragmentUrl: url, noteLink }
+      const entry = noteLinks[node.id]
+      if (entry !== undefined) {
+        // fragmentUrl feeds the body fetch; the rest is the open-note affordance.
+        const { fragmentUrl, ...noteLink } = entry
+        return { colorValue, fragmentUrl, noteLink }
+      }
       return {
         colorValue,
-        url,
+        url: attachments[node.file],
         mediaKind: classifyMediaKind(node.file ?? "") ?? MediaKind.PLAINTEXT,
         fileName: (node.file ?? "").split("/").at(-1) ?? "",
       }
@@ -157,8 +161,12 @@ function toFlowEdge(edge, nodeById) {
 
 /**
  * Sides for both endpoints, inferring absent ones from geometry: connect along
- * the dominant axis between node centers (falls back to "right"->"left" when a
- * referenced node is missing — the edge still renders, just unrouted).
+ * the dominant axis between node centers.
+ *
+ * Dangling edges (an endpoint id with no matching node) are NOT supported:
+ * the fixed "right"->"left" fallback only keeps conversion total (no crash) —
+ * React Flow drops edges with unknown endpoints at render time (warning #008).
+ * Acceptable: Obsidian itself never saves dangling edges.
  */
 function edgeSides(edge, nodeById) {
   const fromNode = nodeById.get(edge.fromNode)

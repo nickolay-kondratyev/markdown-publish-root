@@ -84,15 +84,17 @@ describe("CanvasRewriter — invariants", () => {
     assert.deepEqual(rewriteNodes(link).canvas.nodes[0], link)
   })
 
-  test("GIVEN remaining file nodes WHEN rewriting THEN the attachments map covers every one (404 bodies otherwise)", () => {
+  test("GIVEN remaining file nodes WHEN rewriting THEN every one has a content URL (media: attachments, notes: per-node fragmentUrl)", () => {
     const result = rewriteNodes(
       baseNode("md", { type: "file", file: "notes/architecture.md" }),
       baseNode("img", { type: "file", file: "attachments/diagram.png" }),
     )
-    const fileNodes = result.canvas.nodes.filter((n: any) => n.type === "file")
     assert.deepEqual(
-      fileNodes.map((n: any) => n.file in result.attachments),
-      [true, true],
+      {
+        media: "attachments/diagram.png" in result.attachments,
+        note: result.noteLinks["md"]?.fragmentUrl !== undefined,
+      },
+      { media: true, note: true },
     )
   })
 })
@@ -130,10 +132,10 @@ describe("CanvasRewriter — note cards (file -> .md)", () => {
     assert.equal(result.canvas.nodes[0].type, "file")
   })
 
-  test("GIVEN a note card WHEN rewriting THEN attachments remap the note to an emitted fragment", () => {
+  test("GIVEN a note card WHEN rewriting THEN its noteLinks entry carries the per-NODE fragment URL", () => {
     const result = rewriteNodes(baseNode("n1", { type: "file", file: "notes/architecture.md" }))
     assert.equal(
-      result.attachments["notes/architecture.md"],
+      result.noteLinks["n1"]?.fragmentUrl,
       "../canvases/main.canvas.fragments/n1.html",
     )
   })
@@ -148,7 +150,25 @@ describe("CanvasRewriter — note cards (file -> .md)", () => {
     assert.deepEqual(result.noteLinks["n1"], {
       href: "../notes/architecture",
       title: "Architecture",
+      fragmentUrl: "../canvases/main.canvas.fragments/n1.html",
     })
+  })
+
+  test("GIVEN two cards embedding the SAME note with different subpaths WHEN rewriting THEN each fragmentUrl targets its OWN fragment content", () => {
+    const result = rewriteNodes(
+      baseNode("full", { type: "file", file: "notes/getting-started.md" }),
+      baseNode("install", { type: "file", file: "notes/getting-started.md", subpath: "#Installation" }),
+    )
+    const bodyAt = (fragmentUrl: string | undefined) =>
+      result.fragments.find((f: any) => fragmentUrl === `../${f.sitePath}`)?.html ?? ""
+    assert.deepEqual(
+      {
+        fullHasUsage: bodyAt(result.noteLinks["full"]?.fragmentUrl).includes("USAGE-ONLY-TEXT"),
+        installHasUsage: bodyAt(result.noteLinks["install"]?.fragmentUrl).includes("USAGE-ONLY-TEXT"),
+        installHasInstall: bodyAt(result.noteLinks["install"]?.fragmentUrl).includes("INSTALLATION-ONLY-TEXT"),
+      },
+      { fullHasUsage: true, installHasUsage: false, installHasInstall: true },
+    )
   })
 
   test("GIVEN a #heading subpath WHEN rewriting THEN the fragment contains only that section", () => {

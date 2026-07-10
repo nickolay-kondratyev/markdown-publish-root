@@ -26,16 +26,17 @@ The client receives NO resolution or markdown work — everything is prebaked:
 | Node | Rewrite |
 |---|---|
 | text | markdown -> HTML at build time (unified/remark/rehype, the same pipeline family Quartz uses); `[[wikilinks]]` resolved via the shared resolver relative to the canvas page |
-| file -> `.md` | stays a file node; `attachments` remaps it to a prerendered fragment sliced from the note's PROCESSED Quartz hast (full fidelity: highlighting, callouts, resolved links, rebased via Quartz's own `normalizeHastElement`); `subpath` `#Heading` / `#^block` sliced with Quartz-transclude semantics; open-note affordance metadata in `noteLinks` |
+| file -> `.md` | stays a file node; `noteLinks[node.id].fragmentUrl` points to a prerendered fragment sliced from the note's PROCESSED Quartz hast (full fidelity: highlighting, callouts, resolved links, rebased via Quartz's own `normalizeHastElement`); `subpath` `#Heading` / `#^block` sliced with Quartz-transclude semantics; fragments are per NODE, so several cards can embed the SAME note with different subpaths; open-note affordance metadata in `noteLinks` |
 | file -> `.canvas` | navigable link card to the target canvas page |
 | file -> `.pdf` / unsupported ext | link card to the published asset (plan §5 MVP fallback) |
 | file -> image/audio/video | stays a file node; `attachments` maps to the emitted asset URL |
 | file -> unpublished/missing | contentless "Private note" placeholder — the vault path is REMOVED (plan §4.4) |
-| group / link / edges | untouched |
+| group / link / edges | untouched. Dangling edges (an endpoint id with no matching node) are UNSUPPORTED — React Flow drops them at render time; Obsidian never saves them |
 
 Invariants: node ids + coordinates always preserved (future commenting anchors);
-the attachments map is complete for every remaining file node (the viewer shows
-"Failed to load content." otherwise).
+the attachments map is complete for every remaining MEDIA file node, and every
+note card carries its own `fragmentUrl` (the viewer shows "Failed to load
+content." otherwise).
 
 **Privacy:** the plugin only ever sees the staging directory (publishable files
 only), so it CANNOT distinguish a private note from a missing one — both get
