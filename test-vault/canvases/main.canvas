@@ -1,4 +1,5 @@
 {
+	"metadata":{"frontmatter":{"id":"docid_87l1zmiwf9kwbhzcg7wgd_e"}},
 	"nodes":[
 		{"id":"group-intro","type":"group","x":-520,"y":-420,"width":1040,"height":360,"label":"Intro Group","color":"6"},
 		{"id":"text-welcome","type":"text","x":-480,"y":-380,"width":440,"height":280,"color":"1","text":"# Main Canvas\n\nThis card tests **markdown rendering** inside a text card:\n\n- a wikilink to a note: [[getting-started]]\n- a wikilink to a canvas: [[second.canvas]]\n- `inline code` and *emphasis*\n\n> Blockquotes should render too."},

@@ -8,8 +8,17 @@ TEST_VAULT   := test-vault
 SITE_CONFIG  := docs/current/config/minimal-site.json
 OUT_DIR      := out/public
 PREVIEW_PORT := 8080
+# Vault targeted by vault-add-ids (override: make vault-add-ids VAULT=/path/to/vault).
+VAULT        := $(TEST_VAULT)
 
-.PHONY: test-vault-build test-vault-run-locally
+.PHONY: test-vault-build test-vault-run-locally vault-add-ids test-vault-add-ids
+
+# Stamps a stable docid into every .md/.canvas of $(VAULT) (idempotent).
+vault-add-ids:
+	$(NODE_ENV) && node scripts/add-doc-ids.mjs $(VAULT)
+
+test-vault-add-ids:
+	$(MAKE) vault-add-ids VAULT=$(TEST_VAULT)
 
 test-vault-build:
 	$(NODE_ENV) && node cli/bin/publish.mjs build $(TEST_VAULT) --config $(SITE_CONFIG) --out $(OUT_DIR)

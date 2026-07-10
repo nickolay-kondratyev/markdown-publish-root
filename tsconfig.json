@@ -15,5 +15,5 @@
     "checkJs": false,
     "types": ["node"]
   },
-  "include": ["engine/**/*.ts", "cli/**/*.ts", "canvas-plugin/test/**/*.ts"]
+  "include": ["engine/**/*.ts", "cli/**/*.ts", "canvas-plugin/test/**/*.ts", "scripts/test/**/*.ts"]
 }

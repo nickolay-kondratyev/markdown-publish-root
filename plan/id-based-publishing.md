@@ -12,7 +12,7 @@ Every published doc page (note `.md`, canvas `.canvas`) is served at a URL deriv
 
 | Decision | Value |
 |---|---|
-| Id format | `docid_<21 chars base62 a-zA-Z0-9>_E` — validation regex `^docid_[0-9A-Za-z]{21}_E$` |
+| Id format | `docid_<21 chars base36 a-z0-9>_e` — validation regex `^docid_[0-9a-z]{21}_e$`. **Deviation approved 2026-07-10** (was base62 `_E`): Quartz slugifies URL segments to lowercase and stays unpatched, so a lowercase-only grammar keeps frontmatter id == URL segment byte-for-byte. Base36 × 21 ≈ 108 bits — ample. |
 | Id location | md: frontmatter `id:`; canvas: top-level `metadata.frontmatter.id` |
 | URL shape | `/n/<docid>` for notes; `/n/<docid>.canvas` for canvases (extension-preserving slugs keep Quartz + canvas-plugin untouched; see §6.1) |
 | Missing id on a publishable doc | **Hard fail the build, early** (staging time), listing every offending file |
@@ -112,4 +112,4 @@ Each phase ends with a short written status per the working agreements.
 
 ## 10. Definition of done
 
-`make test-vault-add-ids && make test-vault-build` succeeds end-to-end; every doc page URL matches `^/n/docid_[0-9A-Za-z]{21}_E(\.canvas)?$` (except `/`); the rename-stability test passes; all Phase 4 checks green; removing one id makes the build fail early with the file named.
+`make test-vault-add-ids && make test-vault-build` succeeds end-to-end; every doc page URL matches `^/n/docid_[0-9a-z]{21}_e(\.canvas)?$` (except `/`); the rename-stability test passes; all Phase 4 checks green; removing one id makes the build fail early with the file named.

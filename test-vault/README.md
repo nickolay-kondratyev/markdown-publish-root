@@ -1,3 +1,6 @@
+---
+id: docid_s5t5tmwxky6gpgrpqe703_e
+---
 # Test Vault (Fixture)
 
 An Obsidian-style vault used as the canonical fixture for the publish engine.

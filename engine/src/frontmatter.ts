@@ -2,6 +2,10 @@ import { parse as parseYaml } from "yaml"
 
 /** Frontmatter key controlling the publish filter (matches Obsidian Publish convention). */
 export const PUBLISH_FRONTMATTER_KEY = "publish"
+/** Frontmatter key carrying the stable docid (plan/id-based-publishing.md §2). */
+export const ID_FRONTMATTER_KEY = "id"
+/** Frontmatter key for the human-readable page title (injected at staging when absent). */
+export const TITLE_FRONTMATTER_KEY = "title"
 
 /** Result of reading the publish flag from a markdown file. */
 export interface PublishFlagRead {
@@ -15,34 +19,61 @@ export interface PublishFlagRead {
   malformed: boolean
 }
 
+/** All frontmatter fields the engine cares about, read in one pass. */
+export interface DocFrontmatterRead extends PublishFlagRead {
+  /** Raw `id` value (validated by IdMap, not here); undefined when absent. */
+  idValue: unknown
+  /** Whether an explicit `title` exists (staging injects one when it does not). */
+  hasTitle: boolean
+}
+
 const FRONTMATTER_DELIMITER = "---"
 
-/** Reads the `publish` frontmatter flag from raw markdown. */
+/** Reads engine-relevant frontmatter fields from raw markdown. */
 export class FrontmatterReader {
   static readPublishFlag(markdown: string): PublishFlagRead {
-    const block = extractFrontmatterBlock(markdown)
-    if (block === undefined) return { publish: undefined, malformed: false }
+    const { publish, malformed } = FrontmatterReader.readDocFields(markdown)
+    return { publish, malformed }
+  }
 
+  static readDocFields(markdown: string): DocFrontmatterRead {
+    const block = extractFrontmatterBlock(markdown)
+    if (block === undefined) {
+      return { publish: undefined, malformed: false, idValue: undefined, hasTitle: false }
+    }
     let data: unknown
     try {
       data = parseYaml(block)
     } catch {
-      return { publish: undefined, malformed: true }
+      return { publish: undefined, malformed: true, idValue: undefined, hasTitle: false }
     }
     if (typeof data !== "object" || data === null) {
-      return { publish: undefined, malformed: false }
+      return { publish: undefined, malformed: false, idValue: undefined, hasTitle: false }
     }
-    const value = (data as Record<string, unknown>)[PUBLISH_FRONTMATTER_KEY]
-    if (typeof value === "boolean") return { publish: value, malformed: false }
-    // Obsidian's Publish UI writes strings in some versions; accept them explicitly.
-    if (value === "true") return { publish: true, malformed: false }
-    if (value === "false") return { publish: false, malformed: false }
-    return { publish: undefined, malformed: false }
+    const fields = data as Record<string, unknown>
+    return {
+      publish: readPublishValue(fields[PUBLISH_FRONTMATTER_KEY]),
+      malformed: false,
+      idValue: fields[ID_FRONTMATTER_KEY],
+      hasTitle: fields[TITLE_FRONTMATTER_KEY] !== undefined,
+    }
   }
 }
 
-/** Returns the YAML between leading `---` fences, or undefined when there is none. */
-function extractFrontmatterBlock(markdown: string): string | undefined {
+function readPublishValue(value: unknown): boolean | undefined {
+  if (typeof value === "boolean") return value
+  // Obsidian's Publish UI writes strings in some versions; accept them explicitly.
+  if (value === "true") return true
+  if (value === "false") return false
+  return undefined
+}
+
+/**
+ * Returns the YAML between leading `---` fences, or undefined when there is none.
+ * Exported for the id-addition script (scripts/add-doc-ids.mjs) — one grammar
+ * for "what is a frontmatter block" across the repo.
+ */
+export function extractFrontmatterBlock(markdown: string): string | undefined {
   const lines = markdown.split(/\r?\n/)
   if (lines[0]?.trim() !== FRONTMATTER_DELIMITER) return undefined
   for (let i = 1; i < lines.length; i++) {
