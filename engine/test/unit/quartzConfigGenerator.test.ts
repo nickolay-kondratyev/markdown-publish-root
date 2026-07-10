@@ -106,8 +106,33 @@ describe("QuartzConfigGenerator — plugin set", () => {
     )
   })
 
-  // Phase 3 (plan/folder-nav-over-id-urls.md §4.5) flips folder-page off
-  // together with breadcrumbs — stock breadcrumbs still links the /n/ listing.
+  test("GIVEN any site WHEN generating THEN stock breadcrumbs is disabled (replaced by vintrin-breadcrumbs)", () => {
+    assert.equal(pluginEntry(generate(), "breadcrumbs")?.enabled, false)
+  })
+
+  test("GIVEN a breadcrumbs plugin dir WHEN generating THEN it is an enabled beforeBody local source excluded on the home page", () => {
+    const doc = QuartzConfigGenerator.generateConfigObject(siteConfig(), {
+      breadcrumbsPluginDir: "/abs/path/vintrin-breadcrumbs",
+    }) as ConfigDoc
+    const local = doc.plugins.find((p) => p.source === "/abs/path/vintrin-breadcrumbs") as
+      | { enabled: boolean; layout?: Record<string, unknown> }
+      | undefined
+    assert.deepEqual(
+      { enabled: local?.enabled, layout: local?.layout },
+      {
+        enabled: true,
+        layout: { position: "beforeBody", priority: 5, condition: "not-index" },
+      },
+    )
+  })
+
+  test("GIVEN any site WHEN generating THEN folder-page is disabled (no folder URLs, collapse-only folders)", () => {
+    assert.equal(pluginEntry(generate(), "folder-page")?.enabled, false)
+  })
+
+  test("GIVEN any site WHEN generating THEN the layout has NO folder pageType entry", () => {
+    assert.equal(generate().layout.byPageType.folder, undefined)
+  })
 
   test("GIVEN any site WHEN generating THEN the layout declares the canvas pageType", () => {
     assert.notEqual(generate().layout.byPageType.canvas, undefined)

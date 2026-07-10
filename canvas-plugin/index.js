@@ -36,11 +36,14 @@ export default function VintrinCanvasPage() {
 
     /** pageType phase: one VirtualPage per staged canvas. */
     generate({ ctx, content }) {
-      return processAllCanvases(ctx, content).map(({ slug, title, rewrite }) => ({
+      return processAllCanvases(ctx, content).map(({ slug, title, vintrinPath, rewrite }) => ({
         slug,
         title,
         data: {
-          frontmatter: { title, tags: [] },
+          // vintrinPath (engine-injected ORIGINAL vault path) passes through
+          // so folder-shaped explorer/breadcrumbs place canvases correctly
+          // (plan/folder-nav-over-id-urls.md §4.4).
+          frontmatter: { title, tags: [], vintrinPath },
           // Outbound links register the canvas in backlinks/graph/contentIndex.
           links: rewrite.links,
           // Text-card plain text -> search index (contentIndex `content`).
@@ -118,6 +121,7 @@ function processAllCanvases(ctx, content) {
   // Pass 2: rewrite, with cross-canvas titles available for canvas cards.
   const results = []
   for (const { filePath, slug, title, canvas } of parsedCanvases) {
+    const vintrinPath = canvas.metadata?.frontmatter?.vintrinPath
     const rewrite = new CanvasRewriter({
       canvasSlug: slug,
       allSlugs: ctx.allSlugs,
@@ -127,7 +131,7 @@ function processAllCanvases(ctx, content) {
     for (const warning of rewrite.warnings) {
       console.warn(`[vintrin-canvas-page] ${warning}`)
     }
-    results.push({ filePath, slug, title, rewrite })
+    results.push({ filePath, slug, title, vintrinPath, rewrite })
   }
   return results
 }

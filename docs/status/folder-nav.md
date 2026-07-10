@@ -43,6 +43,23 @@ No fork needed; plan proceeds as written. No deviations.
   passthrough (§4.4) — their virtual pages don't carry vintrinPath yet.
 - 310 unit / 43 integration / typecheck green.
 
+## Phase 3 — vintrin-breadcrumbs + canvas passthrough + config flips (DONE, 2026-07-10)
+
+- New local component plugin `vintrin-breadcrumbs/`: pure `CrumbTrailBuilder`
+  (7 unit tests: nested, root-level, canvas, no-vintrinPath→nothing,
+  showCurrentPage, title fallback, rootName) + component rendering
+  `Home` (linked) ❯ folder segments (plain text) ❯ title (unlinked).
+  Never touches `ctx.trie`.
+- Canvas-plugin §4.4 passthrough: virtual-page frontmatter now carries
+  vintrinPath (new generate() unit test) — canvases appear in the explorer
+  tree and get folder crumbs.
+- Config: stock `breadcrumbs` off, `vintrin-breadcrumbs` on
+  (beforeBody/5/not-index); `folder-page` off + `byPageType.folder` dropped
+  (deferred from Phase 2 — see its deviation note).
+- Verified hands-on: note + canvas crumb trails correct, home page has no
+  crumbs, `/n/index.html` no longer emitted, explorer shows `canvases/`.
+- 323 unit / 43 integration / typecheck green. No deviations.
+
 ## Environment note (this workstation)
 
 No nvm on this box (`~/.nvm` absent) and the profile's `node()`/`npm()` shell

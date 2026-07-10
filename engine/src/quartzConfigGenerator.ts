@@ -21,6 +21,8 @@ export interface LocalPluginDirs {
   canvasPluginDir: string
   /** Folder-shaped Explorer component (plan/folder-nav-over-id-urls.md §4.2). */
   explorerPluginDir: string
+  /** Folder-shaped Breadcrumbs component (plan/folder-nav-over-id-urls.md §4.3). */
+  breadcrumbsPluginDir: string
 }
 
 export class QuartzConfigGenerator {
@@ -37,6 +39,8 @@ export class QuartzConfigGenerator {
     const canvasPluginDir = localPlugins.canvasPluginDir ?? defaultLocalPluginDir("canvas-plugin")
     const explorerPluginDir =
       localPlugins.explorerPluginDir ?? defaultLocalPluginDir("vintrin-explorer")
+    const breadcrumbsPluginDir =
+      localPlugins.breadcrumbsPluginDir ?? defaultLocalPluginDir("vintrin-breadcrumbs")
     return {
       configuration: {
         pageTitle: site.title,
@@ -77,6 +81,13 @@ export class QuartzConfigGenerator {
           source: explorerPluginDir,
           enabled: true,
           layout: { position: "left", priority: 50 },
+        },
+        // Folder-shaped breadcrumbs; replaces the stock breadcrumbs disabled
+        // above (plan/folder-nav-over-id-urls.md §4.3).
+        {
+          source: breadcrumbsPluginDir,
+          enabled: true,
+          layout: { position: "beforeBody", priority: 5, condition: "not-index" },
         },
       ],
       layout: LAYOUT,
@@ -165,6 +176,10 @@ interface PluginEntry {
  *                               branding (we configure no links) — unwanted.
  *   explorer          DISABLED  slug-trie tree = flat /n/ listing; replaced by
  *                               OUR vintrin-explorer (folder-nav plan §3.1).
+ *   breadcrumbs       DISABLED  slug-trie crumbs; replaced by OUR
+ *                               vintrin-breadcrumbs (folder-nav plan §4.3).
+ *   folder-page       DISABLED  collapse-only folders have no URLs; its only
+ *                               output was a flat listing at /n/.
  *
  * Plugins that are disabled in stock Quartz (citations, hard-line-breaks,
  * ox-hugo, roam, comments, recent-notes, stacked-pages, tag-list) plus
@@ -215,10 +230,9 @@ const PLUGIN_ENTRIES: PluginEntry[] = [
   { source: "cname", enabled: false },
   { source: "canvas-page", enabled: false },
   { source: "content-page", enabled: true },
-  // folder-page still ON until Phase 3: stock breadcrumbs (below) links its
-  // "n" crumb to the /n/ listing — both flip together with vintrin-breadcrumbs
-  // (plan/folder-nav-over-id-urls.md §4.5).
-  { source: "folder-page", enabled: true },
+  // folder-page DISABLED: no folder URLs with collapse-only folders; its only
+  // output was a flat meaningless listing at /n/ (folder-nav plan §2).
+  { source: "folder-page", enabled: false },
   { source: "tag-page", enabled: true },
   // explorer DISABLED: builds its tree from slugs -> flat n/ listing; replaced
   // by our vintrin-explorer local plugin (plan/folder-nav-over-id-urls.md §3.1).
@@ -243,11 +257,9 @@ const PLUGIN_ENTRIES: PluginEntry[] = [
     enabled: true,
     layout: { position: "left", priority: 35, group: "toolbar" },
   },
-  {
-    source: "breadcrumbs",
-    enabled: true,
-    layout: { position: "beforeBody", priority: 5, condition: "not-index" },
-  },
+  // breadcrumbs DISABLED: slug-trie crumbs (Home > n > docid); replaced by OUR
+  // vintrin-breadcrumbs local plugin (folder-nav plan §3.1, §4.3).
+  { source: "breadcrumbs", enabled: false },
   { source: "footer", enabled: false },
   {
     source: "spacer",
@@ -282,7 +294,7 @@ const LAYOUT: Record<string, unknown> = {
   byPageType: {
     "404": { positions: { beforeBody: [], left: [], right: [] } },
     content: {},
-    folder: { exclude: ["reader-mode"], positions: { right: [] } },
+    // No `folder` entry: folder-page is disabled (collapse-only folders).
     tag: { exclude: ["reader-mode"], positions: { right: [] } },
     // Our canvas pageType (layout name declared in canvas-plugin/index.js).
     // Keeps default chrome — graph + backlinks on canvas pages is a
