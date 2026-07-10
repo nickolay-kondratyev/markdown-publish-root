@@ -54,6 +54,7 @@ const measure = () =>
         rectWidth(".sidebar.left button.darkmode") +
         rectWidth(".sidebar.left button.readermode"),
       dividerHrVisible: rectWidth(".center > hr") > 0,
+      breadcrumbsVisible: rectWidth(".center .breadcrumb-container") > 0,
       // DOCUMENT_POSITION_PRECEDING (2): reader-mode button comes BEFORE zen.
       zenAfterReader:
         zen !== null &&
@@ -75,6 +76,7 @@ check("initial state is zen off", off.mode === "off")
 check("right sidebar visible before toggle", off.rightSidebarWidth > 0, `w=${off.rightSidebarWidth}`)
 check("other toolbar icons visible before toggle", off.otherToolbarIconsWidth > 0)
 check("article/footer divider visible before toggle", off.dividerHrVisible)
+check("breadcrumbs visible before toggle", off.breadcrumbsVisible)
 
 fs.mkdirSync(path.join(repoRoot, ".out"), { recursive: true })
 // Chromium scroll-anchors a few hundred px during progressive render of the
@@ -99,6 +101,7 @@ check("zen button still visible in zen (exit stays reachable)", on.zenButtonWidt
 check("zen button pinned to the top-right corner", on.zenInRightHalf)
 check("all OTHER toolbar icons hidden in zen", on.otherToolbarIconsWidth === 0)
 check("article/footer divider hidden in zen", !on.dividerHrVisible)
+check("breadcrumbs hidden in zen", !on.breadcrumbsVisible)
 await screenshotFromTop("zen-mode-on.png")
 
 // --- 3. Toggle OFF: stock layout returns ------------------------------------
@@ -109,6 +112,7 @@ check("right sidebar restored", restored.rightSidebarWidth === off.rightSidebarW
 check("center width restored", restored.centerWidth === off.centerWidth)
 check("toolbar icons restored", restored.otherToolbarIconsWidth === off.otherToolbarIconsWidth)
 check("article/footer divider restored", restored.dividerHrVisible)
+check("breadcrumbs restored", restored.breadcrumbsVisible)
 
 // --- 4. Persistence: SPA navigation, then full reload ------------------------
 await page.click("button.zenmode") // zen back ON

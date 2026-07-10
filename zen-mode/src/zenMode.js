@@ -130,8 +130,10 @@ const ZEN_MODE_CSS = `
 :root[zen-mode="on"] .page {
   max-width: 100%;
 }
-/* Zen reads as pure content: drop the article/footer divider rule too. */
-:root[zen-mode="on"] .center > hr {
+/* Zen reads as pure content: drop the article/footer divider and the
+   breadcrumbs trail too. */
+:root[zen-mode="on"] .center > hr,
+:root[zen-mode="on"] .center .breadcrumb-container {
   display: none;
 }
 /* Take the left sidebar OUT of the collapsed grid and pin the lone zen icon

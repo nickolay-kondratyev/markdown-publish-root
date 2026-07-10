@@ -43,6 +43,10 @@ describe("ZenMode component — CSS (the width reclaim)", () => {
     assert.equal(component.css.includes(':root[zen-mode="on"] .center > hr'), true)
   })
 
+  test("GIVEN the css WHEN inspected THEN breadcrumbs are hidden in zen", () => {
+    assert.equal(component.css.includes(':root[zen-mode="on"] .center .breadcrumb-container'), true)
+  })
+
   test("GIVEN the css WHEN inspected THEN .sidebar.left ITSELF is never display:none (would hide the exit button)", () => {
     // Child-filter selectors (`.sidebar.left > ...`) may hide children; a rule
     // whose selector ENDS at .sidebar.left must not contain display: none.
