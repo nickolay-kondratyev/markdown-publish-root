@@ -42,6 +42,10 @@ describe("resolveCanvasColor", () => {
   test("GIVEN an unknown non-hex value WHEN resolving THEN undefined (never emit garbage into styles)", () => {
     assert.equal(resolveCanvasColor("9"), undefined)
   })
+
+  test("GIVEN an Object.prototype member name WHEN resolving THEN undefined (no prototype-chain lookup)", () => {
+    assert.equal(resolveCanvasColor("constructor"), undefined)
+  })
 })
 
 describe("canvasToFlow nodes", () => {

@@ -1,6 +1,6 @@
 # Canvas edge-case correctness: media-extension classifier + preset-color lookup
 
-Status: OPEN
+Status: RESOLVED (2026-07-10 — failing-test-first fixes in `canvasSchema.js` / `canvasToFlow.js`; viewer bundle rebuilt)
 Origin: React Flow migration code review (2026-07-10, commits `3e61cf2` / `d987f75` fixed the severe findings; these two small ones remain).
 
 ## 1. `classifyMediaKind` treats a dot-less filename as its own extension

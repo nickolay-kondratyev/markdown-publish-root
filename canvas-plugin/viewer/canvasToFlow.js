@@ -44,8 +44,9 @@ export const PRESET_COLORS = Object.freeze({
  */
 export function resolveCanvasColor(color) {
   if (color === undefined || color === null || color === "") return undefined
-  const preset = PRESET_COLORS[color]
-  if (preset !== undefined) return preset
+  // Object.hasOwn: a bare index would walk the prototype chain, so a
+  // hand-edited "color": "constructor" would inject Function source into styles.
+  if (Object.hasOwn(PRESET_COLORS, color)) return PRESET_COLORS[color]
   return String(color).startsWith("#") ? String(color) : undefined
 }
 

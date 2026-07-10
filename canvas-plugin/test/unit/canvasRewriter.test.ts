@@ -294,4 +294,11 @@ describe("classifyFileTarget", () => {
       ],
     )
   })
+
+  test("GIVEN a dot-less filename that spells a media extension WHEN classifying THEN OTHER (name is not an extension)", () => {
+    assert.deepEqual(
+      ["png", "mov", "txt", "dir.with.dots/mov"].map(classifyFileTarget),
+      [FileTargetKind.OTHER, FileTargetKind.OTHER, FileTargetKind.OTHER, FileTargetKind.OTHER],
+    )
+  })
 })

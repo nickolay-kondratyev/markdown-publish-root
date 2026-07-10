@@ -84,7 +84,12 @@ const MEDIA_EXTENSIONS = Object.freeze({
  * @returns {string | undefined} one of MediaKind, or undefined when not media
  */
 export function classifyMediaKind(filePath) {
-  const extension = filePath.split(".").at(-1)?.toLowerCase() ?? ""
+  // Only the basename's tail after a dot is an extension — a vault file
+  // literally named "png" must classify OTHER (navigable link card), not MEDIA.
+  const basename = filePath.split("/").at(-1) ?? ""
+  const dotIndex = basename.lastIndexOf(".")
+  if (dotIndex < 0) return undefined
+  const extension = basename.slice(dotIndex + 1).toLowerCase()
   for (const [kind, extensions] of Object.entries(MEDIA_EXTENSIONS)) {
     if (extensions.includes(extension)) return kind
   }
