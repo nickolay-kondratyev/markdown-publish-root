@@ -70,10 +70,12 @@ document.addEventListener("nav", setupZenMode)
 document.addEventListener("render", setupZenMode)
 `
 
-// The width reclaim. Root-attribute selectors out-specify the base grid rules
-// inside the same @layer quartz-base — no !important needed. The single
-// grid override (no media query) beats base's desktop/tablet/mobile variants
-// because base's media queries add no specificity.
+// The width reclaim. Base sidebar rules nest under `.page > #quartz-body`
+// (base.scss) — an ID — so every zen rule that fights them MUST carry
+// #quartz-body too, or it loses the cascade regardless of class count.
+// With the ID matched, the attribute+class selectors win; no !important.
+// The single grid override (no media query) beats base's desktop/tablet/
+// mobile variants because base's media queries add no specificity.
 const ZEN_MODE_CSS = `
 /* Button mirrors reader-mode's .readermode (20px icon in the toolbar row). */
 .zenmode {
@@ -104,8 +106,9 @@ const ZEN_MODE_CSS = `
   grid-template-rows: auto auto auto;
   grid-template-areas: "grid-header" "grid-center" "grid-footer";
 }
-/* Right sidebar (graph/backlinks/TOC): gone entirely. */
-:root[zen-mode="on"] .sidebar.right {
+/* Right sidebar (graph/backlinks/TOC): gone entirely. Also removes its
+   grid-area reference, which would otherwise resurrect implicit columns. */
+:root[zen-mode="on"] #quartz-body .sidebar.right {
   display: none;
 }
 /* Left sidebar: everything hidden EXCEPT the toolbar row (search/darkmode/
@@ -115,7 +118,7 @@ const ZEN_MODE_CSS = `
    sidebar, this filter keeps it visible too — acceptable, only one exists.
    WHY-NOT display:none on .sidebar.left itself: it would hide the zen button
    (fixed-position descendants of display:none ancestors don't render). */
-:root[zen-mode="on"] .sidebar.left > *:not(.flex-component) {
+:root[zen-mode="on"] #quartz-body .sidebar.left > *:not(.flex-component) {
   display: none;
 }
 /* Reclaim the .page cap too — zen means full available width. */
@@ -126,7 +129,7 @@ const ZEN_MODE_CSS = `
    float the toolbar top-left. On mobile the sidebar is already a top row —
    keeping it in flow avoids a fixed toolbar overlaying content. */
 @media (min-width: 800px) {
-  :root[zen-mode="on"] .sidebar.left {
+  :root[zen-mode="on"] #quartz-body .sidebar.left {
     position: fixed;
     top: 0;
     left: 0;
@@ -134,6 +137,10 @@ const ZEN_MODE_CSS = `
     width: auto;
     padding: 1rem;
     z-index: 2;
+  }
+  /* Full-bleed, not glued to the viewport edge (mobile keeps base's 1rem). */
+  :root[zen-mode="on"] .page > #quartz-body {
+    padding: 0 2rem;
   }
 }
 `
