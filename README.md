@@ -45,7 +45,7 @@ opt-in surface):
 | Path | What |
 |------|------|
 | `engine/` | Pure build engine: `(vault, site config) -> static site dir`. No AWS/auth/tenancy — the sacred boundary. |
-| `canvas-plugin/` | Our Quartz pageType+emitter plugin for `.canvas` pages + the isolated hesprs viewer wrapper (ADR 0001). |
+| `canvas-plugin/` | Our Quartz pageType+emitter plugin for `.canvas` pages + the isolated React Flow viewer (ADR 0001, ADR 0003). |
 | `cli/` | Thin CLI (`publish build` / `publish deploy`), stand-in for the future Obsidian plugin. ALL AWS lives here (deploy.json schema: `cli/README.md`). |
 | `vendor/quartz-pin.json` | Pinned Quartz commit; `vendor/quartz/` is the gitignored managed checkout (ADR 0002). |
 | `scripts/setup-quartz.mjs` | The `npm run setup` bootstrap. |

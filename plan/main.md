@@ -27,16 +27,18 @@ We are building a paid replacement for Obsidian Publish. End users press a "publ
 | Component | Choice | License | Notes |
 |---|---|---|---|
 | Canvas format | JSON Canvas 1.0 spec | MIT, open spec | https://jsoncanvas.org/spec/1.0/ created by Obsidian, free to implement commercially |
-| Canvas renderer | `hesprs/json-canvas-viewer` | MIT | https://github.com/hesprs/json-canvas-viewer npm: `json-canvas-viewer`. Chosen over React Flow for MVP (see 2.1) |
+| Canvas renderer | React Flow (`@xyflow/react`) | MIT | https://reactflow.dev — replaced the MVP's hesprs `json-canvas-viewer` post-MVP at Nickolay's direction (ADR 0003; 2.1 records the original MVP reasoning) |
 | Markdown site generator | `jackyzha0/quartz` (Quartz 5 if plugin API suffices, else vendored) | MIT | https://github.com/jackyzha0/quartz |
 | Hosting | S3 + CloudFront | n/a | Per-site S3 prefix, CloudFront invalidation on publish |
 | Client | Obsidian companion plugin (degenerate CLI version for MVP) | n/a | |
 
-### 2.1 Why hesprs viewer and not React Flow
+### 2.1 Why hesprs viewer and not React Flow (SUPERSEDED by ADR 0003 — kept for history)
 
 React Flow is MIT and safe (no gated pro features), but it is an editing library; a published canvas is read-only. hesprs already implements weeks of polish we would otherwise redo: markdown rendering inside nodes with scroll containment, group z-ordering, edge labels and arrow endpoints, the 6-color JSON Canvas palette with light/dark themes, minimap, mobile mistouch prevention, and prerendering via `renderToString`. Risk is single-maintainer, mitigated by: MIT (we can vendor/fork), small readable codebase, and the isolation rule in section 4.3. If during implementation we find ourselves overriding most of `nodeComponents` and fighting the interaction model, escalate to Nickolay; that is the trigger to reconsider React Flow. Do not switch unilaterally.
 
-### 2.2 hesprs viewer integration surface (verified by reading source, v4.x)
+> **2026-07-10:** Nickolay directed the switch; the viewer now runs on React Flow (ADR 0003). The isolation rule in 4.3 made it a `canvas-plugin/viewer/`-only rewrite, as designed.
+
+### 2.2 hesprs viewer integration surface (verified by reading source, v4.x) (historical — see ADR 0003)
 
 The repo is a monorepo: `packages/core` (vanilla TS), plus `react`, `preact`, `vue` component packages and a `vite` plugin. Quartz is Preact-based; the Preact package (`json-canvas-viewer-preact` on npm, published by hesprs) is likely the right fit, but the vanilla core mounted on a placeholder div is also fine.
 
@@ -100,7 +102,7 @@ Reverse direction: teach Quartz's wikilink handling that `[[Something.canvas]]` 
 
 ### 4.3 Renderer isolation rule
 
-Exactly one component/module owns the hesprs dependency (roughly `<CanvasView canvas resolveLink onOpenNote theme/>` plus its build-time counterpart). The rest of the pipeline emits JSON Canvas + a path->URL map, renderer-agnostic. This keeps the React Flow escape hatch cheap.
+Exactly one module tree owns the renderer dependency (today `canvas-plugin/viewer/` owning React Flow — ADR 0003; originally the hesprs wrapper). The rest of the pipeline emits JSON Canvas + a path->URL map, renderer-agnostic. This is what made the hesprs -> React Flow swap a one-directory rewrite, and keeps the next swap cheap too.
 
 ### 4.4 Privacy / degradation rule (decide in Phase 1, enforce in validation)
 

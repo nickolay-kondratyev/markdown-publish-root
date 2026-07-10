@@ -1,6 +1,7 @@
 # ADR 0001: Own Quartz pageType plugin + hesprs viewer (not the official canvas-page plugin)
 
-**Status:** Accepted (Nickolay, 2026-07-08)
+**Status:** Accepted (Nickolay, 2026-07-08). Renderer choice superseded by
+ADR 0003 (React Flow, 2026-07-10); the own-pageType-plugin decision stands.
 **Context:** Phase 0 spikes (see `docs/spikes/`).
 
 ## New fact discovered
