@@ -43,6 +43,11 @@ implementation detail.
      follow from the staged names automatically.
    - `title: <original basename>` is injected when absent (md frontmatter /
      canvas metadata) so pages never display raw docids.
+   - The RESERVED key `vintrinPath: <original vault-relative path>` is ALWAYS
+     injected (md frontmatter / canvas metadata) — the folder-shaped
+     explorer/breadcrumbs place docs by it (ADR 0004). A publishable vault doc
+     declaring `vintrinPath` itself throws `ReservedFrontmatterKeyError`
+     (all offenders listed) before anything is written.
    - Wikilinks in md bodies and canvas text cards are rewritten to docid
      targets (`src/wikilinkRewriter.ts`; display text and `#anchors`
      preserved, code spans skipped, unresolved links left as-is); canvas
@@ -161,11 +166,21 @@ resolve to real pages. `SiteBuilder` fails fast if canvases are staged but the
 viewer bundle was never built (`npm run setup` / `npm run bundle:viewer`).
 See `canvas-plugin/README.md`.
 
+## Folder-shaped navigation (ADR 0004)
+
+The UI shows the ORIGINAL vault hierarchy while URLs stay `/n/<docid>`: the
+generated config disables stock `explorer`/`breadcrumbs`/`folder-page` and
+registers our local component plugins `vintrin-explorer/` and
+`vintrin-breadcrumbs/` (same local-source mechanism as `canvas-plugin/`).
+Both derive placement from the staged `vintrinPath` key (pipeline step 1).
+Folders are collapse-only — no folder URLs exist anywhere. See the plugin
+READMEs and `docs/decisions/0004-folder-nav-local-component-plugins.md`.
+
 ## Stable vs evolving
 
 - **Stable:** the sacred boundary; `buildSite()` shape; site.json schema
   (grows compatibly, never breaks); publish-filter precedence; the privacy
-  rule; leaks-always-fail-the-build.
+  rule; leaks-always-fail-the-build; the reserved `vintrinPath` key.
 - **Evolving:** the generated Quartz plugin set; staging internals;
   `StagingResult` details; `ValidationResult` details (fingerprint heuristics,
   link-check coverage).

@@ -1,5 +1,11 @@
 # Status: plan/folder-nav-over-id-urls.md
 
+**PLAN COMPLETE (2026-07-10).** All phases 0–5 done; definition of done met:
+folder-shaped explorer (collapse-only folders, title labels, `/n/<docid>`
+hrefs), breadcrumbs on nested note + canvas pages, move-stability and
+folder-privacy tests passing, no folder-listing pages, unit + integration +
+e2e green, vendor/quartz tracked diff empty, docs + ADR 0004 updated.
+
 ## Phase 0 — Spike C (DONE, 2026-07-10)
 
 Local `component`-category plugin proven end-to-end against the vendored
@@ -81,6 +87,16 @@ No fork needed; plan proceeds as written. No deviations.
   and a new check asserts `/n` 404s. Server routing behavior unchanged.
 - vendor/quartz tracked diff empty (no fork/patch).
 - 323 unit / 56 integration / 38 smoke / 14 folder-nav e2e green.
+
+## Phase 5 — Docs + ADR (DONE, 2026-07-10)
+
+- ADR `docs/decisions/0004-folder-nav-local-component-plugins.md`.
+- READMEs: new `vintrin-explorer/`, `vintrin-breadcrumbs/`; updated
+  `engine/README.md` (vintrinPath injection + folder-nav section),
+  `canvas-plugin/README.md` (passthrough), `docs/current/dev.md`
+  (modules, design points, test counts).
+- Plans cross-linked: folder-nav plan marked DONE;
+  id-based-publishing §8.3 marked DONE.
 
 ## Environment note (this workstation)
 

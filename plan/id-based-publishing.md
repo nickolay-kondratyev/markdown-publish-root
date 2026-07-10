@@ -96,7 +96,7 @@ Each phase ends with a short written status per the working agreements.
 
 1. **Excalidraw publishing** (greenfield: extension claim, renderer, filter, viewer) — id publishing then falls out of the shared staging pass for free.
 2. Uniform extensionless canvas URLs (`/n/<docid>` without `.canvas`).
-3. Title/metadata-driven Explorer & breadcrumbs (flattening mitigation) — planned in `plan/folder-nav-over-id-urls.md`.
+3. Title/metadata-driven Explorer & breadcrumbs (flattening mitigation) — DONE via `plan/folder-nav-over-id-urls.md` (ADR 0004; status: `docs/status/folder-nav.md`).
 4. Legacy path-URL redirects via alias synthesis — deliberately skipped now; the mechanism (`alias-redirects`, already enabled) remains available if a published site ever migrates.
 5. Stable ids for attachments/assets.
 

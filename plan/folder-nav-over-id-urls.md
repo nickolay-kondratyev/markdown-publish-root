@@ -1,6 +1,6 @@
 # Plan: Folder-Based Navigation UI over Stable-Id URLs
 
-**Status:** PROPOSED (2026-07-10) — awaiting engineer approval.
+**Status:** DONE (2026-07-10) — executed phases 0–5; status log `docs/status/folder-nav.md`, decision record `docs/decisions/0004-folder-nav-local-component-plugins.md`.
 **Predecessor:** `plan/id-based-publishing.md` (DONE) — this plan executes its follow-up #3 (§8): "Title/metadata-driven Explorer & breadcrumbs (flattening mitigation)".
 **Owner:** Nickolay
 
