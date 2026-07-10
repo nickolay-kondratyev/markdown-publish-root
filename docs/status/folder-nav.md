@@ -60,6 +60,28 @@ No fork needed; plan proceeds as written. No deviations.
   crumbs, `/n/index.html` no longer emitted, explorer shows `canvases/`.
 - 323 unit / 43 integration / typecheck green. No deviations.
 
+## Phase 4 — Integration + product verification (DONE, 2026-07-10)
+
+- Fixtures: `notes/guides/deep-dive.md` (nested, id-stamped) and
+  `notes/vintrin-priv-only-x7q3/only-private.md` (publish:false; the folder
+  NAME is a leak sentinel). test-vault README updated.
+- New `engine/test/integration/folderNav.test.ts` (9 tests): nested explorer
+  structure, title labels, every explorer href resolves to the docid grammar,
+  folder rows contain no links, note + canvas crumb trails, only Home linked,
+  folder-privacy sentinel absent from ALL output, no `/n/` listing.
+- Move-stability added to renameStability.test.ts: moving
+  notes/getting-started.md → notes/guides/ leaves the emitted file set and
+  every resolved link identical while crumbs change (with control assert).
+- e2e promoted to a permanent script `scripts/e2e-foldernav.mjs` (wired into
+  `npm run test:e2e`): desktop expand→click→/n/<docid>, crumbs on note +
+  canvas, collapse state across SPA nav, mobile hamburger — 14/14 in real
+  Chromium (screenshots `.out/qa-foldernav/`, not source-controlled).
+- **Called out:** e2e-smoke's dir-redirect check used `/n` as its fixture
+  URL; that listing is now intentionally gone, so the check moved to `/tags`
+  and a new check asserts `/n` 404s. Server routing behavior unchanged.
+- vendor/quartz tracked diff empty (no fork/patch).
+- 323 unit / 56 integration / 38 smoke / 14 folder-nav e2e green.
+
 ## Environment note (this workstation)
 
 No nvm on this box (`~/.nvm` absent) and the profile's `node()`/`npm()` shell

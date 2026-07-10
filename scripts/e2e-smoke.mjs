@@ -148,7 +148,10 @@ const rawGet = (rawPath) =>
 check("preview: site root / 200", (await status("/")) === 200)
 check("preview: extensionless canvas URL 200 (the exact URL that 404'd on plain servers)", (await status(`/${MAIN_CANVAS_SLUG}`)) === 200)
 check("preview: extensionless note URL 200", (await status(`/${ARCHITECTURE_SLUG}`)) === 200)
-check("preview: folder URL without slash redirects to slashed folder index", (await fetch(`${base}/n`, { redirect: "manual" })).status === 302)
+// /tags is the remaining dir with an index — /n has none since folder-page
+// was disabled (plan/folder-nav-over-id-urls.md §2: no folder URLs).
+check("preview: folder URL without slash redirects to slashed folder index", (await fetch(`${base}/tags`, { redirect: "manual" })).status === 302)
+check("preview: the removed /n folder listing 404s (no folder URLs)", (await status("/n")) === 404)
 check("preview: missing URL serves themed 404 page with status 404", await (async () => {
   const response = await fetch(`${base}/definitely/not/here`)
   return response.status === 404 && (await response.text()).includes("<html")

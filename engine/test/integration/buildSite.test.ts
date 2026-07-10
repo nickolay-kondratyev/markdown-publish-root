@@ -48,9 +48,6 @@ describe("SiteBuilder integration — builds test-vault markdown-only", () => {
     const docPages = listFiles(OUT_DIR)
       .filter((p) => p.endsWith(".html"))
       .filter((p) => !p.startsWith("static") && !p.startsWith("tags") && p !== "index.html" && p !== "404.html")
-      // Quartz's FolderPage emits a listing page for the n/ directory itself —
-      // published titles only, same info as the Explorer (accepted, plan §6.2).
-      .filter((p) => p !== "n/index.html")
     const offGrammar = docPages.filter(
       (p) => !/^n\/docid_[0-9a-z]{21}_e(\.canvas)?\.html$/.test(p),
     )

@@ -17,7 +17,7 @@
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "node --test \"engine/test/unit/*.test.ts\" \"canvas-plugin/test/unit/*.test.ts\" \"vintrin-explorer/test/unit/*.test.ts\" \"vintrin-breadcrumbs/test/unit/*.test.ts\" \"cli/test/unit/*.test.ts\" \"scripts/test/unit/*.test.ts\"",
     "test:integration": "node --test --test-concurrency=1 \"engine/test/integration/*.test.ts\"",
-    "test:e2e": "node scripts/e2e-smoke.mjs"
+    "test:e2e": "node scripts/e2e-smoke.mjs && node scripts/e2e-foldernav.mjs"
   },
   "dependencies": {
     "@quartz-community/utils": "github:quartz-community/utils#e09d8b0bbccb46073b23c00affaf3e40a2c3b0c4",
