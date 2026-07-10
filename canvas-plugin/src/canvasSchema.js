@@ -16,8 +16,11 @@ export class CanvasParseError extends Error {
 
 /**
  * Parse raw .canvas file content.
+ * `metadata` is preserved: Obsidian keeps top-level canvas `metadata` across
+ * re-saves (Spike S1), and the engine stamps `metadata.frontmatter.{id,title}`
+ * there (plan/id-based-publishing.md §4).
  * @param {string} raw
- * @returns {{nodes: any[], edges: any[]}}
+ * @returns {{nodes: any[], edges: any[], metadata: any}}
  */
 export function parseCanvas(raw) {
   let parsed
@@ -39,7 +42,7 @@ export function parseCanvas(raw) {
       throw new CanvasParseError("every node needs string `id` and `type`")
     }
   }
-  return { nodes, edges }
+  return { nodes, edges, metadata: parsed.metadata }
 }
 
 /**

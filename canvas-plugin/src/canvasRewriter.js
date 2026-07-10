@@ -42,10 +42,15 @@ export class CanvasRewriter {
    * @param {string[]} args.allSlugs Quartz ctx.allSlugs (staged files only — privacy boundary)
    * @param {(slug: string) => ({tree: any, data: any} | undefined)} args.noteLookup
    *   processed content of a published note by slug (undefined when not published)
+   * @param {(slug: string) => (string | undefined)} [args.canvasTitleLookup]
+   *   display title of another published canvas by slug — needed since staged
+   *   canvas basenames are docids (plan/id-based-publishing.md §4.4); falls
+   *   back to the file basename when absent.
    */
-  constructor({ canvasSlug, allSlugs, noteLookup }) {
+  constructor({ canvasSlug, allSlugs, noteLookup, canvasTitleLookup }) {
     this.canvasSlug = canvasSlug
     this.noteLookup = noteLookup
+    this.canvasTitleLookup = canvasTitleLookup ?? (() => undefined)
     this.resolver = new VaultLinkResolver(canvasSlug, allSlugs)
     this.markdownRenderer = new CanvasMarkdownRenderer(this.resolver)
   }
@@ -112,7 +117,7 @@ export class CanvasRewriter {
         return cardNode(node, {
           kindLabel: "Canvas",
           href: resolved.relativeUrl,
-          text: titleFromPath(node.file),
+          text: this.canvasTitleLookup(resolved.targetSlug) ?? titleFromPath(node.file),
           internal: true,
           targetSlug: resolved.targetSlug,
         })

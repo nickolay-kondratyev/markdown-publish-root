@@ -14,6 +14,8 @@ export {
   type ThemeSettings,
 } from "./siteConfig.ts"
 export { PublishFilter, isCanvasPath, isMarkdownPath } from "./publishFilter.ts"
+export { DocId } from "./docId.ts"
+export { DocIdValidationError } from "./idMap.ts"
 export { QuartzConfigGenerator } from "./quartzConfigGenerator.ts"
 export { NodePreflight } from "./nodePreflight.ts"
 export type { StagingResult } from "./vaultStager.ts"
