@@ -111,34 +111,44 @@ const ZEN_MODE_CSS = `
 :root[zen-mode="on"] #quartz-body .sidebar.right {
   display: none;
 }
-/* Left sidebar: everything hidden EXCEPT the toolbar row (search/darkmode/
-   reader/zen icons) so zen can be exited. The toolbar group renders as a
-   generic .flex-component div (Flex.tsx adds no group-name class) — the only
-   stable selector for it. If a second flex group is ever added to the left
-   sidebar, this filter keeps it visible too — acceptable, only one exists.
+/* Left sidebar: everything hidden EXCEPT the zen button — the single exit
+   affordance. The toolbar group renders as a generic .flex-component div
+   (Flex.tsx adds no group-name class) — the only stable selector for it.
    WHY-NOT display:none on .sidebar.left itself: it would hide the zen button
    (fixed-position descendants of display:none ancestors don't render). */
 :root[zen-mode="on"] #quartz-body .sidebar.left > *:not(.flex-component) {
+  display: none;
+}
+/* Inside the toolbar, hide every icon except zen. Each toolbar item sits in
+   an inline-styled wrapper div (Flex.tsx); hiding the CONTENT (not the
+   wrapper) stays generic — new toolbar plugins hide automatically. The empty
+   wrappers keep 0 width, so the zen icon still hugs the corner. */
+:root[zen-mode="on"] #quartz-body .sidebar.left .flex-component > div > *:not(.zenmode) {
   display: none;
 }
 /* Reclaim the .page cap too — zen means full available width. */
 :root[zen-mode="on"] .page {
   max-width: 100%;
 }
-/* Tablet/desktop only: take the left sidebar OUT of the collapsed grid and
-   float the toolbar top-left. On mobile the sidebar is already a top row —
-   keeping it in flow avoids a fixed toolbar overlaying content. */
+/* Zen reads as pure content: drop the article/footer divider rule too. */
+:root[zen-mode="on"] .center > hr {
+  display: none;
+}
+/* Take the left sidebar OUT of the collapsed grid and pin the lone zen icon
+   to the top-RIGHT corner (all widths — a single 20px icon overlays nothing
+   that matters, unlike the full toolbar this used to be). */
+:root[zen-mode="on"] #quartz-body .sidebar.left {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: auto;
+  height: auto;
+  width: auto;
+  padding: 1rem;
+  z-index: 2;
+}
+/* Full-bleed, not glued to the viewport edge (mobile keeps base's 1rem). */
 @media (min-width: 800px) {
-  :root[zen-mode="on"] #quartz-body .sidebar.left {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: auto;
-    width: auto;
-    padding: 1rem;
-    z-index: 2;
-  }
-  /* Full-bleed, not glued to the viewport edge (mobile keeps base's 1rem). */
   :root[zen-mode="on"] .page > #quartz-body {
     padding: 0 2rem;
   }

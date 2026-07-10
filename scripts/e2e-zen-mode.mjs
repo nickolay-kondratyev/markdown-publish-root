@@ -42,11 +42,18 @@ const measure = () =>
       document.querySelector(selector)?.getBoundingClientRect().width ?? 0
     const zen = document.querySelector("button.zenmode")
     const reader = document.querySelector("button.readermode")
+    const zenRect = zen?.getBoundingClientRect()
     return {
       mode: document.documentElement.getAttribute("zen-mode"),
       centerWidth: rectWidth(".center"),
       rightSidebarWidth: rectWidth(".sidebar.right"),
-      zenButtonWidth: zen?.getBoundingClientRect().width ?? 0,
+      zenButtonWidth: zenRect?.width ?? 0,
+      zenInRightHalf: zenRect !== undefined && zenRect.x > window.innerWidth / 2,
+      otherToolbarIconsWidth:
+        rectWidth(".sidebar.left .search") +
+        rectWidth(".sidebar.left button.darkmode") +
+        rectWidth(".sidebar.left button.readermode"),
+      dividerHrVisible: rectWidth(".center > hr") > 0,
       // DOCUMENT_POSITION_PRECEDING (2): reader-mode button comes BEFORE zen.
       zenAfterReader:
         zen !== null &&
@@ -55,7 +62,9 @@ const measure = () =>
     }
   })
 
-const NOTE_URL = `${base}/notes/architecture`
+// The long-form fixture (test-vault/notes/deep-dive.md): TOC, table, code —
+// the page zen mode is FOR.
+const NOTE_URL = `${base}/notes/deep-dive`
 await page.goto(NOTE_URL)
 await page.waitForSelector("button.zenmode")
 
@@ -64,9 +73,17 @@ const off = await measure()
 check("zen button renders next to (after) the reader-mode book icon", off.zenAfterReader)
 check("initial state is zen off", off.mode === "off")
 check("right sidebar visible before toggle", off.rightSidebarWidth > 0, `w=${off.rightSidebarWidth}`)
+check("other toolbar icons visible before toggle", off.otherToolbarIconsWidth > 0)
+check("article/footer divider visible before toggle", off.dividerHrVisible)
 
 fs.mkdirSync(path.join(repoRoot, ".out"), { recursive: true })
-await page.screenshot({ path: path.join(repoRoot, ".out", "zen-mode-off.png") })
+// Chromium scroll-anchors a few hundred px during progressive render of the
+// long note — pin to top so the screenshots are deterministic.
+const screenshotFromTop = async (name) => {
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await page.screenshot({ path: path.join(repoRoot, ".out", name) })
+}
+await screenshotFromTop("zen-mode-off.png")
 
 // --- 2. Toggle ON: the width reclaim ----------------------------------------
 await page.click("button.zenmode")
@@ -79,7 +96,10 @@ check(
   `off=${off.centerWidth} on=${on.centerWidth}`,
 )
 check("zen button still visible in zen (exit stays reachable)", on.zenButtonWidth > 0)
-await page.screenshot({ path: path.join(repoRoot, ".out", "zen-mode-on.png") })
+check("zen button pinned to the top-right corner", on.zenInRightHalf)
+check("all OTHER toolbar icons hidden in zen", on.otherToolbarIconsWidth === 0)
+check("article/footer divider hidden in zen", !on.dividerHrVisible)
+await screenshotFromTop("zen-mode-on.png")
 
 // --- 3. Toggle OFF: stock layout returns ------------------------------------
 await page.click("button.zenmode")
@@ -87,6 +107,8 @@ const restored = await measure()
 check("second click restores zen-mode=off", restored.mode === "off")
 check("right sidebar restored", restored.rightSidebarWidth === off.rightSidebarWidth)
 check("center width restored", restored.centerWidth === off.centerWidth)
+check("toolbar icons restored", restored.otherToolbarIconsWidth === off.otherToolbarIconsWidth)
+check("article/footer divider restored", restored.dividerHrVisible)
 
 // --- 4. Persistence: SPA navigation, then full reload ------------------------
 await page.click("button.zenmode") // zen back ON
@@ -109,7 +131,8 @@ for (const [label, viewport] of [
 ]) {
   await page.setViewportSize(viewport)
   const at = await measure()
-  check(`${label}: zen button visible while zen on`, at.zenButtonWidth > 0)
+  check(`${label}: zen button visible (top-right) while zen on`, at.zenButtonWidth > 0 && at.zenInRightHalf)
+  check(`${label}: other toolbar icons hidden while zen on`, at.otherToolbarIconsWidth === 0)
   check(`${label}: right sidebar hidden while zen on`, at.rightSidebarWidth === 0)
   check(`${label}: content visible while zen on`, at.centerWidth > 0, `w=${at.centerWidth}`)
 }

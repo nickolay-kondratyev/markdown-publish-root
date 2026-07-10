@@ -30,6 +30,19 @@ describe("ZenMode component — CSS (the width reclaim)", () => {
     assert.equal(component.css.includes("grid-template-columns: auto"), true)
   })
 
+  test("GIVEN the css WHEN inspected THEN all toolbar icons except zen are hidden in zen", () => {
+    assert.equal(component.css.includes(".flex-component > div > *:not(.zenmode)"), true)
+  })
+
+  test("GIVEN the css WHEN inspected THEN the zen exit icon pins to the top-RIGHT corner", () => {
+    const sidebarLeftRule = component.css.match(/\.sidebar\.left\s*\{([^}]*)\}/)?.[1] ?? ""
+    assert.equal(sidebarLeftRule.includes("right: 0") && sidebarLeftRule.includes("left: auto"), true)
+  })
+
+  test("GIVEN the css WHEN inspected THEN the article/footer divider (hr) is hidden in zen", () => {
+    assert.equal(component.css.includes(':root[zen-mode="on"] .center > hr'), true)
+  })
+
   test("GIVEN the css WHEN inspected THEN .sidebar.left ITSELF is never display:none (would hide the exit button)", () => {
     // Child-filter selectors (`.sidebar.left > ...`) may hide children; a rule
     // whose selector ENDS at .sidebar.left must not contain display: none.

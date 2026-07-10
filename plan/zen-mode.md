@@ -104,7 +104,7 @@ Notes:
 ## 4. Decisions taken (flag to Nickolay if disagreeing)
 
 1. **Full-bleed in zen** (`.page { max-width: 100% }`): user asked for "more full view"; long-line readability trade-off accepted. Trivial to soften later (e.g. `max-width: 1200px`).
-2. **Toolbar stays visible in zen** (floating top-left) rather than a lone floating exit button — keeps search/darkmode reachable and is less custom CSS.
+2. ~~**Toolbar stays visible in zen** (floating top-left)~~ — superseded by Nickolay (2026-07-10): zen shows ONLY the lotus icon, pinned top-RIGHT, and hides the article/footer `hr`; search/darkmode return on exit.
 3. **Persist across reloads** via localStorage (darkmode precedent) — reader-mode's session-only behavior would surprise.
 
 ## 5. Test plan (write failing tests first)

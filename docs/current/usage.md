@@ -56,4 +56,4 @@ Pan/zoom/minimap; markdown text cards with working `[[wikilinks]]`; embedded not
 
 ## Zen mode (published-site reading view)
 
-Every published page has a lotus icon in the toolbar (next to the reader-mode book icon). It toggles **zen mode**: the file explorer, graph, backlinks, and TOC disappear AND the note content reclaims their width (stock reader-mode only fades the sidebars out; the ~640px of grid columns stay). The toolbar stays reachable to exit, and the state persists across page navigation and reloads (localStorage, like the theme toggle).
+Every published page has a lotus icon in the toolbar (next to the reader-mode book icon). It toggles **zen mode**: the file explorer, graph, backlinks, TOC, and all other toolbar icons disappear AND the note content reclaims their width (stock reader-mode only fades the sidebars out; the ~640px of grid columns stay). Only the lotus remains, pinned to the top-right corner, to exit. The state persists across page navigation and reloads (localStorage, like the theme toggle).
