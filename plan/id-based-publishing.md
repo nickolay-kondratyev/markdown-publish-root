@@ -1,6 +1,6 @@
 # Plan: ID-Based Publishing (stable `docid` URLs)
 
-**Status:** PLANNED — not started.
+**Status:** DONE (2026-07-10) — implemented through Phase 5; see ADR `docs/decisions/0003-id-based-publishing-staging-rewrite.md`. Definition of done (§10) verified: unit + integration + e2e green, rename-stability test passing, browser-verified canvas nav on `/n/<docid>` URLs.
 **Feasibility basis:** `plan/assesments/stable-id-publishing-feasibility.md` (read it first; this plan assumes its findings).
 **Owner:** Nickolay
 

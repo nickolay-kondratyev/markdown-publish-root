@@ -20,7 +20,7 @@ Two inviolable rules:
 
 | Module | Role | README |
 |---|---|---|
-| `engine/` | `SiteBuilder.buildSite({vaultDir, siteConfig, outDir})`: VaultStager (publish filter → staging dir), QuartzConfigGenerator (config inversion), QuartzRunner (vendored pinned Quartz), SiteValidator (leak check fails build; broken-link report) | `engine/README.md` |
+| `engine/` | `SiteBuilder.buildSite({vaultDir, siteConfig, outDir})`: VaultStager (publish filter → id validation → id-transformed staging dir), QuartzConfigGenerator (config inversion), QuartzRunner (vendored pinned Quartz), SiteValidator (leak check fails build; broken-link report) | `engine/README.md` |
 | `canvas-plugin/` | Quartz 5 pageType plugin: claims `.canvas`, registers links (graph/backlinks/search), rewrites canvas JSON at build time (markdown cards via shared resolver, subpath slicing, private placeholders, canvas→canvas cards), emits pages mounting the viewer | `canvas-plugin/README.md` |
 | `cli/` | `publish build` / `publish preview` (pure PreviewPathResolver + node:http wiring; implements the URL-routing contract of `docs/hosting.md`) / `publish deploy` (pure DeployPlanner + executor, `--dry-run`) | `cli/README.md` |
 | `test-vault/` | Canonical fixture; exercises the full parity checklist; private note carries leak sentinel `LEAK-SENTINEL-9f3a72` — do not break its invariants | `test-vault/README.md` |
@@ -28,7 +28,8 @@ Two inviolable rules:
 
 ## Key design points
 
-- **One shared resolver:** vault path → URL is Quartz's (`transformLink`/`slugifyFilePath` from `@quartz-community/utils`). Never reimplement slugging.
+- **One shared resolver:** vault path → URL is Quartz's (`transformLink`/`slugifyFilePath` from `@quartz-community/utils`). Never reimplement slugging. Since id-based publishing (ADR 0003) the contract is `vaultPath → docid → URL`: staging resolves wikilinks with the SAME Quartz utils against the original path slugs, then maps path-slug → docid (`engine/src/stagingLinkIndex.ts`).
+- **Stable-id URLs:** every doc page (note/canvas) is served at `/n/<docid>` (`/n/<docid>.canvas`), docid from frontmatter `id:` / canvas `metadata.frontmatter.id` (grammar `docid_[0-9a-z]{21}_e`, `engine/src/docId.ts`). Renames never change URLs. Missing/malformed/duplicate ids hard-fail the build BEFORE Quartz; stamp ids with `make vault-add-ids VAULT=<vault>`. Root `index.md` stays at `/`; assets stay path-based.
 - **Privacy by construction:** private files never reach staging, so the build can't leak them; the LeakChecker is a backstop that fails the build on verbatim matches. Private vs missing refs are deliberately indistinguishable ("Private note" placeholder).
 - **Config inversion:** users provide small `site.json`; Quartz config is generated per build. Grow the schema reluctantly.
 - **Node IDs + coordinates preserved** in emitted canvas JSON (future commenting anchors, plan §1).
@@ -38,8 +39,8 @@ Two inviolable rules:
 ```bash
 source ~/.nvm/nvm.sh && nvm use 26        # Node >= 22 required
 npm install && npm run setup              # idempotent Quartz bootstrap
-npm run typecheck && npm test             # 220 unit + 34 integration (node:test, BDD GIVEN/WHEN/THEN)
-npm run test:e2e                          # HTTP + headless Chromium smoke via the real preview server (36 checks)
+npm run typecheck && npm test             # 289 unit + 43 integration (node:test, BDD GIVEN/WHEN/THEN)
+npm run test:e2e                          # HTTP + headless Chromium smoke via the real preview server (37 checks)
 ```
 
 Gotchas (hard-won, see `docs/status/phase-*.md`):

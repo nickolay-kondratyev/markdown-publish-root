@@ -88,6 +88,13 @@ Quartz expects humans editing `quartz.config.yaml`. In our product, config is GE
 
 ### 4.2 Shared link resolution (the actual integration; everything else is plumbing)
 
+> **Deviation note (2026-07-10, id-based publishing — ADR 0003, `plan/id-based-publishing.md`):**
+> the resolver contract is now `vaultPath -> docid -> published URL`. Doc pages
+> are served at `/n/<docid>` (`/n/<docid>.canvas`); the engine's staging pass
+> renames docs to their ids and rewrites links, still resolving through
+> Quartz's own utils (`engine/src/stagingLinkIndex.ts`). Everything below about
+> "never reimplement slugging" stands unchanged.
+
 One function must be agreed on by both systems: `vaultPath -> published URL`. Quartz owns it (slugger, wikilink resolution, ignore/private filtering). The canvas side must CALL Quartz's resolver, never reimplement it, in three places:
 
 1. The `attachments` map handed to the viewer.

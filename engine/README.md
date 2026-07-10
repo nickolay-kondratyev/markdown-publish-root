@@ -29,8 +29,26 @@ implementation detail.
 
 ## Pipeline
 
-1. **VaultStager** copies ONLY publishable files (per **PublishFilter**) into a
-   fresh staging directory (default: under `os.tmpdir()`).
+1. **VaultStager** stages ONLY publishable files (per **PublishFilter**) into a
+   fresh staging directory (default: under `os.tmpdir()`). Since id-based
+   publishing (ADR 0003) staging is also the id-transformation surface:
+   - Every publishable doc must carry a stable docid (md frontmatter `id:`,
+     canvas `metadata.frontmatter.id`; grammar `docid_[0-9a-z]{21}_e` in
+     `src/docId.ts`). Missing/malformed/duplicate ids throw
+     `DocIdValidationError` (full offending list) BEFORE anything is written —
+     fix with `make vault-add-ids VAULT=<vault>`.
+   - Docs are staged *named by id*: `n/<docid>.md` / `n/<docid>.canvas`
+     (root `index.md` stays at `index.md` so the site keeps `/`). Quartz stays
+     id-unaware; its slugs — and therefore all URLs, graph/backlinks/search —
+     follow from the staged names automatically.
+   - `title: <original basename>` is injected when absent (md frontmatter /
+     canvas metadata) so pages never display raw docids.
+   - Wikilinks in md bodies and canvas text cards are rewritten to docid
+     targets (`src/wikilinkRewriter.ts`; display text and `#anchors`
+     preserved, code spans skipped, unresolved links left as-is); canvas
+     `file` nodes are remapped to staged paths. Resolution goes through the
+     shared Quartz resolver (`src/stagingLinkIndex.ts`) — slugging is never
+     reimplemented. Assets stage at their vault paths (no id carrier).
 2. **QuartzConfigGenerator** turns the site settings into `quartz.config.yaml`
    ("config inversion": users never see Quartz config).
 3. **QuartzRunner** runs the vendored, pinned Quartz CLI (see ADR 0002) against

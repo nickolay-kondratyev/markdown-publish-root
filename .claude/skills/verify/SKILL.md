@@ -26,7 +26,7 @@ const address = await new PreviewServer("out/public").start(0) // port 0 = free 
 const { chromium } = await import("playwright-core")
 const browser = await chromium.launch({ executablePath: "/usr/bin/chromium", args: ["--no-sandbox", "--disable-dev-shm-usage"] })
 ```
-- Canvas pages: `/canvases/main.canvas` and `/canvases/second.canvas` (extensionless URLs work; main links to second and back — good for SPA-nav flows).
+- Canvas pages live at stable-id URLs: `/n/<docid>.canvas` (extensionless works; docid = `metadata.frontmatter.id` in `test-vault/canvases/*.canvas`). main links to second and back — good for SPA-nav flows.
 - Wait for the viewer: `.canvas-page-mount .JSON-Canvas-Viewer`, then ~800ms for async fragment fetches.
 - Viewer controls: fullscreen toggle is the FIRST `.JCV-button` inside `.JCV-controls-content`.
 

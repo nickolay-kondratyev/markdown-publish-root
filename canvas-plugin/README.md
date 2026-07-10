@@ -37,6 +37,13 @@ Invariants: node ids + coordinates always preserved (future commenting anchors);
 the attachments map is complete for every remaining file node (the hesprs viewer
 renders fetch-404 bodies otherwise).
 
+**Id-based publishing (ADR 0003):** staged canvas basenames are docids, so
+display names come from `metadata.frontmatter.title` (engine-injected from the
+original basename; `parseCanvas` preserves top-level `metadata`). The canvas
+page title and canvas->canvas card labels use it — basename is only a fallback.
+The plugin itself stays id-unaware: it renders whatever staged names/links the
+engine baked.
+
 **Privacy:** the plugin only ever sees the staging directory (publishable files
 only), so it CANNOT distinguish a private note from a missing one — both get
 the same placeholder, which also means the output is no oracle for whether an
