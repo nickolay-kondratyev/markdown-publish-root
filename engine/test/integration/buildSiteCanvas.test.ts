@@ -233,6 +233,50 @@ describe("SiteBuilder integration — builds test-vault WITH canvases", () => {
     const entry = readContentIndex()[MAIN_CANVAS_SLUG]
     assert.match(entry.content, /Main Canvas/)
   })
+
+  // --- search-in-canvas: EVERYTHING visible on the canvas is searchable --------
+
+  test("THEN embedded-note body text lands in the canvas's content-index entry", () => {
+    const entry = readContentIndex()[MAIN_CANVAS_SLUG]
+    assert.match(entry.content, /pure build engine/)
+  })
+
+  test("THEN a subpath note card contributes ONLY its embedded section", () => {
+    const content: string = readContentIndex()[MAIN_CANVAS_SLUG].content
+    assert.deepEqual(
+      {
+        installation: content.includes("Installation is easy"),
+        usage: content.includes("Basic usage instructions"),
+        advancedNotEmbedded: content.includes("Advanced tips"),
+      },
+      { installation: true, usage: true, advancedNotEmbedded: false },
+    )
+  })
+
+  test("THEN group labels, link URLs, edge labels, and card titles are searchable", () => {
+    const content: string = readContentIndex()[MAIN_CANVAS_SLUG].content
+    assert.deepEqual(
+      {
+        groupLabel: content.includes("Intro Group"),
+        linkUrl: content.includes("jsoncanvas.org"),
+        edgeLabel: content.includes("embeds note"),
+        canvasCardTitle: content.includes("second"),
+      },
+      { groupLabel: true, linkUrl: true, edgeLabel: true, canvasCardTitle: true },
+    )
+  })
+
+  test("THEN the private note contributes NOTHING to the canvas's search content", () => {
+    const content: string = readContentIndex()[MAIN_CANVAS_SLUG].content
+    assert.deepEqual(
+      {
+        path: content.includes(PRIVATE_PATH_MARKER),
+        sentinel: content.includes(LEAK_SENTINEL),
+        placeholderLabel: content.includes("Private note"),
+      },
+      { path: false, sentinel: false, placeholderLabel: false },
+    )
+  })
 })
 
 // --- helpers -----------------------------------------------------------------
