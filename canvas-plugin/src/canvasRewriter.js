@@ -33,9 +33,12 @@ import GithubSlugger from "github-slugger"
  * @property {Record<string, {href: string, title: string, fragmentUrl: string, subpathLabel?: string}>} noteLinks
  *   per note-card node id: open-note affordance target + that node's own fragment URL
  * @property {string[]} links SimpleSlugs for Quartz `data.links` (backlinks/graph)
+ * @property {string[]} searchParts one plain-text entry per visible canvas item
+ *   (card, group label, link URL, edge label) in canvas order — the search
+ *   preview renders each entry as a bracketed pseudo-card (pageBody.js).
+ *   Privacy placeholders contribute nothing; empty items are dropped.
  * @property {string} searchText plain text of EVERYTHING visibly rendered on the
- *   canvas (search index): text cards, embedded-note fragments, card titles,
- *   group labels, link URLs, edge labels. Privacy placeholders contribute nothing.
+ *   canvas (search index): always `searchParts.join("\n")`.
  * @property {{sitePath: string, html: string}[]} fragments prerendered note fragments to emit
  * @property {string[]} warnings human-readable non-fatal issues
  */
@@ -71,6 +74,7 @@ export class CanvasRewriter {
       attachments: {},
       noteLinks: {},
       links: [],
+      searchParts: [],
       searchText: "",
       fragments: [],
       warnings: [],
@@ -84,7 +88,8 @@ export class CanvasRewriter {
       if (edge.label) searchParts.push(edge.label)
     }
     result.links = [...links]
-    result.searchText = searchParts.join("\n")
+    result.searchParts = searchParts.filter((part) => part.trim() !== "")
+    result.searchText = result.searchParts.join("\n")
     return result
   }
 
@@ -192,10 +197,11 @@ export class CanvasRewriter {
       fragmentUrl: this.resolver.relativeUrlTo(sitePath),
       ...(node.subpath ? { subpathLabel: node.subpath.replace(/^#\^?/, "") } : {}),
     }
-    // The card visibly shows the note title + the fragment body — index BOTH.
-    // Only the fragment (not the whole note) so a subpath card contributes
-    // exactly what the canvas displays.
-    searchParts.push(title, plainTextOf(fragment.html))
+    // The card visibly shows the note title + the fragment body — index BOTH,
+    // as ONE part (one search-preview pseudo-card per canvas card). Only the
+    // fragment (not the whole note) so a subpath card contributes exactly
+    // what the canvas displays.
+    searchParts.push(`${title} ${plainTextOf(fragment.html)}`.trim())
     return structuredClone(node)
   }
 }

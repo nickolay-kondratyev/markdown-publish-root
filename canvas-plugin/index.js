@@ -53,6 +53,10 @@ export default function VintrinCanvasPage() {
             viewerSrc: new VaultLinkResolver(slug, ctx.allSlugs).relativeUrlTo(
               VIEWER_BUNDLE_SITE_PATH,
             ),
+            // Per-card plain text for the server-rendered search/popover
+            // preview (pageBody.js). Sibling of `data` on purpose: only
+            // `data` is serialized into the client payload script.
+            previewParts: rewrite.searchParts,
             data: {
               canvas: rewrite.canvas,
               attachments: rewrite.attachments,

@@ -266,6 +266,26 @@ describe("SiteBuilder integration — builds test-vault WITH canvases", () => {
     )
   })
 
+  // --- search preview (docs/tickets/canvas-in-search-results.md) ---------------
+  // The search preview panel (and link popovers) clone `.popover-hint` from the
+  // FETCHED static HTML — the canvas page must server-render its text preview.
+
+  test("THEN the canvas page embeds a popover-hint text preview with one bracketed line per card", () => {
+    const html = fs.readFileSync(path.join(OUT_DIR, MAIN_CANVAS_PAGE), "utf-8")
+    assert.deepEqual(
+      {
+        previewBlock: html.includes('class="popover-hint canvas-text-preview"'),
+        bracketedGroupLabel: html.includes("[Intro Group]"),
+      },
+      { previewBlock: true, bracketedGroupLabel: true },
+    )
+  })
+
+  test("THEN the embedded client payload stays lean (no previewParts in the data script)", () => {
+    const payload = readCanvasPayload(MAIN_CANVAS_PAGE)
+    assert.equal("previewParts" in payload, false)
+  })
+
   test("THEN the private note contributes NOTHING to the canvas's search content", () => {
     const content: string = readContentIndex()[MAIN_CANVAS_SLUG].content
     assert.deepEqual(

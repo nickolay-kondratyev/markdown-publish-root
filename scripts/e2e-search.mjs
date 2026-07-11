@@ -78,6 +78,22 @@ check("embedded-note term still surfaces the note itself", hasResult(embeddedHre
 await searchFor("LEAK-SENTINEL-9f3a72")
 check("private note content yields no results", (await resultHrefs()).length === 0)
 
+// === preview panel shows the canvas's bracketed pseudo-cards, highlighted ====
+// (docs/tickets/canvas-in-search-results.md — previously EMPTY: the panel
+// clones `.popover-hint` from fetched HTML, which the canvas page lacked.)
+await searchFor("Intro Group")
+await page.hover(`.result-card[href*="${docIdOf("canvases/main.canvas")}"]`)
+// Preview populates async: 150ms focus debounce + page fetch — settle like searchFor.
+await page.waitForTimeout(700)
+const previewText = (await page.textContent(".preview-container")) ?? ""
+check("canvas preview shows the bracketed card text", previewText.includes("[Intro Group]"))
+const highlightedInPreview = await page.evaluate(() =>
+  [...document.querySelectorAll(".preview-container .highlight")]
+    .map((el) => el.textContent)
+    .join(" "),
+)
+check("canvas preview highlights the matched term", /intro/i.test(highlightedInPreview))
+
 // === clicking a canvas result lands on a WORKING canvas page =================
 await searchFor("Intro Group")
 await page.click(`.result-card[href*="${docIdOf("canvases/main.canvas")}"]`)

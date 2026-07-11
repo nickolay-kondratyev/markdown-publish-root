@@ -262,6 +262,42 @@ describe("CanvasRewriter — searchText covers ALL visible canvas content (searc
   })
 })
 
+describe("CanvasRewriter — searchParts (per-card entries for the search preview)", () => {
+  test("GIVEN several visible items WHEN rewriting THEN searchParts has one entry per item, in canvas order", () => {
+    const result = rewriter().rewrite({
+      nodes: [
+        baseNode("t1", { type: "text", text: "First card" }),
+        baseNode("g1", { type: "group", label: "Intro Group" }),
+      ],
+      edges: [{ id: "e1", fromNode: "t1", toNode: "g1", label: "edge label" }],
+    })
+    assert.deepEqual(result.searchParts, ["First card", "Intro Group", "edge label"])
+  })
+
+  test("GIVEN a note card WHEN rewriting THEN title and body combine into ONE entry (one preview pseudo-card per canvas card)", () => {
+    const result = rewriteNodes(baseNode("n1", { type: "file", file: "notes/architecture.md" }))
+    assert.deepEqual(result.searchParts, ["Architecture ARCHITECTURE-BODY"])
+  })
+
+  test("GIVEN an empty text card WHEN rewriting THEN it contributes NO entry (no empty pseudo-cards)", () => {
+    const result = rewriteNodes(baseNode("t1", { type: "text", text: "" }))
+    assert.deepEqual(result.searchParts, [])
+  })
+
+  test("GIVEN an unpublished note card WHEN rewriting THEN searchParts is EMPTY (privacy)", () => {
+    const result = rewriteNodes(baseNode("p1", { type: "file", file: "notes/private-secret.md" }))
+    assert.deepEqual(result.searchParts, [])
+  })
+
+  test("GIVEN any canvas WHEN rewriting THEN searchText is exactly the joined searchParts (single source of truth)", () => {
+    const result = rewriteNodes(
+      baseNode("t1", { type: "text", text: "First card" }),
+      baseNode("g1", { type: "group", label: "Intro Group" }),
+    )
+    assert.equal(result.searchText, result.searchParts.join("\n"))
+  })
+})
+
 describe("CanvasRewriter — privacy (plan §4.4)", () => {
   function privateResult() {
     return rewriteNodes(baseNode("p1", { type: "file", file: "notes/private-secret.md" }))

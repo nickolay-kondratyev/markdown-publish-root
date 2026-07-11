@@ -7,7 +7,7 @@
  */
 import { h } from "preact"
 
-/** @typedef {{viewerSrc: string, data: {canvas: object, attachments: object, noteLinks: object}}} CanvasPagePayload */
+/** @typedef {{viewerSrc: string, previewParts: string[], data: {canvas: object, attachments: object, noteLinks: object}}} CanvasPagePayload */
 
 export function CanvasPageBody() {
   /** @param {{fileData: any}} props */
@@ -35,6 +35,21 @@ export function CanvasPageBody() {
         },
         h("p", { class: "canvas-page-loading" }, "Loading canvas..."),
       ),
+      // Search preview + link popovers fetch the STATIC page HTML and clone
+      // `.popover-hint` — the interactive viewer only exists after client-side
+      // boot, so without this block a canvas previews as empty
+      // (docs/tickets/canvas-in-search-results.md). Each visible card becomes
+      // one bracketed text line; hidden on the canvas page itself via CSS
+      // scoped to `.canvas-page` (the clones live outside that scope).
+      payload.previewParts.length === 0
+        ? null
+        : h(
+            "div",
+            { class: "popover-hint canvas-text-preview" },
+            payload.previewParts.map((part) =>
+              h("p", { class: "canvas-text-preview-card" }, `[${part}]`),
+            ),
+          ),
     ])
   }
 
@@ -85,6 +100,11 @@ const LOADER_SCRIPT = `
 `
 
 const CANVAS_PAGE_CSS = `
+/* The text preview exists for cloned-out contexts (search preview panel, link
+   popovers). On the canvas page itself the interactive viewer IS the content. */
+.canvas-page .canvas-text-preview {
+  display: none;
+}
 .canvas-page-mount {
   width: 100%;
   height: min(75vh, 56rem);
