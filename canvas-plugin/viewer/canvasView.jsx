@@ -24,10 +24,13 @@ const STYLESHEET = `${xyflowCss}\n${viewerCss}`
 
 // Module-level state survives SPA navigations: this bundle is dynamic-imported
 // once and cached, while CanvasView instances are disposed/recreated per page.
+// Only the CANVAS fullscreen level needs this — the site-wide level (<html>,
+// full-screen-mode plugin) survives the DOM swap natively.
 const fullscreenRetention = new FullscreenRetention()
 if (typeof document !== "undefined") {
   // Quartz fires "prenav" right before it swaps the DOM (which force-exits
-  // native fullscreen). Recomputed on every nav — see FullscreenRetention.
+  // the mount's native fullscreen). Recomputed on every nav — see
+  // FullscreenRetention.
   document.addEventListener("prenav", () => {
     fullscreenRetention.capture(
       document.fullscreenElement !== null &&
@@ -49,7 +52,7 @@ export function mountCanvasView(container, payload) {
 
 export class CanvasView {
   /**
-   * @param {HTMLElement} container the page mount div (also the fullscreen target)
+   * @param {HTMLElement} container the page mount div (also the canvas fullscreen target)
    * @param {CanvasViewPayload} payload
    */
   constructor(container, payload) {

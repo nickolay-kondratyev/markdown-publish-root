@@ -25,6 +25,8 @@ export interface LocalPluginDirs {
   breadcrumbsPluginDir: string
   /** Zen-mode toolbar toggle (plan/zen-mode.md). */
   zenModePluginDir: string
+  /** Full-screen-mode toolbar toggle (docs/tickets/full-screen-mode.md). */
+  fullScreenModePluginDir: string
 }
 
 export class QuartzConfigGenerator {
@@ -40,6 +42,8 @@ export class QuartzConfigGenerator {
   ): Record<string, unknown> {
     const canvasPluginDir = localPlugins.canvasPluginDir ?? defaultLocalPluginDir("canvas-plugin")
     const zenModePluginDir = localPlugins.zenModePluginDir ?? defaultLocalPluginDir("zen-mode")
+    const fullScreenModePluginDir =
+      localPlugins.fullScreenModePluginDir ?? defaultLocalPluginDir("full-screen-mode")
     const explorerPluginDir =
       localPlugins.explorerPluginDir ?? defaultLocalPluginDir("vintrin-explorer")
     const breadcrumbsPluginDir =
@@ -85,6 +89,15 @@ export class QuartzConfigGenerator {
           source: zenModePluginDir,
           enabled: true,
           layout: { position: "left", priority: 40, group: "toolbar" },
+        },
+        // Our full-screen-mode toggle (docs/tickets/full-screen-mode.md):
+        // native fullscreen on <html>, site-wide. Priority 45 = rightmost in
+        // the toolbar; it stays visible inside reader/zen mode (their hide
+        // rules allowlist it) so any reading mode can be upgraded to fullscreen.
+        {
+          source: fullScreenModePluginDir,
+          enabled: true,
+          layout: { position: "left", priority: 45, group: "toolbar" },
         },
         // Folder-shaped Explorer over stable-id URLs; replaces the stock
         // explorer disabled above (plan/folder-nav-over-id-urls.md, spike C).
@@ -303,9 +316,9 @@ const PLUGIN_ENTRIES: PluginEntry[] = [
 /** Layout groups + per-pageType tweaks (mirrors Quartz defaults, minus bases). */
 const LAYOUT: Record<string, unknown> = {
   groups: {
-    // The mode-toggle cluster: darkmode + reader-mode + zen-mode, the ONLY
-    // group in the left sidebar. SiteChromeStyles pins it to the top-right
-    // viewport corner (ref.ap.0zwhQQya81CGNQ9pmqKkM.E).
+    // The mode-toggle cluster: darkmode + reader-mode + zen-mode +
+    // full-screen-mode, the ONLY group in the left sidebar. SiteChromeStyles
+    // pins it to the top-right viewport corner (ref.ap.0zwhQQya81CGNQ9pmqKkM.E).
     toolbar: { priority: 35, direction: "row", gap: "0.5rem" },
   },
   byPageType: {

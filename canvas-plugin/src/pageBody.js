@@ -123,7 +123,9 @@ const CANVAS_PAGE_CSS = `
 .canvas-page-mount img {
   object-fit: contain;
 }
-/* Native fullscreen on the mount: fill the screen, drop the page-embed frame. */
+/* Canvas-level fullscreen on the mount (the INNER of the two fullscreen
+   levels, docs/tickets/full-screen-mode.md): fill the screen, drop the
+   page-embed frame. */
 .canvas-page-mount:fullscreen {
   height: 100%;
   border: none;

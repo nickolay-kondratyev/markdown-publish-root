@@ -44,10 +44,37 @@ const SITE_CHROME_SCSS = `@use "./variables.scss" as *;
     right: 1rem;
   }
   /* The header row's spacer pushes search to the right edge — reserve the
-     cluster's footprint (3 icons + gaps + gutter) so they never overlap. */
+     cluster's footprint (4 icons + gaps + gutter) so they never overlap. */
   #quartz-body .sidebar.left {
-    padding-right: 6rem;
+    padding-right: 7.5rem;
   }
+}
+
+/* Hover tooltips for the cluster icons (ticket full-screen-mode.md): every
+   button already carries an aria-label, so the tooltip is pure CSS off that
+   one source of truth — the vendored darkmode/reader-mode plugins cannot be
+   edited (gitignored pinned checkout), and this covers future icons too.
+   Right-anchored: the cluster hugs the right viewport edge, so the tooltip
+   grows leftward and never overflows. */
+.sidebar.left > .flex-component button[aria-label] {
+  position: relative;
+}
+.sidebar.left > .flex-component button[aria-label]:hover::after {
+  content: attr(aria-label);
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.4rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--lightgray);
+  border-radius: 5px;
+  background-color: var(--light);
+  color: var(--darkgray);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
 }
 
 /* Reader-mode exit affordance (ticket 0005, mirrors zen): stock readermode.scss
@@ -69,12 +96,14 @@ const SITE_CHROME_SCSS = `@use "./variables.scss" as *;
 :root[reader-mode="on"]:not([zen-mode="on"]) .sidebar.left:hover > *:not(.flex-component) {
   opacity: 1;
 }
-/* Only the book icon in the corner: hide the sibling icon WRAPPERS (Flex.tsx
-   inline-styled divs), not just their content — zen's hide-the-content trick
-   would leave the reader icon a gap-width short of the corner because zen's
-   empty wrapper sits to its RIGHT. With siblings gone, the shrink-to-fit fixed
-   cluster leaves the book icon flush in the rightmost (lotus) slot. */
-:root[reader-mode="on"]:not([zen-mode="on"]) .sidebar.left > .flex-component > div:not(:has(.readermode)) {
+/* Book icon + fullscreen icon in the corner: hide the OTHER icon WRAPPERS
+   (Flex.tsx inline-styled divs), not just their content — zen's
+   hide-the-content trick would leave gap-width holes between the survivors.
+   The fullscreen toggle stays visible so the reading experience can be
+   upgraded to fullscreen from inside reader mode (ticket full-screen-mode.md);
+   with the other siblings gone, the shrink-to-fit fixed cluster leaves book +
+   fullscreen flush in the rightmost slots. */
+:root[reader-mode="on"]:not([zen-mode="on"]) .sidebar.left > .flex-component > div:not(:has(.readermode)):not(:has(.fullscreenmode)) {
   display: none;
 }
 `

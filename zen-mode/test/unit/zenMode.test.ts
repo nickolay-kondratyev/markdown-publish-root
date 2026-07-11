@@ -30,8 +30,12 @@ describe("ZenMode component — CSS (the width reclaim)", () => {
     assert.equal(component.css.includes("grid-template-columns: auto"), true)
   })
 
-  test("GIVEN the css WHEN inspected THEN all toolbar icons except zen are hidden in zen", () => {
-    assert.equal(component.css.includes(".flex-component > div > *:not(.zenmode)"), true)
+  test("GIVEN the css WHEN inspected THEN all toolbar icons except zen AND fullscreen are hidden in zen", () => {
+    // The fullscreen toggle stacks with zen (ticket full-screen-mode.md).
+    assert.equal(
+      component.css.includes(".flex-component > div > *:not(.zenmode):not(.fullscreenmode)"),
+      true,
+    )
   })
 
   test("GIVEN the css WHEN inspected THEN the zen exit icon pins to the top-RIGHT corner", () => {
