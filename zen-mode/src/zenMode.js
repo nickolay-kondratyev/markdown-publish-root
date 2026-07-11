@@ -133,6 +133,16 @@ const ZEN_MODE_CSS = `
 :root[zen-mode="on"] .page {
   max-width: 100%;
 }
+/* Frugal vertical space: base's .page-header carries margin-top $topSpacing
+   (6rem) to clear the sticky sidebars — both are gone in zen, so pull the
+   first heading up. 2rem matches the pinned toggle cluster's top offset
+   (ref.ap.0zwhQQya81CGNQ9pmqKkM.E). Desktop/tablet only: base already zeroes
+   this margin on mobile (<800px), which this rule would otherwise override. */
+@media (min-width: 800px) {
+  :root[zen-mode="on"] #quartz-body .page-header {
+    margin-top: 2rem;
+  }
+}
 /* Zen reads as pure content: drop the article/footer divider and the
    breadcrumbs trail too. */
 :root[zen-mode="on"] .center > hr,
