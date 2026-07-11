@@ -6,9 +6,10 @@
  * Registered by the engine's generated quartz.config.yaml as a LOCAL plugin
  * source. Must stay plain-Node-importable ESM (gotcha G6) — hence h(), no JSX.
  */
-import { h } from "preact"
+import { Fragment, h } from "preact"
 
 const ZEN_MODE_LABEL = "Zen mode"
+const ZEN_SEARCH_LABEL = "Search"
 
 // Phosphor Icons "flower-lotus" (regular), 256x256 viewBox.
 // Source: https://github.com/phosphor-icons/core/blob/main/assets/regular/flower-lotus.svg
@@ -16,30 +17,64 @@ const ZEN_MODE_LABEL = "Zen mode"
 const LOTUS_ICON_PATH =
   "M245.83,121.63a15.53,15.53,0,0,0-9.52-7.33,73.51,73.51,0,0,0-22.17-2.22c4-19.85,1-35.55-2.06-44.86a16.15,16.15,0,0,0-18.79-10.88,85.53,85.53,0,0,0-28.55,12.12,94.58,94.58,0,0,0-27.11-33.25,16.05,16.05,0,0,0-19.26,0A94.48,94.48,0,0,0,91.26,68.46,85.53,85.53,0,0,0,62.71,56.34,16.15,16.15,0,0,0,43.92,67.22c-3,9.31-6,25-2.06,44.86a73.51,73.51,0,0,0-22.17,2.22,15.53,15.53,0,0,0-9.52,7.33,16,16,0,0,0-1.6,12.27c3.39,12.57,13.8,36.48,45.33,55.32S113.13,208,128.05,208s42.67,0,74-18.78c31.53-18.84,41.94-42.75,45.33-55.32A16,16,0,0,0,245.83,121.63ZM59.14,72.14a.2.2,0,0,1,.23-.15A70.43,70.43,0,0,1,85.18,83.66,118.65,118.65,0,0,0,80,119.17c0,18.74,3.77,34,9.11,46.28A123.59,123.59,0,0,1,69.57,140C51.55,108.62,55.3,84,59.14,72.14Zm3,103.35C35.47,159.57,26.82,140.05,24,129.7a59.82,59.82,0,0,1,22.5-1.17,129.08,129.08,0,0,0,9.15,19.41,142.28,142.28,0,0,0,34,39.56A114.92,114.92,0,0,1,62.1,175.49ZM128,190.4c-9.33-6.94-32-28.23-32-71.23C96,76.7,118.38,55.24,128,48c9.62,7.26,32,28.72,32,71.19C160,162.17,137.33,183.46,128,190.4ZM170.82,83.66A70.43,70.43,0,0,1,196.63,72a.2.2,0,0,1,.23.15C200.7,84,204.45,108.62,186.43,140a123.32,123.32,0,0,1-19.54,25.48c5.34-12.26,9.11-27.54,9.11-46.28A118.65,118.65,0,0,0,170.82,83.66ZM232,129.72c-2.77,10.25-11.4,29.81-38.09,45.77a114.92,114.92,0,0,1-27.55,12,142.28,142.28,0,0,0,34-39.56,129.08,129.08,0,0,0,9.15-19.41A59.69,59.69,0,0,1,232,129.71Z"
 
-/** Quartz component constructor (same shape as reader-mode's default export). */
+// Phosphor Icons "magnifying-glass" (regular), 256x256 viewBox.
+// Source: https://github.com/phosphor-icons/core/blob/main/assets/regular/magnifying-glass.svg
+// License: MIT — https://github.com/phosphor-icons/core/blob/main/LICENSE
+const MAGNIFIER_ICON_PATH =
+  "M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"
+
+/** 20px toolbar icon button (lotus/magnifier) — shared shape for the cluster. */
+function iconButton({ className, label, iconPath, displayClass }) {
+  return h(
+    "button",
+    {
+      class: [className, displayClass].filter(Boolean).join(" "),
+      "aria-label": label,
+    },
+    h(
+      "svg",
+      {
+        xmlns: "http://www.w3.org/2000/svg",
+        class: "zenIcon",
+        fill: "currentColor",
+        viewBox: "0 0 256 256",
+        width: "64px",
+        height: "64px",
+        "aria-label": label,
+      },
+      [h("title", null, label), h("path", { d: iconPath })],
+    ),
+  )
+}
+
+/**
+ * Quartz component constructor (same shape as reader-mode's default export).
+ *
+ * Renders TWO buttons in the toolbar cluster (the config loader supports only
+ * one layout slot per plugin, so the zen-search affordance ships as a sibling
+ * of the lotus rather than as its own plugin entry):
+ *   - .zen-search  magnifier, visible ONLY in zen — re-opens search after zen
+ *                  hides the full-width search bar. Delegates to the real
+ *                  .search-button (see TOGGLE_SCRIPT).
+ *   - .zenmode     lotus toggle (rightmost, so it never moves).
+ */
 export function ZenMode() {
   /** @param {{displayClass?: string}} props */
   function ZenModeComponent({ displayClass }) {
-    return h(
-      "button",
-      {
-        class: ["zenmode", displayClass].filter(Boolean).join(" "),
-        "aria-label": ZEN_MODE_LABEL,
-      },
-      h(
-        "svg",
-        {
-          xmlns: "http://www.w3.org/2000/svg",
-          class: "zenIcon",
-          fill: "currentColor",
-          viewBox: "0 0 256 256",
-          width: "64px",
-          height: "64px",
-          "aria-label": ZEN_MODE_LABEL,
-        },
-        [h("title", null, ZEN_MODE_LABEL), h("path", { d: LOTUS_ICON_PATH })],
-      ),
-    )
+    return h(Fragment, null, [
+      iconButton({
+        className: "zen-search",
+        label: ZEN_SEARCH_LABEL,
+        iconPath: MAGNIFIER_ICON_PATH,
+        displayClass,
+      }),
+      iconButton({
+        className: "zenmode",
+        label: ZEN_MODE_LABEL,
+        iconPath: LOTUS_ICON_PATH,
+        displayClass,
+      }),
+    ])
   }
 
   ZenModeComponent.css = ZEN_MODE_CSS
@@ -65,6 +100,14 @@ const setupZenMode = () => {
     button.addEventListener("click", toggleZenMode)
     window.addCleanup(() => button.removeEventListener("click", toggleZenMode))
   }
+  // Zen-search icon: delegate to the REAL search button (hidden in zen, see
+  // ZEN_MODE_CSS) so open/focus/Esc/Ctrl+K logic stays single-source in the
+  // search plugin's script — no second search implementation.
+  const openSearch = () => document.querySelector(".search > .search-button")?.click()
+  for (const button of document.getElementsByClassName("zen-search")) {
+    button.addEventListener("click", openSearch)
+    window.addCleanup(() => button.removeEventListener("click", openSearch))
+  }
 }
 document.addEventListener("nav", setupZenMode)
 document.addEventListener("render", setupZenMode)
@@ -77,8 +120,9 @@ document.addEventListener("render", setupZenMode)
 // The single grid override (no media query) beats base's desktop/tablet/
 // mobile variants because base's media queries add no specificity.
 const ZEN_MODE_CSS = `
-/* Button mirrors reader-mode's .readermode (20px icon in the toolbar row). */
-.zenmode {
+/* Buttons mirror reader-mode's .readermode (20px icon in the toolbar row). */
+.zenmode,
+.zen-search {
   cursor: pointer;
   padding: 0;
   position: relative;
@@ -90,13 +134,25 @@ const ZEN_MODE_CSS = `
   text-align: inherit;
   flex-shrink: 0;
 }
-.zenmode svg {
+.zenmode svg,
+.zen-search svg {
   position: absolute;
   width: 20px;
   height: 20px;
   top: calc(50% - 10px);
   left: 0;
   fill: var(--darkgray);
+}
+/* Zen-search magnifier: hidden in stock layout (the full-width search bar is
+   already there), shown ONLY in zen as the way back into search. Both buttons
+   share ONE Flex wrapper div, so the toolbar group gap does not apply between
+   them — the margin reproduces it (toolbar gap: 0.5rem, quartzConfigGenerator). */
+.zen-search {
+  display: none;
+  margin-right: 0.5rem;
+}
+:root[zen-mode="on"] .zen-search {
+  display: inline-block;
 }
 
 /* Collapse the grid: single column, no sidebar areas
@@ -111,22 +167,32 @@ const ZEN_MODE_CSS = `
 :root[zen-mode="on"] #quartz-body .sidebar.right {
   display: none;
 }
-/* Left sidebar: everything hidden (page title, search, explorer) EXCEPT the
-   mode-toggle cluster holding the zen button — the single exit affordance.
+/* Left sidebar: everything hidden (page title, explorer) EXCEPT the
+   mode-toggle cluster holding the zen button — the single exit affordance —
+   and the search ROOT (next rule).
    The cluster renders as a generic .flex-component div (Flex.tsx adds no
    group-name class) — the only stable selector for it; it is the sidebar's
    ONLY group (ref.ap.0zwhQQya81CGNQ9pmqKkM.E).
    WHY-NOT display:none on .sidebar.left itself: it would hide the zen button
    (fixed-position descendants of display:none ancestors don't render). */
-:root[zen-mode="on"] #quartz-body .sidebar.left > *:not(.flex-component) {
+:root[zen-mode="on"] #quartz-body .sidebar.left > *:not(.flex-component):not(.search) {
   display: none;
 }
-/* Inside the mode-toggle cluster, hide every icon except zen. Each item sits
-   in an inline-styled wrapper div (Flex.tsx); hiding the CONTENT (not the
-   wrapper) stays generic — new cluster plugins hide automatically. The empty
-   wrappers keep 0 width, and zen is the LAST (rightmost) item, so the lotus
-   does not move when the others vanish. */
-:root[zen-mode="on"] #quartz-body .sidebar.left .flex-component > div > *:not(.zenmode) {
+/* The search ROOT stays renderable in zen so its fixed full-viewport overlay
+   (.search-container.active) can still appear — the .zen-search magnifier in
+   the corner cluster (and Ctrl/Cmd+K) opens it. Only the inline full-width
+   button is hidden; with it hidden and the overlay out of flow, .search
+   collapses to a zero-size box. */
+:root[zen-mode="on"] #quartz-body .sidebar.left > .search > .search-button {
+  display: none;
+}
+/* Inside the mode-toggle cluster, hide every icon except zen and zen-search
+   (zen-search only EXISTS visually in zen — see its display rules above).
+   Each item sits in an inline-styled wrapper div (Flex.tsx); hiding the
+   CONTENT (not the wrapper) stays generic — new cluster plugins hide
+   automatically. The empty wrappers keep 0 width, and zen is the LAST
+   (rightmost) item, so the lotus does not move when the others vanish. */
+:root[zen-mode="on"] #quartz-body .sidebar.left .flex-component > div > *:not(.zenmode):not(.zen-search) {
   display: none;
 }
 /* Reclaim the .page cap too — zen means full available width. */

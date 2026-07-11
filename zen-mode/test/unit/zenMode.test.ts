@@ -9,15 +9,33 @@ const component = ZenMode() as ((props: Record<string, unknown>) => unknown) & {
   beforeDOMLoaded: string
 }
 
+/** The component renders a fragment of [zen-search, zenmode] buttons. */
+function renderButtons(displayClass?: string): { type: string; props: { class: string } }[] {
+  const vnode = component({ displayClass }) as {
+    props: { children: { type: string; props: { class: string } }[] }
+  }
+  return vnode.props.children
+}
+
 describe("ZenMode component — rendering", () => {
   test("GIVEN the constructor WHEN instantiated THEN it renders a button with the zenmode class", () => {
-    const vnode = component({ displayClass: undefined }) as { type: string; props: { class: string } }
-    assert.deepEqual({ type: vnode.type, class: vnode.props.class }, { type: "button", class: "zenmode" })
+    const zen = renderButtons().find((b) => b.props.class.includes("zenmode"))
+    assert.deepEqual({ type: zen?.type, class: zen?.props.class }, { type: "button", class: "zenmode" })
   })
 
-  test("GIVEN a displayClass WHEN rendering THEN it is appended to the button class", () => {
-    const vnode = component({ displayClass: "desktop-only" }) as { props: { class: string } }
-    assert.equal(vnode.props.class, "zenmode desktop-only")
+  test("GIVEN the constructor WHEN instantiated THEN it ALSO renders the zen-search button (search stays reachable in zen)", () => {
+    const search = renderButtons().find((b) => b.props.class.includes("zen-search"))
+    assert.deepEqual({ type: search?.type, class: search?.props.class }, { type: "button", class: "zen-search" })
+  })
+
+  test("GIVEN the buttons WHEN rendered THEN zenmode is LAST (rightmost — the lotus never moves)", () => {
+    const classes = renderButtons().map((b) => b.props.class)
+    assert.deepEqual(classes, ["zen-search", "zenmode"])
+  })
+
+  test("GIVEN a displayClass WHEN rendering THEN it is appended to each button class", () => {
+    const classes = renderButtons("desktop-only").map((b) => b.props.class)
+    assert.deepEqual(classes, ["zen-search desktop-only", "zenmode desktop-only"])
   })
 })
 
@@ -30,8 +48,29 @@ describe("ZenMode component — CSS (the width reclaim)", () => {
     assert.equal(component.css.includes("grid-template-columns: auto"), true)
   })
 
-  test("GIVEN the css WHEN inspected THEN all toolbar icons except zen are hidden in zen", () => {
-    assert.equal(component.css.includes(".flex-component > div > *:not(.zenmode)"), true)
+  test("GIVEN the css WHEN inspected THEN all toolbar icons except zen and zen-search are hidden in zen", () => {
+    assert.equal(component.css.includes(".flex-component > div > *:not(.zenmode):not(.zen-search)"), true)
+  })
+
+  test("GIVEN the css WHEN inspected THEN the zen-search icon is hidden in stock layout and shown in zen", () => {
+    // Stock layout already has the full-width search bar; the magnifier only
+    // appears once zen hides that bar.
+    assert.equal(
+      component.css.includes(".zen-search {\n  display: none;") &&
+        component.css.includes(':root[zen-mode="on"] .zen-search'),
+      true,
+    )
+  })
+
+  test("GIVEN the css WHEN inspected THEN the search ROOT stays renderable in zen (overlay must be able to appear)", () => {
+    // The sidebar-children hiding rule must exempt .search; only the inline
+    // full-width button is hidden. Without this, .search-container.active
+    // sits under a display:none ancestor and search cannot open in zen.
+    assert.equal(
+      component.css.includes(".sidebar.left > *:not(.flex-component):not(.search)") &&
+        component.css.includes(".sidebar.left > .search > .search-button"),
+      true,
+    )
   })
 
   test("GIVEN the css WHEN inspected THEN the zen exit icon pins to the top-RIGHT corner", () => {
@@ -70,6 +109,15 @@ describe("ZenMode component — toggle script", () => {
   test("GIVEN beforeDOMLoaded WHEN inspected THEN it persists via localStorage under the zen-mode key", () => {
     const script = component.beforeDOMLoaded
     assert.equal(script.includes('localStorage.getItem("zen-mode")') && script.includes('localStorage.setItem("zen-mode"'), true)
+  })
+
+  test("GIVEN beforeDOMLoaded WHEN inspected THEN zen-search delegates to the REAL search button (single search implementation)", () => {
+    const script = component.beforeDOMLoaded
+    assert.equal(
+      script.includes('getElementsByClassName("zen-search")') &&
+        script.includes('document.querySelector(".search > .search-button")?.click()'),
+      true,
+    )
   })
 
   test("GIVEN beforeDOMLoaded WHEN inspected THEN it re-binds on SPA nav/render with cleanup", () => {
