@@ -47,6 +47,14 @@ describe("ZenMode component — CSS (the width reclaim)", () => {
     assert.equal(component.css.includes(':root[zen-mode="on"] .center .breadcrumb-container'), true)
   })
 
+  test("GIVEN reader-mode dims .sidebar.left to opacity 0 WHEN zen pins it as the exit affordance THEN zen forces opacity back to 1 (ticket 0000)", () => {
+    // Stock reader-mode sets `:root[reader-mode="on"] .sidebar.left { opacity: 0 }`.
+    // Both modes can be on at once; without an opacity reset the lotus exit
+    // icon is invisible and zen mode cannot be undone.
+    const sidebarLeftRule = component.css.match(/\.sidebar\.left\s*\{([^}]*)\}/)?.[1] ?? ""
+    assert.equal(sidebarLeftRule.includes("opacity: 1"), true)
+  })
+
   test("GIVEN the css WHEN inspected THEN .sidebar.left ITSELF is never display:none (would hide the exit button)", () => {
     // Child-filter selectors (`.sidebar.left > ...`) may hide children; a rule
     // whose selector ENDS at .sidebar.left must not contain display: none.

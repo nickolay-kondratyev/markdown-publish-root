@@ -44,8 +44,11 @@ const measure = () =>
     const zen = document.querySelector("button.zenmode")
     const reader = document.querySelector("button.readermode")
     const zenRect = zen?.getBoundingClientRect()
+    const sidebarLeft = document.querySelector(".sidebar.left")
     return {
       mode: document.documentElement.getAttribute("zen-mode"),
+      // Reader-mode hides sidebars via opacity (not width) — rects can't see it.
+      sidebarLeftOpacity: sidebarLeft === null ? "0" : getComputedStyle(sidebarLeft).opacity,
       centerWidth: rectWidth(".center"),
       rightSidebarWidth: rectWidth(".sidebar.right"),
       zenButtonWidth: zenRect?.width ?? 0,
@@ -143,8 +146,25 @@ for (const [label, viewport] of [
   check(`${label}: content visible while zen on`, at.centerWidth > 0, `w=${at.centerWidth}`)
 }
 
+// --- 6. Reader mode first, then zen: the exit icon must stay VISIBLE ---------
+// Reader-mode dims .sidebar.left to opacity 0 (hover-revealed). Zen pins that
+// same sidebar as the lone exit affordance — it must force opacity back to 1
+// or zen becomes un-exitable (ticket 0000).
+await page.setViewportSize({ width: 1280, height: 720 })
+await page.click("button.zenmode") // zen OFF (was on from section 5)
+await page.click("button.readermode") // reader ON — sidebar now opacity 0
+await page.click("button.zenmode") // zen ON while reader is on
+const readerThenZen = await measure()
+check(
+  "reader-then-zen: zen exit icon stays opaque (not hidden by reader-mode)",
+  readerThenZen.sidebarLeftOpacity === "1",
+  `opacity=${readerThenZen.sidebarLeftOpacity}`,
+)
+check("reader-then-zen: zen layout still applies", readerThenZen.rightSidebarWidth === 0)
+await screenshotFromTop("zen-mode-reader-then-zen.png")
 // Leave the site as we found it for whoever debugs the .build output next.
-await page.click("button.zenmode")
+await page.click("button.zenmode") // zen OFF
+await page.click("button.readermode") // reader OFF — site back to stock
 
 const ownErrors = filterOwnErrors(errors, base)
 check("no console/page errors from our origin", ownErrors.length === 0, ownErrors.join(" | "))

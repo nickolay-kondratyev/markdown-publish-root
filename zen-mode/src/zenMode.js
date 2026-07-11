@@ -148,6 +148,11 @@ const ZEN_MODE_CSS = `
   width: auto;
   padding: 1rem;
   z-index: 2;
+  /* Reader-mode (independent root attribute, can be on simultaneously) dims
+     .sidebar.left to opacity 0 — which would hide this lone exit affordance
+     and make zen un-exitable. Force it opaque; #quartz-body wins the cascade
+     over reader-mode's :root[reader-mode="on"] .sidebar.left rule. */
+  opacity: 1;
 }
 /* Full-bleed, not glued to the viewport edge (mobile keeps base's 1rem). */
 @media (min-width: 800px) {
