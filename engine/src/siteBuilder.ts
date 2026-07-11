@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url"
 import { PublishFilter } from "./publishFilter.ts"
 import { QuartzConfigGenerator } from "./quartzConfigGenerator.ts"
 import { QuartzRunner } from "./quartzRunner.ts"
+import { SiteChromeStyles } from "./siteChromeStyles.ts"
 import type { SiteConfig } from "./siteConfig.ts"
 import {
   BrokenInternalLinksError,
@@ -56,7 +57,8 @@ const STAGING_DIR_PREFIX = "publish-staging-"
  * build (plan/main.md §3). No AWS, auth, or tenancy in here — ever.
  *
  * Pipeline: stage publishable files (VaultStager) -> generate quartz.config.yaml
- * (QuartzConfigGenerator) -> run the vendored Quartz CLI (QuartzRunner).
+ * (QuartzConfigGenerator) + custom.scss (SiteChromeStyles) -> run the vendored
+ * Quartz CLI (QuartzRunner).
  */
 export class SiteBuilder {
   private readonly runner: QuartzRunner
@@ -95,6 +97,7 @@ export class SiteBuilder {
           canvasPluginDir: this.canvasPluginDir,
         }),
       )
+      this.runner.writeCustomStyles(SiteChromeStyles.scss())
       const buildOutput = this.runner.build(path.resolve(stagingDir), path.resolve(options.outDir))
       assertQuartzSawStagedContent(buildOutput.stdout, staging, stagingDir)
 

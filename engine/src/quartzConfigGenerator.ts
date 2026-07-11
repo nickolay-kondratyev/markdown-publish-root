@@ -252,7 +252,10 @@ const PLUGIN_ENTRIES: PluginEntry[] = [
   {
     source: "search",
     enabled: true,
-    layout: { position: "left", priority: 20, group: "toolbar", groupOptions: { grow: true } },
+    // Deliberately NOT in the toolbar group: the mode toggles live in the
+    // top-right corner cluster (ref.ap.0zwhQQya81CGNQ9pmqKkM.E), so search
+    // stands alone and gets the full sidebar width.
+    layout: { position: "left", priority: 20 },
   },
   { source: "backlinks", enabled: true, layout: { position: "right", priority: 50 } },
   { source: "article-title", enabled: true, layout: { position: "beforeBody", priority: 10 } },
@@ -300,6 +303,9 @@ const PLUGIN_ENTRIES: PluginEntry[] = [
 /** Layout groups + per-pageType tweaks (mirrors Quartz defaults, minus bases). */
 const LAYOUT: Record<string, unknown> = {
   groups: {
+    // The mode-toggle cluster: darkmode + reader-mode + zen-mode, the ONLY
+    // group in the left sidebar. SiteChromeStyles pins it to the top-right
+    // viewport corner (ref.ap.0zwhQQya81CGNQ9pmqKkM.E).
     toolbar: { priority: 35, direction: "row", gap: "0.5rem" },
   },
   byPageType: {

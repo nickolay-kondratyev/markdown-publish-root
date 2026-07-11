@@ -43,6 +43,7 @@ const measure = () =>
       document.querySelector(selector)?.getBoundingClientRect().width ?? 0
     const zen = document.querySelector("button.zenmode")
     const reader = document.querySelector("button.readermode")
+    const dark = document.querySelector("button.darkmode")
     const zenRect = zen?.getBoundingClientRect()
     const sidebarLeft = document.querySelector(".sidebar.left")
     return {
@@ -53,6 +54,10 @@ const measure = () =>
       rightSidebarWidth: rectWidth(".sidebar.right"),
       zenButtonWidth: zenRect?.width ?? 0,
       zenInRightHalf: zenRect !== undefined && zenRect.x > window.innerWidth / 2,
+      // The mode-toggle cluster is ALWAYS pinned top-right (custom.scss,
+      // ref.ap.0zwhQQya81CGNQ9pmqKkM.E) — darkmode stands in for the cluster.
+      modeIconsInRightHalf:
+        dark !== null && dark.getBoundingClientRect().x > window.innerWidth / 2,
       otherToolbarIconsWidth:
         rectWidth(".sidebar.left .search") +
         rectWidth(".sidebar.left button.darkmode") +
@@ -80,6 +85,7 @@ check("zen button renders next to (after) the reader-mode book icon", off.zenAft
 check("initial state is zen off", off.mode === "off")
 check("right sidebar visible before toggle", off.rightSidebarWidth > 0, `w=${off.rightSidebarWidth}`)
 check("other toolbar icons visible before toggle", off.otherToolbarIconsWidth > 0)
+check("mode toggles pinned to the top-right corner while zen off", off.modeIconsInRightHalf)
 check("article/footer divider visible before toggle", off.dividerHrVisible)
 check("breadcrumbs visible before toggle", off.breadcrumbsVisible)
 
@@ -146,12 +152,39 @@ for (const [label, viewport] of [
   check(`${label}: content visible while zen on`, at.centerWidth > 0, `w=${at.centerWidth}`)
 }
 
+// --- 5b. Zen OFF at mobile width: fixed corner icons must not eat the search --
+// custom.scss reserves sidebar padding-right on mobile so the header row
+// (spacer pushes search rightward) never runs under the fixed cluster.
+// Reload first: a desktop→mobile RESIZE leaves the explorer panel open and
+// intercepting all taps (pre-existing, ticket 0004) — a fresh mobile load is
+// the real initial state (zen stays on via localStorage).
+await page.reload()
+await page.waitForSelector("button.zenmode")
+await page.click("button.zenmode") // zen OFF (mobile viewport from section 5)
+const mobileOff = await page.evaluate(() => {
+  const rect = (sel) => document.querySelector(sel)?.getBoundingClientRect()
+  const search = rect(".sidebar.left .search")
+  const dark = rect(".sidebar.left button.darkmode")
+  return {
+    searchRight: search?.right ?? 0,
+    darkLeft: dark?.left ?? Number.POSITIVE_INFINITY,
+    iconsInRightHalf: dark !== undefined && dark.x > window.innerWidth / 2,
+  }
+})
+check("mobile zen-off: mode icons sit in the top-right corner", mobileOff.iconsInRightHalf)
+check(
+  "mobile zen-off: search bar does not run under the corner icons",
+  mobileOff.searchRight <= mobileOff.darkLeft,
+  `searchRight=${mobileOff.searchRight} darkLeft=${mobileOff.darkLeft}`,
+)
+// (zen stays OFF here; clicking again at mobile would be eaten by the open
+// explorer panel — the second repro in ticket 0004. Section 6 is desktop.)
+
 // --- 6. Reader mode first, then zen: the exit icon must stay VISIBLE ---------
 // Reader-mode dims .sidebar.left to opacity 0 (hover-revealed). Zen pins that
 // same sidebar as the lone exit affordance — it must force opacity back to 1
 // or zen becomes un-exitable (ticket 0000).
-await page.setViewportSize({ width: 1280, height: 720 })
-await page.click("button.zenmode") // zen OFF (was on from section 5)
+await page.setViewportSize({ width: 1280, height: 720 }) // zen OFF after 5b
 await page.click("button.readermode") // reader ON — sidebar now opacity 0
 await page.click("button.zenmode") // zen ON while reader is on
 const readerThenZen = await measure()

@@ -149,6 +149,23 @@ describe("QuartzConfigGenerator — plugin set", () => {
     assert.equal(pluginEntry(generate(), "remove-draft")?.enabled, false)
   })
 
+  test("GIVEN any site WHEN generating THEN search stands alone in the left sidebar (full width, no toolbar group)", () => {
+    // The mode toggles live in the top-right corner cluster instead
+    // (ref.ap.0zwhQQya81CGNQ9pmqKkM.E) — search must NOT share a row with them.
+    const entry = pluginEntry(generate(), "search") as { layout?: Record<string, unknown> }
+    assert.deepEqual(entry?.layout, { position: "left", priority: 20 })
+  })
+
+  test("GIVEN any site WHEN generating THEN darkmode and reader-mode form the corner mode-toggle cluster", () => {
+    const doc = generate()
+    const groupOf = (name: string) =>
+      (pluginEntry(doc, name) as { layout?: { group?: string } })?.layout?.group
+    assert.deepEqual(
+      { darkmode: groupOf("darkmode"), readerMode: groupOf("reader-mode") },
+      { darkmode: "toolbar", readerMode: "toolbar" },
+    )
+  })
+
   test("GIVEN any site WHEN generating THEN core markdown pipeline plugins are enabled", () => {
     const doc = generate()
     const enabledCore = ["obsidian-flavored-markdown", "crawl-links", "content-page", "search", "graph"]

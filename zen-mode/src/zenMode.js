@@ -111,18 +111,21 @@ const ZEN_MODE_CSS = `
 :root[zen-mode="on"] #quartz-body .sidebar.right {
   display: none;
 }
-/* Left sidebar: everything hidden EXCEPT the zen button — the single exit
-   affordance. The toolbar group renders as a generic .flex-component div
-   (Flex.tsx adds no group-name class) — the only stable selector for it.
+/* Left sidebar: everything hidden (page title, search, explorer) EXCEPT the
+   mode-toggle cluster holding the zen button — the single exit affordance.
+   The cluster renders as a generic .flex-component div (Flex.tsx adds no
+   group-name class) — the only stable selector for it; it is the sidebar's
+   ONLY group (ref.ap.0zwhQQya81CGNQ9pmqKkM.E).
    WHY-NOT display:none on .sidebar.left itself: it would hide the zen button
    (fixed-position descendants of display:none ancestors don't render). */
 :root[zen-mode="on"] #quartz-body .sidebar.left > *:not(.flex-component) {
   display: none;
 }
-/* Inside the toolbar, hide every icon except zen. Each toolbar item sits in
-   an inline-styled wrapper div (Flex.tsx); hiding the CONTENT (not the
-   wrapper) stays generic — new toolbar plugins hide automatically. The empty
-   wrappers keep 0 width, so the zen icon still hugs the corner. */
+/* Inside the mode-toggle cluster, hide every icon except zen. Each item sits
+   in an inline-styled wrapper div (Flex.tsx); hiding the CONTENT (not the
+   wrapper) stays generic — new cluster plugins hide automatically. The empty
+   wrappers keep 0 width, and zen is the LAST (rightmost) item, so the lotus
+   does not move when the others vanish. */
 :root[zen-mode="on"] #quartz-body .sidebar.left .flex-component > div > *:not(.zenmode) {
   display: none;
 }
@@ -136,9 +139,11 @@ const ZEN_MODE_CSS = `
 :root[zen-mode="on"] .center .breadcrumb-container {
   display: none;
 }
-/* Take the left sidebar OUT of the collapsed grid and pin the lone zen icon
-   to the top-RIGHT corner (all widths — a single 20px icon overlays nothing
-   that matters, unlike the full toolbar this used to be). */
+/* Take the left sidebar OUT of the collapsed grid (its grid-area would
+   otherwise resurrect an implicit column). The visible corner position of the
+   zen icon comes from the ALWAYS-ON cluster pin in the engine's custom.scss
+   (unlayered, so it wins — ref.ap.0zwhQQya81CGNQ9pmqKkM.E); the fixed
+   top-right placement here keeps this rule self-sufficient regardless. */
 :root[zen-mode="on"] #quartz-body .sidebar.left {
   position: fixed;
   top: 0;

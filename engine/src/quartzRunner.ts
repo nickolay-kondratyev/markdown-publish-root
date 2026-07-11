@@ -50,6 +50,15 @@ export class QuartzRunner {
     fs.writeFileSync(path.join(this.quartzDir, "quartz.config.yaml"), configYaml)
   }
 
+  /**
+   * Writes engine-owned chrome CSS as `quartz/styles/custom.scss` — Quartz's
+   * global-CSS extension point, overwritten every build like the config
+   * (the checkout is gitignored; build artifacts are the only way in).
+   */
+  writeCustomStyles(scss: string): void {
+    fs.writeFileSync(path.join(this.quartzDir, "quartz", "styles", "custom.scss"), scss)
+  }
+
   /** Runs `quartz build -d contentDir -o outDir`. Throws with a log tail on failure. */
   build(contentDir: string, outDir: string): QuartzBuildOutput {
     const result = spawnSync(
