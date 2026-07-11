@@ -103,6 +103,14 @@ const CANVAS_PAGE_CSS = `
 .canvas-page-mount img {
   object-fit: contain;
 }
+/* Canvas-level fullscreen on the mount (the INNER of the two fullscreen
+   levels, docs/tickets/full-screen-mode.md): fill the screen, drop the
+   page-embed frame. */
+.canvas-page-mount:fullscreen {
+  height: 100%;
+  border: none;
+  border-radius: 0;
+}
 /* Rewritten cards: canvas->canvas, PDF, unsupported files, private placeholders. */
 .canvas-card {
   display: flex;

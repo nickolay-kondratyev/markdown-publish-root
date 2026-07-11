@@ -71,22 +71,29 @@ export function FullScreenMode() {
   return FullScreenModeComponent
 }
 
-// State source of truth is the BROWSER (document.fullscreenElement), synced to
-// the root attribute on "fullscreenchange" — so Esc, F11 and our button all
-// converge on the same attribute. Button wiring mirrors zen-mode (nav/render
-// re-setup + addCleanup for the SPA-swapped body).
+// State source of truth is the BROWSER, synced to the root attribute on
+// "fullscreenchange" — so Esc, F11 and our button all converge on the same
+// attribute. The check is <html>.matches(":fullscreen") — NOT
+// document.fullscreenElement !== null — because fullscreen has TWO LEVELS
+// (docs/tickets/full-screen-mode.md): the canvas viewer can fullscreen its
+// mount ON TOP of (or instead of) the site level, and only elements in the
+// fullscreen stack match :fullscreen. The site mode must stay truthful either
+// way. Button wiring mirrors zen-mode (nav/render re-setup + addCleanup).
 const TOGGLE_SCRIPT = `
 document.documentElement.setAttribute("full-screen-mode", "off")
 
 document.addEventListener("fullscreenchange", () => {
-  const mode = document.fullscreenElement !== null ? "on" : "off"
+  const mode = document.documentElement.matches(":fullscreen") ? "on" : "off"
+  if (document.documentElement.getAttribute("full-screen-mode") === mode) return
   document.documentElement.setAttribute("full-screen-mode", mode)
   document.dispatchEvent(new CustomEvent("fullscreenmodechange", { detail: { mode } }))
 })
 
 const setupFullScreenMode = () => {
   const toggleFullScreenMode = () => {
-    if (document.fullscreenElement !== null) {
+    if (document.documentElement.matches(":fullscreen")) {
+      // Only reachable when <html> is the TOP fullscreen element (a canvas
+      // level on top would cover this button), so this pops the site level.
       document.exitFullscreen().catch(() => {})
     } else {
       // The WHOLE site goes fullscreen (site-wide mode, not per-element):

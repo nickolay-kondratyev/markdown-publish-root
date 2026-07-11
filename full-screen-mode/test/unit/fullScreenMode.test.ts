@@ -67,6 +67,15 @@ describe("FullScreenMode component — toggle script", () => {
     assert.equal(component.beforeDOMLoaded.includes('addEventListener("fullscreenchange"'), true)
   })
 
+  test("GIVEN beforeDOMLoaded WHEN inspected THEN state keys on <html>.matches(':fullscreen'), not on ANY fullscreen element (two-level design: canvas-level fullscreen must not flip the site mode)", () => {
+    const script = component.beforeDOMLoaded
+    assert.equal(
+      script.includes('document.documentElement.matches(":fullscreen")') &&
+        !script.includes("document.fullscreenElement !== null"),
+      true,
+    )
+  })
+
   test("GIVEN beforeDOMLoaded WHEN inspected THEN it does NOT persist to localStorage (reload can never restore fullscreen without a gesture)", () => {
     assert.equal(component.beforeDOMLoaded.includes("localStorage"), false)
   })

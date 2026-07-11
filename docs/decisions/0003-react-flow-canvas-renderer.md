@@ -58,3 +58,8 @@ Structure (the new isolation boundary is the whole `viewer/` directory):
   now the site-wide `full-screen-mode` toolbar plugin, which fullscreens
   `<html>` — an element the SPA router never swaps, so fullscreen survives
   navigation without retention machinery.
+- 2026-07-11, later (same ticket, owner direction): the canvas control and
+  `fullscreenRetention.js` were REINSTATED as the INNER of two fullscreen
+  levels — it fullscreens the mount and nests on top of the site-wide level
+  (Fullscreen API stack). The site-wide plugin keys its state on
+  `documentElement.matches(":fullscreen")` so the levels stay independent.

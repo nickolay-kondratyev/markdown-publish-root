@@ -1,15 +1,18 @@
 /**
  * The React Flow canvas application: read-only graph + minimap + controls
- * (zoom, fit). One instance per canvas page mount.
+ * (zoom, fit, canvas fullscreen). One instance per canvas page mount.
  *
- * WHY-NOT a fullscreen control here: fullscreen is the SITE-WIDE toggle in the
- * top-right toolbar (full-screen-mode plugin, docs/tickets/full-screen-mode.md)
- * — one ubiquitous affordance instead of a canvas-only one. It fullscreens
- * <html>, which survives SPA navigation, so a canvas opened while the mode is
- * on is already fullscreen.
+ * Fullscreen has TWO LEVELS (docs/tickets/full-screen-mode.md):
+ * - OUTER: the site-wide toolbar toggle (full-screen-mode plugin) fullscreens
+ *   <html> — whole page chrome, survives SPA navigation.
+ * - INNER (this control): fullscreens the canvas MOUNT — just the canvas fills
+ *   the screen. The Fullscreen API stacks: entering the inner level while the
+ *   outer is on nests it, and exiting pops back to the outer level.
+ * Each level keys on ITS OWN element (mount here, <html> in the plugin), never
+ * on "anything is fullscreen" — that is what keeps the two glyphs truthful.
  */
-import { Background, Controls, MiniMap, ReactFlow } from "@xyflow/react"
-import { useState } from "react"
+import { Background, ControlButton, Controls, MiniMap, ReactFlow } from "@xyflow/react"
+import { useCallback, useEffect, useState } from "react"
 import {
   CanvasGroupNode,
   CanvasLinkNode,
@@ -38,12 +41,43 @@ const MINIMAP_FALLBACK_NODE_COLOR = "#d4d4d4"
  * @param {object} props
  * @param {{nodes: any[], edges: any[]}} props.flow    converted React Flow graph
  * @param {"light" | "dark"} props.theme
+ * @param {HTMLElement} props.fullscreenTarget          the page mount div (stays valid across renders)
+ * @param {boolean} props.restoreFullscreen             re-enter canvas fullscreen dropped by the SPA DOM swap
  */
-export function CanvasApp({ flow, theme }) {
+export function CanvasApp({ flow, theme, fullscreenTarget, restoreFullscreen }) {
   // Mistouch prevention (parity with the previous viewer): the wheel only
   // zooms the canvas after the user deliberately clicked/tapped it once —
   // until then, scrolling over the canvas keeps scrolling the page.
   const [interacted, setInteracted] = useState(false)
+  const [isCanvasFullscreen, setIsCanvasFullscreen] = useState(false)
+
+  useEffect(() => {
+    // The MOUNT specifically — site-wide fullscreen (<html>) must not flip
+    // this glyph to "exit": the canvas level is still available on top of it.
+    const onFullscreenChange = () =>
+      setIsCanvasFullscreen(document.fullscreenElement === fullscreenTarget)
+    document.addEventListener("fullscreenchange", onFullscreenChange)
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange)
+  }, [fullscreenTarget])
+
+  useEffect(() => {
+    if (restoreFullscreen) {
+      // Relies on the transient user activation of the click that triggered
+      // the navigation still being valid; degrade gracefully if rejected.
+      fullscreenTarget.requestFullscreen().catch(() => {})
+    }
+  }, [restoreFullscreen, fullscreenTarget])
+
+  const toggleCanvasFullscreen = useCallback(() => {
+    if (document.fullscreenElement === fullscreenTarget) {
+      // Pops ONE level: nested under site-wide fullscreen this lands back on
+      // the fullscreen <html>, not on a windowed page.
+      document.exitFullscreen().catch(() => {})
+    } else {
+      // Stacks on top of site-wide fullscreen when that is active.
+      fullscreenTarget.requestFullscreen().catch(() => {})
+    }
+  }, [fullscreenTarget])
 
   return (
     <div
@@ -73,7 +107,15 @@ export function CanvasApp({ flow, theme }) {
         <Background gap={24} />
         {/* Same options as the initial fit: re-fit must honor the 1:1 cap too
             (React Flow's default would zoom a sparse canvas up to maxZoom). */}
-        <Controls showInteractive={false} fitViewOptions={FIT_VIEW_OPTIONS} />
+        <Controls showInteractive={false} fitViewOptions={FIT_VIEW_OPTIONS}>
+          <ControlButton
+            className="canvas-flow-fullscreen"
+            onClick={toggleCanvasFullscreen}
+            title={isCanvasFullscreen ? "Exit canvas fullscreen" : "Enter canvas fullscreen"}
+          >
+            {isCanvasFullscreen ? "🡼" : "⛶"}
+          </ControlButton>
+        </Controls>
         <MiniMap
           className="canvas-flow-minimap"
           pannable
