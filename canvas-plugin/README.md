@@ -15,7 +15,10 @@ Dual Quartz category (`package.json` -> `quartz.category`):
   (=> backlinks, graph, contentIndex) and ALL visible canvas content via
   `data.text` (=> search): text cards, embedded-note fragments (subpath-aware),
   card titles, group labels, link URLs, edge labels. Privacy placeholders
-  contribute nothing.
+  contribute nothing. The same per-card text (`searchParts`) is server-rendered
+  into a `.popover-hint` block of bracketed pseudo-cards — hidden on the canvas
+  page itself, cloned by the search preview panel and link popovers (which
+  fetch static HTML, where the client-side viewer doesn't exist).
 - **emitter** — writes the prerendered note fragments
   (`<canvas-slug>.fragments/<node-id>.html`) and the self-hosted viewer bundle
   (`static/canvas-viewer.js`) into the output. Emitted only when at least one
