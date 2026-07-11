@@ -12,8 +12,10 @@ Dual Quartz category (`package.json` -> `quartz.category`):
   generates one virtual page per canvas: Quartz page chrome (theme toggle, nav,
   graph, backlinks) around an embedded, build-time-REWRITTEN canvas JSON payload
   plus a mount div. Registers each canvas's outbound links via `data.links`
-  (=> backlinks, graph, contentIndex) and its text-card plain text via
-  `data.text` (=> search).
+  (=> backlinks, graph, contentIndex) and ALL visible canvas content via
+  `data.text` (=> search): text cards, embedded-note fragments (subpath-aware),
+  card titles, group labels, link URLs, edge labels. Privacy placeholders
+  contribute nothing.
 - **emitter** — writes the prerendered note fragments
   (`<canvas-slug>.fragments/<node-id>.html`) and the self-hosted viewer bundle
   (`static/canvas-viewer.js`) into the output. Emitted only when at least one
@@ -31,7 +33,7 @@ The client receives NO resolution or markdown work — everything is prebaked:
 | file -> `.pdf` / unsupported ext | link card to the published asset (plan §5 MVP fallback) |
 | file -> image/audio/video | stays a file node; `attachments` maps to the emitted asset URL |
 | file -> unpublished/missing | contentless "Private note" placeholder — the vault path is REMOVED (plan §4.4) |
-| group / link / edges | untouched. Dangling edges (an endpoint id with no matching node) are UNSUPPORTED — React Flow drops them at render time; Obsidian never saves them |
+| group / link / edges | untouched in the emitted JSON (group labels, link URLs, and edge labels still feed `searchText`). Dangling edges (an endpoint id with no matching node) are UNSUPPORTED — React Flow drops them at render time; Obsidian never saves them |
 
 Invariants: node ids + coordinates always preserved (future commenting anchors);
 the attachments map is complete for every remaining MEDIA file node, and every

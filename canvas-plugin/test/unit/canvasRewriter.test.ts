@@ -199,6 +199,69 @@ describe("CanvasRewriter — note cards (file -> .md)", () => {
   })
 })
 
+describe("CanvasRewriter — searchText covers ALL visible canvas content (search-in-canvas)", () => {
+  test("GIVEN a note card WHEN rewriting THEN the embedded note's body text lands in searchText", () => {
+    const result = rewriteNodes(baseNode("n1", { type: "file", file: "notes/architecture.md" }))
+    assert.match(result.searchText, /ARCHITECTURE-BODY/)
+  })
+
+  test("GIVEN a note card WHEN rewriting THEN the note's display title lands in searchText", () => {
+    const result = rewriteNodes(baseNode("n1", { type: "file", file: "notes/architecture.md" }))
+    assert.match(result.searchText, /Architecture/)
+  })
+
+  test("GIVEN a #heading subpath note card WHEN rewriting THEN ONLY that section's text lands in searchText", () => {
+    const result = rewriteNodes(
+      baseNode("n1", { type: "file", file: "notes/getting-started.md", subpath: "#Installation" }),
+    )
+    assert.deepEqual(
+      {
+        installation: result.searchText.includes("INSTALLATION-ONLY-TEXT"),
+        usage: result.searchText.includes("USAGE-ONLY-TEXT"),
+      },
+      { installation: true, usage: false },
+    )
+  })
+
+  test("GIVEN a group node WHEN rewriting THEN its label lands in searchText", () => {
+    const result = rewriteNodes(baseNode("g1", { type: "group", label: "Intro Group" }))
+    assert.match(result.searchText, /Intro Group/)
+  })
+
+  test("GIVEN a web link node WHEN rewriting THEN its URL lands in searchText", () => {
+    const result = rewriteNodes(baseNode("l1", { type: "link", url: "https://jsoncanvas.org/" }))
+    assert.match(result.searchText, /jsoncanvas\.org/)
+  })
+
+  test("GIVEN a canvas card WHEN rewriting THEN the target canvas title lands in searchText", () => {
+    const result = rewriteNodes(baseNode("c1", { type: "file", file: "canvases/second.canvas" }))
+    assert.match(result.searchText, /second/)
+  })
+
+  test("GIVEN a PDF card WHEN rewriting THEN its file name lands in searchText", () => {
+    const result = rewriteNodes(baseNode("pdf1", { type: "file", file: "attachments/manual.pdf" }))
+    assert.match(result.searchText, /manual\.pdf/)
+  })
+
+  test("GIVEN a labeled edge WHEN rewriting THEN the edge label lands in searchText", () => {
+    const result = rewriter().rewrite({
+      nodes: [],
+      edges: [{ id: "e1", fromNode: "a", toNode: "b", label: "embeds note" }],
+    })
+    assert.match(result.searchText, /embeds note/)
+  })
+
+  test("GIVEN an image node WHEN rewriting THEN it contributes NOTHING (no visible text on the card)", () => {
+    const result = rewriteNodes(baseNode("i1", { type: "file", file: "attachments/diagram.png" }))
+    assert.equal(result.searchText, "")
+  })
+
+  test("GIVEN an unpublished note card WHEN rewriting THEN searchText is EMPTY (no path, no placeholder label)", () => {
+    const result = rewriteNodes(baseNode("p1", { type: "file", file: "notes/private-secret.md" }))
+    assert.equal(result.searchText, "")
+  })
+})
+
 describe("CanvasRewriter — privacy (plan §4.4)", () => {
   function privateResult() {
     return rewriteNodes(baseNode("p1", { type: "file", file: "notes/private-secret.md" }))

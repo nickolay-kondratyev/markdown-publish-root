@@ -33,7 +33,9 @@ import GithubSlugger from "github-slugger"
  * @property {Record<string, {href: string, title: string, fragmentUrl: string, subpathLabel?: string}>} noteLinks
  *   per note-card node id: open-note affordance target + that node's own fragment URL
  * @property {string[]} links SimpleSlugs for Quartz `data.links` (backlinks/graph)
- * @property {string} searchText plain text of text cards (search index)
+ * @property {string} searchText plain text of EVERYTHING visibly rendered on the
+ *   canvas (search index): text cards, embedded-note fragments, card titles,
+ *   group labels, link URLs, edge labels. Privacy placeholders contribute nothing.
  * @property {{sitePath: string, html: string}[]} fragments prerendered note fragments to emit
  * @property {string[]} warnings human-readable non-fatal issues
  */
@@ -78,6 +80,9 @@ export class CanvasRewriter {
     for (const node of canvas.nodes) {
       result.canvas.nodes.push(this.rewriteNode(node, result, links, searchParts))
     }
+    for (const edge of canvas.edges) {
+      if (edge.label) searchParts.push(edge.label)
+    }
     result.links = [...links]
     result.searchText = searchParts.join("\n")
     return result
@@ -89,9 +94,15 @@ export class CanvasRewriter {
       case "text":
         return this.rewriteTextNode(node, links, searchParts)
       case "file":
-        return this.rewriteFileNode(node, result, links)
+        return this.rewriteFileNode(node, result, links, searchParts)
+      case "group":
+        if (node.label) searchParts.push(node.label)
+        return structuredClone(node)
+      case "link":
+        if (node.url) searchParts.push(node.url)
+        return structuredClone(node)
       default:
-        // group, link, and any future node types pass through untouched.
+        // Unknown future node types pass through untouched.
         return structuredClone(node)
     }
   }
@@ -105,41 +116,49 @@ export class CanvasRewriter {
     return { ...structuredClone(node), text: rendered.html }
   }
 
-  rewriteFileNode(node, result, links) {
+  rewriteFileNode(node, result, links, searchParts) {
     const resolved = this.resolver.resolveFilePath(node.file)
     if (!resolved.exists) {
       // Unpublished or missing — same contentless card either way (see header).
+      // PRIVACY: contributes NOTHING to searchText (a filename is content).
       return placeholderNode(node)
     }
     links.add(resolved.simpleSlug)
     const kind = classifyFileTarget(node.file)
     switch (kind) {
       case FileTargetKind.NOTE:
-        return this.rewriteNoteCard(node, resolved, result)
-      case FileTargetKind.CANVAS:
+        return this.rewriteNoteCard(node, resolved, result, searchParts)
+      case FileTargetKind.CANVAS: {
+        const title = this.canvasTitleLookup(resolved.targetSlug) ?? titleFromPath(node.file)
+        searchParts.push(title)
         return cardNode(node, {
           kindLabel: "Canvas",
           href: resolved.relativeUrl,
-          text: this.canvasTitleLookup(resolved.targetSlug) ?? titleFromPath(node.file),
+          text: title,
           internal: true,
           targetSlug: resolved.targetSlug,
         })
+      }
       case FileTargetKind.MEDIA:
+        // No visible text on a media card — nothing for searchText.
         result.attachments[node.file] = resolved.relativeUrl
         return structuredClone(node)
-      default:
+      default: {
         // PDF + unsupported extensions: navigable card linking the published
         // asset (plan §5 MVP fallback; the viewer renders neither natively).
+        const text = baseName(node.file)
+        searchParts.push(text)
         return cardNode(node, {
           kindLabel: kind === FileTargetKind.PDF ? "PDF" : "File",
           href: resolved.relativeUrl,
-          text: baseName(node.file),
+          text,
           internal: false,
         })
+      }
     }
   }
 
-  rewriteNoteCard(node, resolved, result) {
+  rewriteNoteCard(node, resolved, result, searchParts) {
     const note = this.noteLookup(resolved.targetSlug)
     if (note === undefined) {
       // Staged .md that produced no processed content (should not happen) —
@@ -166,12 +185,17 @@ export class CanvasRewriter {
     })
     // Keyed by NODE id (not node.file): fragments are extracted per node, and
     // two nodes may embed the same note with different subpaths.
+    const title = note.data.frontmatter?.title ?? titleFromPath(node.file)
     result.noteLinks[node.id] = {
       href: resolved.relativeUrl + subpathToAnchor(node.subpath),
-      title: note.data.frontmatter?.title ?? titleFromPath(node.file),
+      title,
       fragmentUrl: this.resolver.relativeUrlTo(sitePath),
       ...(node.subpath ? { subpathLabel: node.subpath.replace(/^#\^?/, "") } : {}),
     }
+    // The card visibly shows the note title + the fragment body — index BOTH.
+    // Only the fragment (not the whole note) so a subpath card contributes
+    // exactly what the canvas displays.
+    searchParts.push(title, plainTextOf(fragment.html))
     return structuredClone(node)
   }
 }

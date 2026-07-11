@@ -46,7 +46,8 @@ export default function VintrinCanvasPage() {
           frontmatter: { title, tags: [], vintrinPath },
           // Outbound links register the canvas in backlinks/graph/contentIndex.
           links: rewrite.links,
-          // Text-card plain text -> search index (contentIndex `content`).
+          // ALL visible canvas content (text cards, embedded-note fragments,
+          // card titles, labels, link URLs) -> search index (contentIndex `content`).
           text: rewrite.searchText,
           vintrinCanvas: {
             viewerSrc: new VaultLinkResolver(slug, ctx.allSlugs).relativeUrlTo(
