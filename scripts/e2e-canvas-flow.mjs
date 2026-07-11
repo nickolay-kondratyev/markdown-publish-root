@@ -383,7 +383,34 @@ await page.click('.react-flow__controls button[title="Fit View"]')
 await page.waitForTimeout(400)
 check("sparse canvas: RE-fit via the control capped at 1:1", zoomOf(await VIEWPORT_TRANSFORM()) <= 1, await VIEWPORT_TRANSFORM())
 
-// === Phase 7: our origin stayed error-free ===================================
+// === Phase 7: collapsible minimap (global preference across canvases) ========
+const minimapPresent = () => page.evaluate(() => document.querySelector(".react-flow__minimap") !== null)
+const toggleTitle = () =>
+  page.evaluate(() => document.querySelector(".canvas-flow-minimap-toggle")?.getAttribute("title") ?? "")
+check("minimap toggle affords collapsing while expanded", (await toggleTitle()) === "Hide minimap")
+await page.click(".canvas-flow-minimap-toggle")
+await page.waitForTimeout(200)
+check("collapsing removes the minimap", !(await minimapPresent()))
+check("collapsed toggle affords expanding", (await toggleTitle()) === "Show minimap")
+await shot("minimap-collapsed")
+
+// The preference is GLOBAL: it must follow the user onto a different canvas.
+await page.goto(`${base}/${MAIN_CANVAS_SLUG}`)
+await waitForCanvas("text-welcome")
+check("collapsed preference sticks on another canvas", !(await minimapPresent()))
+check(
+  "collapsed preference persisted to localStorage",
+  (await page.evaluate(() => localStorage.getItem("canvas-minimap"))) === "collapsed",
+)
+await page.click(".canvas-flow-minimap-toggle")
+await page.waitForTimeout(200)
+check("expanding restores the minimap at its original size", await minimapPresent())
+check(
+  "expanded preference persisted to localStorage",
+  (await page.evaluate(() => localStorage.getItem("canvas-minimap"))) === "expanded",
+)
+
+// === Phase 8: our origin stayed error-free ===================================
 const ownErrors = filterOwnErrors(errors, base)
 check("no console/page errors from our origin", ownErrors.length === 0, ownErrors.join(" | "))
 
