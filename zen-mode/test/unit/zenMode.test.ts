@@ -51,6 +51,20 @@ describe("ZenMode component — CSS (the width reclaim)", () => {
     assert.equal(component.css.includes(':root[zen-mode="on"] .center .breadcrumb-container'), true)
   })
 
+  test("GIVEN base's 5px grid row-gap WHEN zen leaves the trailing grid rows empty THEN the gap is zeroed (no dead scroll at the page bottom)", () => {
+    const gridRule =
+      component.css.match(/:root\[zen-mode="on"\] \.page > #quartz-body\s*\{([^}]*)\}/)?.[1] ?? ""
+    assert.equal(gridRule.includes("row-gap: 0"), true)
+  })
+
+  test("GIVEN base's 6rem sidebar-clearing top margin WHEN zen removes the sidebars THEN the page header is pulled up to reclaim the vertical space", () => {
+    // base.scss gives .page-header `margin: $topSpacing 0 0 0` (6rem) to clear
+    // the sticky sidebars — pointless in zen where the sidebars are gone.
+    const headerRule =
+      component.css.match(/:root\[zen-mode="on"\] #quartz-body \.page-header\s*\{([^}]*)\}/)?.[1] ?? ""
+    assert.equal(headerRule.includes("margin-top: 2rem"), true)
+  })
+
   test("GIVEN reader-mode dims .sidebar.left to opacity 0 WHEN zen pins it as the exit affordance THEN zen forces opacity back to 1 (ticket 0000)", () => {
     // Stock reader-mode sets `:root[reader-mode="on"] .sidebar.left { opacity: 0 }`.
     // Both modes can be on at once; without an opacity reset the lotus exit

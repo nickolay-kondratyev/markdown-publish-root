@@ -105,6 +105,9 @@ const ZEN_MODE_CSS = `
   grid-template-columns: auto;
   grid-template-rows: auto auto auto;
   grid-template-areas: "grid-header" "grid-center" "grid-footer";
+  /* Base's 5px row-gap × the two empty trailing rows = 10px of dead scroll
+     at the page bottom (breaks the canvas viewport fill in pageBody.js). */
+  row-gap: 0;
 }
 /* Right sidebar (graph/backlinks/TOC): gone entirely. Also removes its
    grid-area reference, which would otherwise resurrect implicit columns. */
@@ -134,6 +137,16 @@ const ZEN_MODE_CSS = `
 /* Reclaim the .page cap too — zen means full available width. */
 :root[zen-mode="on"] .page {
   max-width: 100%;
+}
+/* Frugal vertical space: base's .page-header carries margin-top $topSpacing
+   (6rem) to clear the sticky sidebars — both are gone in zen, so pull the
+   first heading up. 2rem matches the pinned toggle cluster's top offset
+   (ref.ap.0zwhQQya81CGNQ9pmqKkM.E). Desktop/tablet only: base already zeroes
+   this margin on mobile (<800px), which this rule would otherwise override. */
+@media (min-width: 800px) {
+  :root[zen-mode="on"] #quartz-body .page-header {
+    margin-top: 2rem;
+  }
 }
 /* Zen reads as pure content: drop the article/footer divider and the
    breadcrumbs trail too. */
