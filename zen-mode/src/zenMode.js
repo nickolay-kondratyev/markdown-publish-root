@@ -105,6 +105,9 @@ const ZEN_MODE_CSS = `
   grid-template-columns: auto;
   grid-template-rows: auto auto auto;
   grid-template-areas: "grid-header" "grid-center" "grid-footer";
+  /* Base's 5px row-gap × the two empty trailing rows = 10px of dead scroll
+     at the page bottom (breaks the canvas viewport fill in pageBody.js). */
+  row-gap: 0;
 }
 /* Right sidebar (graph/backlinks/TOC): gone entirely. Also removes its
    grid-area reference, which would otherwise resurrect implicit columns. */

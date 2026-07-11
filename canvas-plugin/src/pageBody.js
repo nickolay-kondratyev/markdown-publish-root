@@ -129,6 +129,37 @@ const CANVAS_PAGE_CSS = `
   border: none;
   border-radius: 0;
 }
+/* Zen mode (root attribute owned by the zen-mode plugin, same cross-plugin
+   contract the engine's reader-mode rules use): the canvas IS the content, so
+   fill the viewport's remaining height instead of the page-embed cap above.
+   A flex chain — NOT a "calc(100dvh - Xrem)" offset — so the mount ends at the
+   viewport bottom whatever height the title/meta header happens to take.
+   #quartz-body carried for the cascade (base nests everything under that ID);
+   dvh so mobile browser-UI collapse doesn't leave a gap. The empty
+   .page-footer sibling keeps its 1rem margin as bottom breathing room. */
+:root[zen-mode="on"] #quartz-body .center:has(.canvas-page) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+/* Flex items are independent formatting contexts: the title's own top margin
+   no longer collapses into .page-header's, which would sit the heading
+   ~2.25rem lower than on zen note pages. Zero it — .page-header's margin
+   (zen-mode plugin) alone positions the heading, identically to notes. */
+:root[zen-mode="on"] #quartz-body .center:has(.canvas-page) .article-title {
+  margin-top: 0;
+}
+:root[zen-mode="on"] #quartz-body .center .canvas-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+:root[zen-mode="on"] #quartz-body .center .canvas-page .canvas-page-mount {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
 /* Rewritten cards: canvas->canvas, PDF, unsupported files, private placeholders. */
 .canvas-card {
   display: flex;
