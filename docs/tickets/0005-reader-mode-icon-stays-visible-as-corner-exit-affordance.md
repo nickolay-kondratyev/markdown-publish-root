@@ -1,6 +1,13 @@
 # Reader mode: keep the reader icon visible top-right as the exit affordance (mirror zen mode)
 
-Status: OPEN
+Status: RESOLVED (2026-07-11 — reader-mode rules in `engine/src/siteChromeStyles.ts`
+(unlayered custom.scss beats the plugin's layered dim): sidebar forced opaque, stock
+dim moved to its non-cluster children (hover-reveal kept), sibling icon WRAPPERS
+hidden via `:not(:has(.readermode))` so the book icon takes the rightmost slot.
+Zen precedence kept via `:not([zen-mode="on"])` on every rule. Pinned by
+`engine/test/unit/siteChromeStyles.test.ts` + new `scripts/e2e-reader-mode.mjs`.
+Note: with reader on, zen/darkmode are UI-unreachable until reader is exited —
+intended per this ticket; e2e drives the both-on combo via DOM click.)
 Origin: mode-toggle corner-cluster work (2026-07-11, commit 310cecb) — the
 toggles now live in a fixed top-right cluster; this ticket extends the zen
 "visible exit affordance" pattern to reader mode.

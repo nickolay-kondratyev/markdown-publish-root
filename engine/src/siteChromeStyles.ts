@@ -49,4 +49,32 @@ const SITE_CHROME_SCSS = `@use "./variables.scss" as *;
     padding-right: 6rem;
   }
 }
+
+/* Reader-mode exit affordance (ticket 0005, mirrors zen): stock readermode.scss
+   dims .sidebar.left to opacity 0 (hover-revealed), which would fade the reader
+   icon itself — no visible cue of the mode or how to leave it. Keep the sidebar
+   opaque and move the stock dim onto its NON-cluster children instead, so the
+   book icon stays visible while search/explorer keep the hover-reveal.
+   Zen precedence: every rule carries :not([zen-mode="on"]) — with both modes on
+   only the lotus shows (zen-mode/src/zenMode.js owns that state).
+   Cascade: these rules are UNLAYERED (see header) so they beat the plugin's
+   @layer quartz-base dim without specificity games. */
+:root[reader-mode="on"]:not([zen-mode="on"]) .sidebar.left {
+  opacity: 1;
+}
+:root[reader-mode="on"]:not([zen-mode="on"]) .sidebar.left > *:not(.flex-component) {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+:root[reader-mode="on"]:not([zen-mode="on"]) .sidebar.left:hover > *:not(.flex-component) {
+  opacity: 1;
+}
+/* Only the book icon in the corner: hide the sibling icon WRAPPERS (Flex.tsx
+   inline-styled divs), not just their content — zen's hide-the-content trick
+   would leave the reader icon a gap-width short of the corner because zen's
+   empty wrapper sits to its RIGHT. With siblings gone, the shrink-to-fit fixed
+   cluster leaves the book icon flush in the rightmost (lotus) slot. */
+:root[reader-mode="on"]:not([zen-mode="on"]) .sidebar.left > .flex-component > div:not(:has(.readermode)) {
+  display: none;
+}
 `

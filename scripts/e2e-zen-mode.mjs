@@ -186,7 +186,11 @@ check(
 // or zen becomes un-exitable (ticket 0000).
 await page.setViewportSize({ width: 1280, height: 720 }) // zen OFF after 5b
 await page.click("button.readermode") // reader ON — sidebar now opacity 0
-await page.click("button.zenmode") // zen ON while reader is on
+// Reader mode hides the zen button (ticket 0005: the book icon is the lone
+// corner affordance), so Playwright's visibility-gated click can't reach it.
+// The state combo is still reachable (both modes persist in localStorage) —
+// DOM click() fires the toggle listener regardless of visibility.
+await page.evaluate(() => document.querySelector("button.zenmode").click()) // zen ON while reader is on
 const readerThenZen = await measure()
 check(
   "reader-then-zen: zen exit icon stays opaque (not hidden by reader-mode)",
