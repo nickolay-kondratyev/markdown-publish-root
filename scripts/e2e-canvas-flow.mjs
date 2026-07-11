@@ -2,7 +2,7 @@
 /**
  * Extensive e2e of the React Flow canvas viewer: render fidelity for every
  * JSON Canvas node/edge feature, the two-click interaction model, pan/zoom/
- * minimap/controls, fullscreen (+ retention across SPA nav), canvas<->canvas
+ * minimap/controls, site-wide fullscreen (+ survival across SPA nav), canvas<->canvas
  * and canvas->note navigation, browser history, theming, and privacy.
  *
  * Run: `npm run test:e2e` (or directly). Exits non-zero on any failed check.
@@ -181,8 +181,8 @@ check("group renders its label", dom.groupLabel === "Intro Group")
 check("group stays behind its members (z-order = array order)", dom.groupZ < dom.welcomeZ, `${dom.groupZ} vs ${dom.welcomeZ}`)
 check("minimap present with node dots", dom.minimap && dom.minimapNodes >= 8, `nodes=${dom.minimapNodes}`)
 check(
-  "controls: zoom in/out, fit view, fullscreen",
-  JSON.stringify(dom.controlTitles) === JSON.stringify(["Zoom In", "Zoom Out", "Fit View", "Enter fullscreen"]),
+  "controls: zoom in/out, fit view — NO canvas-local fullscreen (ticket full-screen-mode.md: the site-wide toolbar toggle is the one affordance)",
+  JSON.stringify(dom.controlTitles) === JSON.stringify(["Zoom In", "Zoom Out", "Fit View"]),
   dom.controlTitles.join(","),
 )
 check("link card shows the URL affordance", dom.linkHeaderHref === "https://jsoncanvas.org/")
@@ -245,14 +245,28 @@ await page.mouse.wheel(0, -300)
 await page.waitForTimeout(300)
 check("mistouch gate lifted: wheel zooms after interacting", (await VIEWPORT_TRANSFORM()) !== beforeWheel)
 
-// === Phase 3: fullscreen ======================================================
-await page.click(".canvas-flow-fullscreen")
+// === Phase 3: fullscreen (site-wide toolbar toggle, ticket full-screen-mode.md) ===
+// The corner icon must be present ON canvas pages: it is both the way in and
+// (while fullscreen) the visible way out.
+check("fullscreen toolbar icon present on canvas pages", (await page.locator("button.fullscreenmode").count()) === 1)
+await page.click("button.fullscreenmode")
 await page.waitForTimeout(500)
 check(
-  "fullscreen enters on the canvas mount",
-  await page.evaluate(() => document.fullscreenElement?.hasAttribute("data-canvas-mount") ?? false),
+  "fullscreen enters SITE-WIDE (on <html>, not the canvas mount)",
+  await page.evaluate(() => document.fullscreenElement === document.documentElement),
 )
-await page.click(".canvas-flow-fullscreen")
+check(
+  "root attribute mirrors the mode",
+  await page.evaluate(() => document.documentElement.getAttribute("full-screen-mode") === "on"),
+)
+check(
+  "fullscreen icon still visible top-right while fullscreen (exit affordance)",
+  await page.evaluate(() => {
+    const rect = document.querySelector("button.fullscreenmode")?.getBoundingClientRect()
+    return rect !== undefined && rect.width > 0 && rect.x > window.innerWidth / 2 && rect.y < 100
+  }),
+)
+await page.click("button.fullscreenmode")
 await page.waitForTimeout(400)
 check("fullscreen toggle exits", await page.evaluate(() => document.fullscreenElement === null))
 
@@ -266,18 +280,20 @@ check("canvas card navigates to the second canvas", page.url().endsWith(`/${SECO
 check("navigation was SPA (no full reload)", await page.evaluate(() => window.__spaMarker === true))
 await shot("second")
 
-// fullscreen retention: enter on second, navigate back via its canvas card
-await page.click(".canvas-flow-fullscreen")
+// Site-wide fullscreen survives SPA navigation natively: <html> is the
+// fullscreen element and is never swapped by the router, so entering a canvas
+// while the mode is on shows it fullscreen already (no retention machinery).
+await page.click("button.fullscreenmode")
 await page.waitForTimeout(500)
 await twoClickOn("file-back", "a.canvas-card-link")
 await waitForCanvas("text-welcome")
 check("back-navigation lands on main", page.url().endsWith(`/${MAIN_CANVAS_SLUG}`))
 check(
   "fullscreen RETAINED across canvas->canvas SPA navigation",
-  await page.evaluate(() => document.fullscreenElement?.hasAttribute("data-canvas-mount") ?? false),
+  await page.evaluate(() => document.fullscreenElement === document.documentElement),
 )
 await shot("fullscreen-main")
-await page.click(".canvas-flow-fullscreen")
+await page.click("button.fullscreenmode")
 await page.waitForTimeout(400)
 
 // browser history: back button re-mounts the previous canvas via popstate

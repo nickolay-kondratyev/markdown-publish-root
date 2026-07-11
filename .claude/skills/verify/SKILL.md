@@ -29,14 +29,14 @@ const browser = await chromium.launch({ executablePath: "/usr/bin/chromium", arg
 - Canvas pages live at stable-id URLs: `/n/<docid>.canvas` (extensionless works; docid = `metadata.frontmatter.id` in `test-vault/canvases/*.canvas`). main links to second and back — good for SPA-nav flows.
 - The viewer is React Flow (ADR 0003). Wait for `.canvas-page-mount .react-flow__node`, then ~900ms for async fragment fetches.
 - Nodes are addressable by JSON Canvas id: `.react-flow__node[data-id="text-welcome"]`.
-- Controls: `.react-flow__controls` buttons titled `Zoom In` / `Zoom Out` / `Fit View`; the fullscreen toggle is `.canvas-flow-fullscreen`. Minimap: `.react-flow__minimap`.
+- Controls: `.react-flow__controls` buttons titled `Zoom In` / `Zoom Out` / `Fit View`. Minimap: `.react-flow__minimap`. Fullscreen is NOT a canvas control — it is the site-wide `button.fullscreenmode` toolbar toggle (top-right cluster, docs/tickets/full-screen-mode.md).
 - The extensive canvas e2e already covers most flows: `node scripts/e2e-canvas-flow.mjs`.
 
 ## Gotchas
 - **Links inside canvas cards need TWO clicks**: a transparent `.canvas-node-click-guard` overlay intercepts the first click (card select, Obsidian-Publish behavior); it lifts once the node has the `selected` class. Playwright's `locator.click()` times out on "intercepts pointer events" — use two raw `page.mouse.click(x, y)` (~300ms apart): card center first, then the link's bounding-box center.
 - **The minimap overlays bottom-right cards** — pan the viewport first (drag on the pane) if the target card sits under it.
 - **Wheel does not zoom until the user has clicked/tapped the canvas once** (mistouch gate); pointerdown anywhere on the viewer arms it.
-- **Esc does not exit fullscreen in headless Chromium** (browser-UI chrome, not DOM). Exit via `.canvas-flow-fullscreen`.
-- Native `requestFullscreen` DOES work in headless Chromium; assert via `document.fullscreenElement` (it is the `[data-canvas-mount]` div).
+- **Esc does not exit fullscreen in headless Chromium** (browser-UI chrome, not DOM). Exit via `button.fullscreenmode` or `document.exitFullscreen()`.
+- Native `requestFullscreen` DOES work in headless Chromium; assert via `document.fullscreenElement` (it is `document.documentElement` — site-wide mode; `<html full-screen-mode>` mirrors it).
 - **Theme testing**: mirror Quartz's real toggle — set `<html saved-theme="dark">` (drives card CSS vars) AND dispatch `themechange` (drives React Flow's colorMode).
 - Screenshots go to `.out/` (gitignored); temp driver scripts to `.tmp/` (gitignored).

@@ -198,6 +198,37 @@ describe("QuartzConfigGenerator — zen-mode plugin", () => {
   })
 })
 
+describe("QuartzConfigGenerator — full-screen-mode plugin (docs/tickets/full-screen-mode.md)", () => {
+  function fullScreenEntry(doc: ConfigDoc) {
+    return doc.plugins.find(
+      (p) => typeof p.source === "string" && p.source.endsWith("/full-screen-mode"),
+    )
+  }
+
+  test("GIVEN a full-screen-mode plugin dir WHEN generating THEN it is an enabled local source", () => {
+    const doc = QuartzConfigGenerator.generateConfigObject(siteConfig(), {
+      fullScreenModePluginDir: "/abs/path/full-screen-mode",
+    }) as ConfigDoc
+    assert.equal(doc.plugins.find((p) => p.source === "/abs/path/full-screen-mode")?.enabled, true)
+  })
+
+  test("GIVEN any site WHEN generating THEN full-screen-mode is the RIGHTMOST toolbar icon (priority 45)", () => {
+    const entry = fullScreenEntry(generate()) as { layout?: Record<string, unknown> } | undefined
+    assert.deepEqual(entry?.layout, { position: "left", priority: 45, group: "toolbar" })
+  })
+
+  test("GIVEN any site WHEN generating THEN canvas pages keep full-screen-mode (the ubiquitous fullscreen affordance)", () => {
+    const canvasExclude: string[] = generate().layout.byPageType.canvas.exclude ?? []
+    assert.equal(canvasExclude.includes("full-screen-mode"), false)
+  })
+
+  test("GIVEN the default full-screen-mode dir WHEN inspected THEN it is a component-category quartz plugin", () => {
+    const source = fullScreenEntry(generate())?.source as string
+    const pkg = JSON.parse(fs.readFileSync(path.join(source, "package.json"), "utf-8"))
+    assert.equal(pkg.quartz?.category, "component")
+  })
+})
+
 describe("QuartzConfigGenerator — YAML output", () => {
   test("GIVEN a site WHEN generating YAML THEN it round-trips to the same object", () => {
     const yamlText = QuartzConfigGenerator.generateYaml(siteConfig())

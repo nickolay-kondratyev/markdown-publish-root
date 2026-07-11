@@ -30,6 +30,16 @@ describe("SiteChromeStyles — mode-toggle cluster pin", () => {
   test("GIVEN the scss WHEN inspected THEN it imports quartz style variables (breakpoints)", () => {
     assert.equal(SiteChromeStyles.scss().startsWith('@use "./variables.scss" as *;'), true)
   })
+
+  test("GIVEN the scss WHEN inspected THEN hovering a cluster icon shows its aria-label as a tooltip (ticket full-screen-mode.md)", () => {
+    // aria-label is the single source of truth: the vendored darkmode/reader
+    // plugins cannot be edited, so the tooltip is engine CSS off that attribute.
+    const rule =
+      SiteChromeStyles.scss().match(
+        /button\[aria-label\]:hover::after\s*\{([^}]*)\}/,
+      )?.[1] ?? ""
+    assert.equal(rule.includes("content: attr(aria-label)"), true)
+  })
 })
 
 // Reader-mode exit affordance (ticket 0005, mirrors zen): reader-mode dims
@@ -61,11 +71,11 @@ describe("SiteChromeStyles — reader-mode exit affordance", () => {
     )
   })
 
-  test("GIVEN reader on WHEN inspected THEN sibling icon WRAPPERS hide so the book icon takes the rightmost slot", () => {
+  test("GIVEN reader on WHEN inspected THEN sibling icon WRAPPERS hide EXCEPT book + fullscreen (fullscreen stacks with reader, ticket full-screen-mode.md)", () => {
     assert.equal(
-      readerRule(".sidebar.left > .flex-component > div:not(:has(.readermode))").includes(
-        "display: none",
-      ),
+      readerRule(
+        ".sidebar.left > .flex-component > div:not(:has(.readermode)):not(:has(.fullscreenmode))",
+      ).includes("display: none"),
       true,
     )
   })

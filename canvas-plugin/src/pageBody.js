@@ -103,12 +103,6 @@ const CANVAS_PAGE_CSS = `
 .canvas-page-mount img {
   object-fit: contain;
 }
-/* Native fullscreen on the mount: fill the screen, drop the page-embed frame. */
-.canvas-page-mount:fullscreen {
-  height: 100%;
-  border: none;
-  border-radius: 0;
-}
 /* Rewritten cards: canvas->canvas, PDF, unsupported files, private placeholders. */
 .canvas-card {
   display: flex;

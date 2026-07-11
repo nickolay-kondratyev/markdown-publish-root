@@ -50,3 +50,11 @@ Structure (the new isolation boundary is the whole `viewer/` directory):
 - Browser-facing selectors changed (`.react-flow__node[data-id=...]` instead of
   `.JCV-*`); e2e lives in `scripts/e2e-canvas-flow.mjs` + `scripts/e2e-smoke.mjs`
   over the shared `scripts/lib/e2eHarness.mjs`.
+
+## Amendments
+
+- 2026-07-11 (ticket `docs/tickets/full-screen-mode.md`): the canvas-local
+  fullscreen control and `fullscreenRetention.js` were REMOVED. Fullscreen is
+  now the site-wide `full-screen-mode` toolbar plugin, which fullscreens
+  `<html>` — an element the SPA router never swaps, so fullscreen survives
+  navigation without retention machinery.

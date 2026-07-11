@@ -18,23 +18,8 @@ import xyflowCss from "@xyflow/react/dist/style.css"
 import viewerCss from "./viewer.css"
 import { CanvasApp } from "./canvasApp.jsx"
 import { canvasToFlow } from "./canvasToFlow.js"
-import { FullscreenRetention } from "./fullscreenRetention.js"
 
 const STYLESHEET = `${xyflowCss}\n${viewerCss}`
-
-// Module-level state survives SPA navigations: this bundle is dynamic-imported
-// once and cached, while CanvasView instances are disposed/recreated per page.
-const fullscreenRetention = new FullscreenRetention()
-if (typeof document !== "undefined") {
-  // Quartz fires "prenav" right before it swaps the DOM (which force-exits
-  // native fullscreen). Recomputed on every nav — see FullscreenRetention.
-  document.addEventListener("prenav", () => {
-    fullscreenRetention.capture(
-      document.fullscreenElement !== null &&
-        document.fullscreenElement.closest("[data-canvas-mount]") !== null,
-    )
-  })
-}
 
 /** @typedef {import("./canvasToFlow.js").CanvasViewPayload} CanvasViewPayload */
 
@@ -49,14 +34,13 @@ export function mountCanvasView(container, payload) {
 
 export class CanvasView {
   /**
-   * @param {HTMLElement} container the page mount div (also the fullscreen target)
+   * @param {HTMLElement} container the page mount div
    * @param {CanvasViewPayload} payload
    */
   constructor(container, payload) {
     this.container = container
     this.flow = canvasToFlow(payload)
     this.theme = currentSiteTheme()
-    this.restoreFullscreen = fullscreenRetention.consume()
     this.onThemeChange = (event) => {
       this.setTheme(event.detail?.theme === "dark" ? "dark" : "light")
     }
@@ -75,8 +59,6 @@ export class CanvasView {
         createElement(CanvasApp, {
           flow: this.flow,
           theme: this.theme,
-          fullscreenTarget: this.container,
-          restoreFullscreen: this.restoreFullscreen,
         }),
       ),
     )

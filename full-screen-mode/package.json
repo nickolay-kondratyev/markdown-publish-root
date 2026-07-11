@@ -1,0 +1,24 @@
+{
+  "name": "vintrin-full-screen-mode",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Quartz 5 component plugin: toolbar toggle that puts the whole site into native browser fullscreen (docs/tickets/full-screen-mode.md). Stacks with reader/zen mode.",
+  "type": "module",
+  "main": "index.js",
+  "quartz": {
+    "name": "full-screen-mode",
+    "displayName": "Full Screen Mode",
+    "category": "component",
+    "version": "0.1.0",
+    "quartzVersion": ">=5.0.0",
+    "dependencies": [],
+    "defaultEnabled": true,
+    "components": {
+      "FullScreenMode": {
+        "displayName": "Full Screen Mode",
+        "defaultPosition": "left",
+        "defaultPriority": 45
+      }
+    }
+  }
+}
