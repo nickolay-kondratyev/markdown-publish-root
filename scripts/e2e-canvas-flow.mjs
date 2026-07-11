@@ -118,6 +118,7 @@ const dom = await page.evaluate(() => {
     groupZ: Number(nodeEl("group-intro")?.style.zIndex),
     welcomeZ: Number(nodeEl("text-welcome")?.style.zIndex),
     minimap: document.querySelector(".react-flow__minimap") !== null,
+    attribution: document.querySelector(".react-flow__attribution") !== null,
     minimapNodes: q(".react-flow__minimap-node").length,
     controlTitles: q(".react-flow__controls button").map((b) => b.getAttribute("title")),
     linkHeaderHref: nodeEl("link-card")?.querySelector(".canvas-link-url")?.getAttribute("href") ?? "",
@@ -180,6 +181,7 @@ check("text card carries prebaked HTML with resolved wikilink", dom.welcomeHtml.
 check("group renders its label", dom.groupLabel === "Intro Group")
 check("group stays behind its members (z-order = array order)", dom.groupZ < dom.welcomeZ, `${dom.groupZ} vs ${dom.welcomeZ}`)
 check("minimap present with node dots", dom.minimap && dom.minimapNodes >= 8, `nodes=${dom.minimapNodes}`)
+check("React Flow attribution banner is hidden (proOptions.hideAttribution)", !dom.attribution)
 check(
   "controls: zoom in/out, fit view, canvas fullscreen (the INNER fullscreen level)",
   JSON.stringify(dom.controlTitles) ===

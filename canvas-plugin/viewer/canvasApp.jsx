@@ -37,6 +37,8 @@ const MAX_ZOOM = 20
 // Initial fit never zooms IN past 1:1 — a one-card canvas should not fill the screen.
 const FIT_VIEW_OPTIONS = Object.freeze({ padding: 0.08, maxZoom: 1 })
 const MINIMAP_FALLBACK_NODE_COLOR = "#d4d4d4"
+// Frozen module-level constant so ReactFlow gets a stable reference across renders.
+const PRO_OPTIONS = Object.freeze({ hideAttribution: true })
 
 // One global preference shared by every canvas page (survives SPA navigation).
 const minimapPreference = new MinimapPreference(window.localStorage)
@@ -126,6 +128,8 @@ export function CanvasApp({ flow, theme, fullscreenTarget, restoreFullscreen }) 
         elementsSelectable
         zoomOnScroll={interacted}
         preventScrolling={interacted}
+        // Official API to hide the "React Flow" attribution (MIT license permits it).
+        proOptions={PRO_OPTIONS}
       >
         <Background gap={24} />
         {/* Same options as the initial fit: re-fit must honor the 1:1 cap too
