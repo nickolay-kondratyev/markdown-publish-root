@@ -81,7 +81,9 @@ Inside `viewer/`: `canvasToFlow.js` (PURE payload -> React Flow graph
 conversion, unit-tested in Node: handles/side inference, arrow endpoints,
 preset+hex colors, z-order), `flowNodes.jsx` (text/note/media/link/group card
 components), `canvasApp.jsx` (minimap, controls, fullscreen, mistouch wheel
-gate), `canvasView.jsx` (mount/theme/dispose + fullscreen retention).
+gate), `minimapPreference.js` (collapsible minimap: one global
+localStorage-backed choice that follows the user across canvases),
+`canvasView.jsx` (mount/theme/dispose + fullscreen retention).
 
 The bundle is self-hosted (no CDN): `npm run bundle:viewer` (part of
 `npm run setup`) esbuilds `viewer/canvasView.jsx` to `dist/canvas-viewer.js`

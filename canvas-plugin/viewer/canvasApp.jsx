@@ -21,6 +21,7 @@ import {
   CanvasTextNode,
 } from "./flowNodes.jsx"
 import { FlowNodeType } from "./canvasToFlow.js"
+import { MinimapPreference } from "./minimapPreference.js"
 
 const NODE_TYPES = Object.freeze({
   [FlowNodeType.TEXT]: CanvasTextNode,
@@ -37,6 +38,19 @@ const MAX_ZOOM = 20
 const FIT_VIEW_OPTIONS = Object.freeze({ padding: 0.08, maxZoom: 1 })
 const MINIMAP_FALLBACK_NODE_COLOR = "#d4d4d4"
 
+// One global preference shared by every canvas page (survives SPA navigation).
+const minimapPreference = new MinimapPreference(window.localStorage)
+
+/** Minimap pictogram (outer map + viewport dot) — stable across both toggle states. */
+function MinimapToggleIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="1.5" y="2.5" width="13" height="11" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="8" y="7.5" width="4.5" height="3.5" rx="1" fill="currentColor" />
+    </svg>
+  )
+}
+
 /**
  * @param {object} props
  * @param {{nodes: any[], edges: any[]}} props.flow    converted React Flow graph
@@ -50,6 +64,15 @@ export function CanvasApp({ flow, theme, fullscreenTarget, restoreFullscreen }) 
   // until then, scrolling over the canvas keeps scrolling the page.
   const [interacted, setInteracted] = useState(false)
   const [isCanvasFullscreen, setIsCanvasFullscreen] = useState(false)
+  const [minimapCollapsed, setMinimapCollapsed] = useState(() => minimapPreference.isCollapsed())
+
+  const toggleMinimap = useCallback(() => {
+    setMinimapCollapsed((collapsed) => {
+      const next = !collapsed
+      minimapPreference.setCollapsed(next)
+      return next
+    })
+  }, [])
 
   useEffect(() => {
     // The MOUNT specifically — site-wide fullscreen (<html>) must not flip
@@ -116,13 +139,28 @@ export function CanvasApp({ flow, theme, fullscreenTarget, restoreFullscreen }) 
             {isCanvasFullscreen ? "🡼" : "⛶"}
           </ControlButton>
         </Controls>
-        <MiniMap
-          className="canvas-flow-minimap"
-          pannable
-          zoomable
-          nodeColor={(node) => node.data?.colorValue ?? MINIMAP_FALLBACK_NODE_COLOR}
-        />
+        {!minimapCollapsed && (
+          <MiniMap
+            className="canvas-flow-minimap"
+            pannable
+            zoomable
+            nodeColor={(node) => node.data?.colorValue ?? MINIMAP_FALLBACK_NODE_COLOR}
+          />
+        )}
       </ReactFlow>
+      {/* Pinned to the minimap's corner so it stays put as the expand
+          affordance when the minimap is collapsed (mirrors the zen-mode
+          "exit icon stays visible" pattern). */}
+      <button
+        type="button"
+        className="canvas-flow-minimap-toggle"
+        onClick={toggleMinimap}
+        aria-pressed={!minimapCollapsed}
+        title={minimapCollapsed ? "Show minimap" : "Hide minimap"}
+        aria-label={minimapCollapsed ? "Show minimap" : "Hide minimap"}
+      >
+        <MinimapToggleIcon />
+      </button>
     </div>
   )
 }

@@ -17,12 +17,16 @@ bare `node`/`npm` invocation hangs.
 Current workarounds (fragile, needed in every shell):
 
 - `unset -f node npm npx` before running anything, or call binaries by
-  absolute path.
+  absolute path. NOTE: prepending a newer node to PATH is NOT enough — the
+  shell FUNCTION shadows PATH lookup; the functions must be unset.
 - Node v26.4.0 was installed manually at
   `/home/node/.nvm/versions/node/v26.4.0/bin` (tarball, no nvm) — matches the
   path `.claude/skills/verify/SKILL.md` documents. The system
   `/usr/local/bin/node` is v20 and cannot type-strip the `.ts` tests
   (needs >= 22.6).
+- 2026-07-11: fresh sandbox instance lost that v26 install; Node v22.21.1
+  (linux-arm64 tarball) reinstalled at `~/.local/node22/bin`
+  (SKILL.md updated to match).
 
 **Better workaround (2026-07-11, survives per shell automatically):** write a
 minimal `/home/node/.nvm/nvm.sh` stub that prepends
