@@ -63,3 +63,28 @@ npm run test:e2e     # build + serve + curl checks + headless-Chromium canvas sm
 
 TypeScript runs directly on Node's native type stripping — no build step.
 Tests use `node:test`.
+
+## License
+
+This project is source-available under the Kondratyev Source Available
+License 2.2 (KSAL-2.2). In short:
+
+- **You can** use, modify, fork, and redistribute the code for free for
+  personal, educational, research, and other noncommercial purposes.
+- **Individual creators** — including freelancers, sole proprietors, and
+  single-person LLCs — may commercialize anything they *create with* the
+  software (sites, content, client deliverables), but not the software
+  itself.
+- **You cannot** otherwise use it for commercial purposes — including
+  company/business use, selling products built on it, or offering it as
+  a hosted service — without a paid license.
+- A one-time 30-day commercial evaluation is permitted to decide whether
+  to purchase.
+- Paid functionality behind a license key is not covered by this grant
+  and requires a subscription.
+- Do not bypass or tamper with license key / subscription checks.
+- Contributions you submit are licensed to the author for any use.
+
+This summary is informational only and is not the license. The full text
+in [LICENSE.md](LICENSE.md) is the sole and final authority on your
+rights and obligations.
