@@ -26,3 +26,6 @@ test-vault-build:
 # Rebuilds first (build is ~2s), then serves with production URL routing on 127.0.0.1.
 test-vault-run-locally: test-vault-build
 	$(NODE_ENV) && node cli/bin/publish.mjs preview $(OUT_DIR) --port $(PREVIEW_PORT)
+
+setup:
+	$(NODE_ENV) && npm install && npm run setup
