@@ -93,7 +93,7 @@ describe("ModeSwitcher component — rendering", () => {
     )
   })
 
-  test("GIVEN a trigger WHEN rendered THEN it holds one glyph per mode plus the caret (CSS shows exactly one glyph)", () => {
+  test("GIVEN a trigger WHEN rendered THEN it holds one glyph per mode and nothing else (CSS shows exactly one glyph)", () => {
     const trigger = children(groupOf(renderItems(), "screen"))[0]
     assert.deepEqual(
       children(trigger).map((svg) => svg.props.class),
@@ -101,7 +101,6 @@ describe("ModeSwitcher component — rendering", () => {
         "trigger-glyph trigger-glyph--normal",
         "trigger-glyph trigger-glyph--fullscreen",
         "trigger-glyph trigger-glyph--fullscreen-canvas",
-        "mode-caret",
       ],
     )
   })

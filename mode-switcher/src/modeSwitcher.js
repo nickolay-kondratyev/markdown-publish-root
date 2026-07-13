@@ -12,8 +12,9 @@
  *
  * Each group is ONE trigger button showing the CURRENT mode's glyph (outline
  * while the default mode is active, FILLED for any non-default mode — the fill
- * IS the "something is on" cue, same language as darkmode's glyph swap) plus a
- * caret, opening a labeled vertical popover with radio semantics.
+ * IS the "something is on" cue, same language as darkmode's glyph swap),
+ * opening a labeled vertical popover with radio semantics. No caret: the
+ * cluster reads as a uniform icon row; the click itself reveals the choices.
  *
  * State contract (attributes on <html> — never swapped by the SPA router, so
  * both survive every navigation):
@@ -80,10 +81,6 @@ const ARROWS_OUT_ICON_PATH =
 const ARROWS_OUT_FILL_ICON_PATH =
   "M109.66,146.34a8,8,0,0,1,0,11.32L83.31,184l18.35,18.34A8,8,0,0,1,96,216H48a8,8,0,0,1-8-8V160a8,8,0,0,1,13.66-5.66L72,172.69l26.34-26.35A8,8,0,0,1,109.66,146.34ZM83.31,72l18.35-18.34A8,8,0,0,0,96,40H48a8,8,0,0,0-8,8V96a8,8,0,0,0,13.66,5.66L72,83.31l26.34,26.35a8,8,0,0,0,11.32-11.32ZM208,40H160a8,8,0,0,0-5.66,13.66L172.69,72,146.34,98.34a8,8,0,0,0,11.32,11.32L184,83.31l18.34,18.35A8,8,0,0,0,216,96V48A8,8,0,0,0,208,40Zm3.06,112.61a8,8,0,0,0-8.72,1.73L184,172.69l-26.34-26.35a8,8,0,0,0-11.32,11.32L172.69,184l-18.35,18.34A8,8,0,0,0,160,216h48a8,8,0,0,0,8-8V160A8,8,0,0,0,211.06,152.61Z"
 
-// "caret-down" — the trigger's "this opens choices" affordance.
-const CARET_DOWN_ICON_PATH =
-  "M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"
-
 // "magnifying-glass" — the search delegate (kept from the retired zen-mode plugin).
 const MAGNIFIER_ICON_PATH =
   "M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"
@@ -133,7 +130,7 @@ function glyph({ iconPath, className }) {
   )
 }
 
-/** One radio group: trigger (current-mode glyph + caret) + labeled popover. */
+/** One radio group: trigger (current-mode glyph) + labeled popover. */
 function switcherGroup({ group, label, modes }) {
   const defaultValue = modes[0].value
   return h("div", { class: "mode-switcher", "data-group": group }, [
@@ -145,19 +142,16 @@ function switcherGroup({ group, label, modes }) {
         "aria-haspopup": "menu",
         "aria-expanded": "false",
       },
-      [
-        // All trigger glyphs render; CSS shows exactly one per root attribute
-        // (attribute set pre-paint by beforeDOMLoaded — no glyph flash).
-        ...modes.map((mode) =>
-          glyph({
-            // Outline for the group's default mode, FILL for any other: the
-            // filled trigger is the at-a-glance "a mode is active" cue.
-            iconPath: mode.value === defaultValue ? mode.iconPath : mode.fillIconPath,
-            className: `trigger-glyph trigger-glyph--${mode.value}`,
-          }),
-        ),
-        glyph({ iconPath: CARET_DOWN_ICON_PATH, className: "mode-caret" }),
-      ],
+      // All trigger glyphs render; CSS shows exactly one per root attribute
+      // (attribute set pre-paint by beforeDOMLoaded — no glyph flash).
+      modes.map((mode) =>
+        glyph({
+          // Outline for the group's default mode, FILL for any other: the
+          // filled trigger is the at-a-glance "a mode is active" cue.
+          iconPath: mode.value === defaultValue ? mode.iconPath : mode.fillIconPath,
+          className: `trigger-glyph trigger-glyph--${mode.value}`,
+        }),
+      ),
     ),
     h(
       "div",
@@ -284,28 +278,21 @@ const STRUCTURAL_CSS = `
   order: -1;
 }
 
-/* --- Trigger: current-mode glyph + caret ------------------------------------ */
+/* --- Trigger: current-mode glyph (uniform 20px icon, same as .mode-search) --- */
 .mode-switcher {
   position: relative;
   display: flex;
   align-items: center;
 }
 .mode-switcher-trigger {
-  width: 30px;
+  width: 20px;
   display: flex;
   align-items: center;
-  gap: 2px;
 }
 .mode-switcher-trigger .trigger-glyph {
   display: none;
   width: 20px;
   height: 20px;
-  fill: var(--darkgray);
-  flex-shrink: 0;
-}
-.mode-switcher-trigger .mode-caret {
-  width: 8px;
-  height: 8px;
   fill: var(--darkgray);
   flex-shrink: 0;
 }
