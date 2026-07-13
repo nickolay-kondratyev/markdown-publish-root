@@ -6,12 +6,12 @@ description: Build the test-vault site, serve it with the real preview server, a
 # Verify this repo's changes at the browser surface
 
 ## Environment
-- Node: `~/.local/node22/bin/node` (v22.21.1; installs do NOT survive sandbox refreshes — reinstalled 2026-07-13 for linux-x64 after the arm64 one vanished. Reinstall: `curl -fsSL https://nodejs.org/dist/v22.21.1/node-v22.21.1-linux-$(uname -m | sed -e s/x86_64/x64/ -e s/aarch64/arm64/).tar.xz | tar -xJ -C ~/.local && mv ~/.local/node-v22.21.1-* ~/.local/node22`). Default `node` is v20 — cannot type-strip `.ts` test files. ALSO `unset -f node npm npx` first: the profile defines a recursive `node()` function that shadows PATH (ticket 0003).
+- Node: prefer the nvm stub `/home/node/.nvm/versions/node/v26.4.0/bin` (canonical setup, see `ai_input/auto_load/dev-env.md` + ticket 0003; verified 2026-07-13). A `~/.local/node22` tarball install has been used before but does NOT survive sandbox refreshes — check it exists before relying on it. Default `node` is v20 — cannot type-strip `.ts` test files. ALSO `unset -f node npm npx` first: the profile defines a recursive `node()` function that shadows PATH (ticket 0003).
 - Browser: system Chromium at `/usr/bin/chromium` driven via `playwright-core` (already in node_modules). No downloaded Playwright browsers.
 
 ## Build + serve
 ```bash
-unset -f node npm npx; export PATH=~/.local/node22/bin:$PATH
+unset -f node npm npx; export PATH=/home/node/.nvm/versions/node/v26.4.0/bin:$PATH
 npm run bundle:viewer   # REQUIRED if canvas-plugin/viewer/* changed (self-hosted React Flow bundle)
 node cli/bin/publish.mjs build test-vault --config docs-internal/current/config/minimal-site.json --out out/public
 ```
