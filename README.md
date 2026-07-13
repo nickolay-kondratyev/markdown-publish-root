@@ -16,7 +16,9 @@ cache-classed headers. Next: Phase 4 dogfood.
 ## Quick start
 
 ```bash
-source ~/.nvm/nvm.sh && nvm use 26   # Node >= 22 required (tested on v26)
+scripts/setup-dev-env.sh   # one-command bootstrap: nvm + Node (pinned in .nvmrc) + npm install + npm run setup + npm test
+# or manually:
+source ~/.nvm/nvm.sh && nvm use   # Node >= 22 required; version pinned in .nvmrc
 
 npm install
 npm run setup        # one-time: clones pinned Quartz + installs its deps/plugins (needs network)
