@@ -1,0 +1,15 @@
+{
+	"nodes":[
+		{"id":"453ef57832cea649","x":-380,"y":-520,"width":640,"height":240,"type":"link","url":"https://www.google.com"},
+		{"id":"37709759f2fb9207","x":-380,"y":-160,"width":640,"height":360,"type":"link","url":"https://www.youtube.com/watch?v=Jk71bPz5VLo"},
+		{"id":"4fb3b1dd19f83002","x":-800,"y":-80,"width":250,"height":60,"type":"text","text":"YouTube URL"},
+		{"id":"915b9f68ff3bf6b1","x":-720,"y":-430,"width":250,"height":60,"type":"text","text":"Regular URL link"},
+		{"id":"cc1662f44426b3a5","x":-360,"y":340,"width":640,"height":360,"type":"link","url":"https://www.youtube.com/shorts/aj09fctv1Mc"},
+		{"id":"16ae78b947380fa7","x":-800,"y":340,"width":250,"height":60,"type":"text","text":"YouTube shorts"}
+	],
+	"edges":[
+		{"id":"35605e744ac6a960","fromNode":"915b9f68ff3bf6b1","fromSide":"right","toNode":"453ef57832cea649","toSide":"left"},
+		{"id":"9a2f7fd0caabc880","fromNode":"4fb3b1dd19f83002","fromSide":"right","toNode":"37709759f2fb9207","toSide":"left"},
+		{"id":"09f26b7675b2fb7c","fromNode":"16ae78b947380fa7","fromSide":"right","toNode":"cc1662f44426b3a5","toSide":"left"}
+	]
+}
