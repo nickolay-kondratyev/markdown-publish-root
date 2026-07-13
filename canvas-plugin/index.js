@@ -21,12 +21,15 @@ import { parseCanvas } from "./src/canvasSchema.js"
 import { cspFrameSrcContent } from "./src/linkProviders.js"
 import { CanvasPageBody } from "./src/pageBody.js"
 import { VaultLinkResolver, vaultPathToSlug } from "./src/resolver.js"
+import { ViewerBundleGuard } from "./src/viewerBundleGuard.js"
 
 const CANVAS_EXTENSION = ".canvas"
 /** Site-relative path the viewer bundle is served from. */
 export const VIEWER_BUNDLE_SITE_PATH = "static/canvas-viewer.js"
 /** Built by `npm run bundle:viewer` (scripts/build-canvas-viewer.mjs). */
 const VIEWER_BUNDLE_LOCAL_PATH = fileURLToPath(new URL("./dist/canvas-viewer.js", import.meta.url))
+/** Sources the bundle is built from; freshness-checked at emit time. */
+const VIEWER_SRC_DIR = fileURLToPath(new URL("./viewer", import.meta.url))
 
 export default function VintrinCanvasPage() {
   return {
@@ -163,12 +166,10 @@ function processAllCanvases(ctx, content) {
 }
 
 function copyViewerBundle(outputDir) {
-  if (!fs.existsSync(VIEWER_BUNDLE_LOCAL_PATH)) {
-    throw new Error(
-      `canvas viewer bundle missing at ${VIEWER_BUNDLE_LOCAL_PATH}. ` +
-        `Fix: run \`npm run setup\` (or \`npm run bundle:viewer\`) from the repo root.`,
-    )
-  }
+  ViewerBundleGuard.assertFresh({
+    bundlePath: VIEWER_BUNDLE_LOCAL_PATH,
+    viewerSrcDir: VIEWER_SRC_DIR,
+  })
   const dest = path.join(outputDir, VIEWER_BUNDLE_SITE_PATH)
   fs.mkdirSync(path.dirname(dest), { recursive: true })
   fs.copyFileSync(VIEWER_BUNDLE_LOCAL_PATH, dest)

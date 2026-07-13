@@ -89,7 +89,11 @@ The bundle is self-hosted (no CDN): `npm run bundle:viewer` (part of
 `npm run setup`) esbuilds `viewer/canvasView.jsx` to `dist/canvas-viewer.js`
 (~397 KB min — React + React Flow; loaded lazily on canvas pages only). CSS
 (React Flow base + `viewer/viewer.css`) is bundled as text and rendered inside
-the mount so Quartz SPA DOM swaps cannot strip it.
+the mount so Quartz SPA DOM swaps cannot strip it. The bundle is gitignored, so
+the emitter freshness-checks it against `viewer/*` mtimes at emit time
+(`src/viewerBundleGuard.js`) and fails the build with rebuild instructions
+instead of silently serving stale viewer behavior; `make test-vault-build`
+rebuilds it automatically.
 
 Client behavior: viewer mounts via the page's loader script (Quartz SPA
 `nav`/`render` events + `window.addCleanup`, mirroring the official plugin's

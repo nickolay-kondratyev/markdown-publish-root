@@ -10,3 +10,6 @@
 - Test commands: `npm run test:unit`, `npm run test:integration`,
   e2e per-script: `node scripts/e2e-*.mjs` (Chromium at `/usr/bin/chromium`).
 - Screenshots -> `.out/` (not source controlled); temp output -> `.tmp/`.
+- `canvas-plugin/dist/canvas-viewer.js` is a gitignored build artifact. Site builds
+  FAIL LOUDLY on a stale/missing bundle (ViewerBundleGuard in the canvas emitter);
+  `make test-vault-build` auto-rebuilds it. Manual fix: `npm run bundle:viewer`.
