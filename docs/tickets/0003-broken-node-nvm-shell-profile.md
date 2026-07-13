@@ -38,6 +38,11 @@ file, so bare `node`/`npm` then resolve to v26 in EVERY shell — no per-shell
 install` + `npm run setup` (the tarball must match `uname -m` — the sandbox is
 **aarch64**).
 
+- 2026-07-13: another fresh sandbox, this time **x86_64** (arch varies between
+  instances — ALWAYS check `uname -m` first). Reinstalled Node v26.4.0
+  linux-x64 tarball at `/home/node/.nvm/versions/node/v26.4.0/` + the nvm.sh
+  PATH stub. Bare `node`/`npm` work again in every shell.
+
 Proper fix (profile, not this repo): make the wrapper bail out (fall through
 to `command node`) when nvm.sh is absent instead of recursing, and/or install
 nvm properly in the sandbox image.

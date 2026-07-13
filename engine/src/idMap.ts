@@ -1,4 +1,4 @@
-import { DocId } from "./docId.ts"
+import { UrlSegment } from "./urlSegment.ts"
 
 /** A publishable doc and the raw `id` value harvested from it (undefined = absent). */
 export interface HarvestedDoc {
@@ -23,53 +23,64 @@ export class DocIdValidationError extends Error {
   }
 }
 
-/** Staged docs live under this directory, making every page URL /n/<docid>. */
+/** Staged docs live under this directory, making every page URL /n/<url-segment>. */
 export const ID_NAMESPACE_DIR = "n"
 
 /** The vault's root index.md keeps its path so the site keeps a homepage at "/". */
 const ROOT_INDEX_PATH = "index.md"
 
 /**
- * vaultPath -> docid mapping for every publishable doc, plus the derived
+ * vaultPath -> URL-segment mapping for every publishable doc, plus the derived
  * staged path each doc is copied to (plan/id-based-publishing.md §4.1-3).
- * `build` hard-fails on missing, malformed, or duplicate ids — BEFORE any
- * Quartz invocation — listing every offending file.
+ *
+ * Any non-empty string id is accepted; UrlSegment derives the published
+ * segment (verbatim for URL-safe ids — all ids WE generate; `lc_`/`ue_`
+ * marker-prefixed forms for foreign ids needing transformation). `build`
+ * hard-fails on missing/non-string/empty ids and on segment collisions —
+ * BEFORE any Quartz invocation — listing every offending file.
  */
 export class IdMap {
-  private readonly docIdByVaultPath: Map<string, string>
+  private readonly urlSegmentByVaultPath: Map<string, string>
 
-  private constructor(docIdByVaultPath: Map<string, string>) {
-    this.docIdByVaultPath = docIdByVaultPath
+  private constructor(urlSegmentByVaultPath: Map<string, string>) {
+    this.urlSegmentByVaultPath = urlSegmentByVaultPath
   }
 
   static build(docs: HarvestedDoc[]): IdMap {
     const problems: string[] = []
-    const byId = new Map<string, string[]>()
+    const docsBySegment = new Map<string, { vaultPath: string; rawId: string }[]>()
     const map = new Map<string, string>()
     for (const doc of docs) {
       if (doc.idValue === undefined) {
         problems.push(`${doc.vaultPath}: missing id`)
         continue
       }
-      if (!DocId.isValid(doc.idValue)) {
-        problems.push(`${doc.vaultPath}: malformed id [${String(doc.idValue)}]`)
+      if (typeof doc.idValue !== "string" || doc.idValue.length === 0) {
+        problems.push(`${doc.vaultPath}: invalid id [${String(doc.idValue)}] (must be a non-empty string)`)
         continue
       }
-      map.set(doc.vaultPath, doc.idValue)
-      byId.set(doc.idValue, [...(byId.get(doc.idValue) ?? []), doc.vaultPath])
+      const urlSegment = UrlSegment.deriveFrom(doc.idValue)
+      map.set(doc.vaultPath, urlSegment)
+      docsBySegment.set(urlSegment, [
+        ...(docsBySegment.get(urlSegment) ?? []),
+        { vaultPath: doc.vaultPath, rawId: doc.idValue },
+      ])
     }
-    for (const [docId, vaultPaths] of byId) {
-      if (vaultPaths.length > 1) {
-        problems.push(`duplicate id [${docId}] in: ${vaultPaths.join(", ")}`)
+    // Collide on DERIVED segments, not raw ids: e.g. ids [Foo] and [foo] both
+    // publish at lc_foo/foo-adjacent URLs and must be rejected together.
+    for (const [urlSegment, collidingDocs] of docsBySegment) {
+      if (collidingDocs.length > 1) {
+        const described = collidingDocs.map((d) => `${d.vaultPath} (id [${d.rawId}])`).join(", ")
+        problems.push(`url-segment collision [${urlSegment}] in: ${described}`)
       }
     }
     if (problems.length > 0) throw new DocIdValidationError(problems)
     return new IdMap(map)
   }
 
-  /** docid of a publishable doc; undefined for anything else (assets, unknown paths). */
-  docIdOf(vaultPath: string): string | undefined {
-    return this.docIdByVaultPath.get(vaultPath)
+  /** Published URL segment of a doc; undefined for anything else (assets, unknown paths). */
+  urlSegmentOf(vaultPath: string): string | undefined {
+    return this.urlSegmentByVaultPath.get(vaultPath)
   }
 
   /**
@@ -78,16 +89,16 @@ export class IdMap {
    */
   stagedPathOf(vaultPath: string): string {
     if (vaultPath === ROOT_INDEX_PATH) return ROOT_INDEX_PATH
-    const docId = this.docIdByVaultPath.get(vaultPath)
-    if (docId === undefined) {
+    const urlSegment = this.urlSegmentByVaultPath.get(vaultPath)
+    if (urlSegment === undefined) {
       throw new Error(`stagedPathOf called for a non-doc path: ${vaultPath}`)
     }
     const extension = vaultPath.slice(vaultPath.lastIndexOf("."))
-    return `${ID_NAMESPACE_DIR}/${docId}${extension}`
+    return `${ID_NAMESPACE_DIR}/${urlSegment}${extension}`
   }
 
-  /** All mapped docs as [vaultPath, docId] pairs (insertion order). */
+  /** All mapped docs as [vaultPath, urlSegment] pairs (insertion order). */
   entries(): [string, string][] {
-    return [...this.docIdByVaultPath.entries()]
+    return [...this.urlSegmentByVaultPath.entries()]
   }
 }

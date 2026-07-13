@@ -50,8 +50,10 @@ export class MarkdownIdStamper {
     }
     const existing = data !== null && typeof data === "object" ? data.id : undefined
     if (existing !== undefined) {
-      if (DocId.isValid(existing)) return { action: "skip" }
-      return { action: "error", reason: `malformed id [${existing}] — never overwritten, fix manually` }
+      // Foreign (non-DocId-grammar) ids are publishable too — the engine derives
+      // a URL segment via UrlSegment. Never overwritten; only unusable ids error.
+      if (typeof existing === "string" && existing.length > 0) return { action: "skip" }
+      return { action: "error", reason: `invalid id [${existing}] (must be a non-empty string) — never overwritten, fix manually` }
     }
     // Insert `id:` as the first line of the existing block (after the opening ---).
     const opener = content.match(/^---[^\S\r\n]*\r?\n/)
@@ -86,8 +88,9 @@ export class CanvasIdStamper {
     }
     const existing = parsed.metadata?.frontmatter?.id
     if (existing !== undefined) {
-      if (DocId.isValid(existing)) return { action: "skip" }
-      return { action: "error", reason: `malformed id [${existing}] — never overwritten, fix manually` }
+      // Same acceptance as MarkdownIdStamper: foreign ids are publishable, keep them.
+      if (typeof existing === "string" && existing.length > 0) return { action: "skip" }
+      return { action: "error", reason: `invalid id [${existing}] (must be a non-empty string) — never overwritten, fix manually` }
     }
     if (parsed.metadata === undefined) {
       return CanvasIdStamper.spliceFreshMetadata(content, docId)

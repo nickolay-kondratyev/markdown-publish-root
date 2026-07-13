@@ -26,14 +26,14 @@ export class StagingLinkIndex {
   constructor(idMap: IdMap, allStagedVaultPaths: string[]) {
     this.allOriginalSlugs = allStagedVaultPaths.map((vaultPath) => vaultPathToSlug(vaultPath))
     this.newTargetByOriginalSlug = new Map()
-    for (const [vaultPath, docId] of idMap.entries()) {
+    for (const [vaultPath, urlSegment] of idMap.entries()) {
       const stagedPath = idMap.stagedPathOf(vaultPath)
       // Root index: staged path unchanged, links to it keep resolving as-is.
       if (stagedPath === vaultPath) continue
-      // Link target = staged basename: "<docid>" for md (extension-stripped by
-      // slugging), "<docid>.canvas" for canvas (extension-preserving slugs).
+      // Link target = staged basename: "<url-segment>" for md (extension-stripped
+      // by slugging), "<url-segment>.canvas" for canvas (extension-preserving slugs).
       const stagedBasename = stagedPath.slice(stagedPath.lastIndexOf("/") + 1)
-      const linkTarget = stagedBasename.endsWith(".md") ? docId : stagedBasename
+      const linkTarget = stagedBasename.endsWith(".md") ? urlSegment : stagedBasename
       this.newTargetByOriginalSlug.set(vaultPathToSlug(vaultPath), linkTarget)
     }
   }
