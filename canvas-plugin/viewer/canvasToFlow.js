@@ -128,12 +128,25 @@ function nodeData(node, attachments, noteLinks, colorValue) {
         fileName: (node.file ?? "").split("/").at(-1) ?? "",
       }
     }
-    case "link":
-      return { colorValue, url: node.url ?? "" }
+    case "link": {
+      const url = node.url ?? ""
+      // vintrinLink comes prebaked from the rewriter (embed vs card). The
+      // domain-only card fallback keeps conversion total for un-rewritten
+      // payloads; NO provider logic lives client-side.
+      return { colorValue, url, link: node.vintrinLink ?? { mode: "card", meta: { domain: hostnameOf(url) } } }
+    }
     case "group":
       return { colorValue, label: node.label }
     default:
       return { colorValue, html: "" }
+  }
+}
+
+function hostnameOf(rawUrl) {
+  try {
+    return new URL(rawUrl).hostname
+  } catch {
+    return ""
   }
 }
 

@@ -133,13 +133,52 @@ describe("canvasToFlow nodes", () => {
     assert.deepEqual(nodes.map((n: any) => n.data.mediaKind), ["audio", "video", "plaintext"])
   })
 
-  test("GIVEN a link node WHEN converting THEN it is a canvasLink carrying the URL", () => {
+  test("GIVEN a rewritten embed link node WHEN converting THEN a canvasLink carrying URL + embed data", () => {
+    const { nodes } = canvasToFlow(
+      payload({
+        nodes: [
+          {
+            id: "l1", type: "link", x: 0, y: 0, width: 10, height: 10,
+            url: "https://www.youtube.com/watch?v=Jk71bPz5VLo",
+            vintrinLink: { mode: "embed", embedUrl: "https://www.youtube-nocookie.com/embed/Jk71bPz5VLo" },
+          },
+        ],
+      }),
+    )
+    assert.deepEqual(
+      { type: nodes[0].type, url: nodes[0].data.url, link: nodes[0].data.link },
+      {
+        type: FlowNodeType.LINK,
+        url: "https://www.youtube.com/watch?v=Jk71bPz5VLo",
+        link: { mode: "embed", embedUrl: "https://www.youtube-nocookie.com/embed/Jk71bPz5VLo" },
+      },
+    )
+  })
+
+  test("GIVEN a rewritten card link node WHEN converting THEN the card metadata passes through", () => {
+    const vintrinLink = {
+      mode: "card",
+      meta: { domain: "example.com", title: "A Post", description: "d", image: "https://example.com/i.png" },
+    }
+    const { nodes } = canvasToFlow(
+      payload({
+        nodes: [{ id: "l1", type: "link", x: 0, y: 0, width: 10, height: 10, url: "https://example.com/post", vintrinLink }],
+      }),
+    )
+    assert.deepEqual(nodes[0].data.link, vintrinLink)
+  })
+
+  test("GIVEN an un-rewritten link node (no vintrinLink) WHEN converting THEN a domain-only card fallback", () => {
     const { nodes } = canvasToFlow(
       payload({ nodes: [{ id: "l1", type: "link", x: 0, y: 0, width: 10, height: 10, url: "https://jsoncanvas.org/" }] }),
     )
     assert.deepEqual(
-      { type: nodes[0].type, url: nodes[0].data.url },
-      { type: FlowNodeType.LINK, url: "https://jsoncanvas.org/" },
+      { type: nodes[0].type, url: nodes[0].data.url, link: nodes[0].data.link },
+      {
+        type: FlowNodeType.LINK,
+        url: "https://jsoncanvas.org/",
+        link: { mode: "card", meta: { domain: "jsoncanvas.org" } },
+      },
     )
   })
 
