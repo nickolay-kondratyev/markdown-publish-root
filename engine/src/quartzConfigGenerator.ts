@@ -330,6 +330,8 @@ const LAYOUT: Record<string, unknown> = {
     // Keeps default chrome — graph + backlinks on canvas pages is a
     // differentiator (plan §4.1). reader-mode (book icon) stays: it is the
     // toggle for the graph sidebar, so canvas pages need it too.
-    canvas: { exclude: ["table-of-contents"] },
+    // content-meta excluded: canvas virtual pages carry no dates, so it would
+    // only render a reading-time estimate ("N min read") — meaningless for a canvas.
+    canvas: { exclude: ["table-of-contents", "content-meta"] },
   },
 }
