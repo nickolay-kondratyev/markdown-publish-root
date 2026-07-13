@@ -126,23 +126,32 @@ const CANVAS_PAGE_CSS = `
 .canvas-page-mount img {
   object-fit: contain;
 }
-/* Canvas-level fullscreen on the mount (the INNER of the two fullscreen
-   levels, docs/tickets/full-screen-mode.md): fill the screen, drop the
-   page-embed frame. */
-.canvas-page-mount:fullscreen {
-  height: 100%;
+/* "Canvas full screen" (root attribute owned by the mode-switcher plugin,
+   docs-internal/tickets/mode-switcher.md): html-level fullscreen + this pure
+   CSS expansion of the mount over the whole viewport. WHY-NOT native mount
+   fullscreen: only the fullscreen element's subtree renders, which would hide
+   the corner mode cluster — the exit affordance; and a second same-gesture
+   requestFullscreen is rejected (activation already consumed).
+   z-index 1 keeps the mount UNDER the corner cluster (custom.scss pins it at
+   z-index 2) while covering the page chrome (z-index auto). */
+:root[screen-mode="fullscreen-canvas"] .canvas-page .canvas-page-mount {
+  position: fixed;
+  inset: 0;
+  height: auto;
+  margin: 0;
+  z-index: 1;
   border: none;
   border-radius: 0;
 }
-/* Zen mode (root attribute owned by the zen-mode plugin, same cross-plugin
-   contract the engine's reader-mode rules use): the canvas IS the content, so
+/* Zen mode (root attribute owned by the mode-switcher plugin, same
+   cross-plugin contract as its reader dim): the canvas IS the content, so
    fill the viewport's remaining height instead of the page-embed cap above.
    A flex chain — NOT a "calc(100dvh - Xrem)" offset — so the mount ends at the
    viewport bottom whatever height the title/meta header happens to take.
    #quartz-body carried for the cascade (base nests everything under that ID);
    dvh so mobile browser-UI collapse doesn't leave a gap. The empty
    .page-footer sibling keeps its 1rem margin as bottom breathing room. */
-:root[zen-mode="on"] #quartz-body .center:has(.canvas-page) {
+:root[reading-mode="zen"] #quartz-body .center:has(.canvas-page) {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
@@ -150,17 +159,17 @@ const CANVAS_PAGE_CSS = `
 /* Flex items are independent formatting contexts: the title's own top margin
    no longer collapses into .page-header's, which would sit the heading
    ~2.25rem lower than on zen note pages. Zero it — .page-header's margin
-   (zen-mode plugin) alone positions the heading, identically to notes. */
-:root[zen-mode="on"] #quartz-body .center:has(.canvas-page) .article-title {
+   (mode-switcher plugin) alone positions the heading, identically to notes. */
+:root[reading-mode="zen"] #quartz-body .center:has(.canvas-page) .article-title {
   margin-top: 0;
 }
-:root[zen-mode="on"] #quartz-body .center .canvas-page {
+:root[reading-mode="zen"] #quartz-body .center .canvas-page {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
-:root[zen-mode="on"] #quartz-body .center .canvas-page .canvas-page-mount {
+:root[reading-mode="zen"] #quartz-body .center .canvas-page .canvas-page-mount {
   flex: 1;
   height: auto;
   min-height: 0;

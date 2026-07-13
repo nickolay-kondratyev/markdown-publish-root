@@ -1,0 +1,24 @@
+{
+  "name": "vintrin-mode-switcher",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Quartz 5 component plugin: the top-right mode cluster's two radio-style switchers — reading mode (plain/reader/zen) and screen mode (normal/fullscreen/fullscreen-canvas) — plus the always-visible search magnifier (docs-internal/tickets/mode-switcher.md).",
+  "type": "module",
+  "main": "index.js",
+  "quartz": {
+    "name": "mode-switcher",
+    "displayName": "Mode Switcher",
+    "category": "component",
+    "version": "0.1.0",
+    "quartzVersion": ">=5.0.0",
+    "dependencies": [],
+    "defaultEnabled": true,
+    "components": {
+      "ModeSwitcher": {
+        "displayName": "Mode Switcher",
+        "defaultPosition": "left",
+        "defaultPriority": 40
+      }
+    }
+  }
+}

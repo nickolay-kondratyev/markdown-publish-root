@@ -23,10 +23,8 @@ export interface LocalPluginDirs {
   explorerPluginDir: string
   /** Folder-shaped Breadcrumbs component (plan/folder-nav-over-id-urls.md §4.3). */
   breadcrumbsPluginDir: string
-  /** Zen-mode toolbar toggle (plan/zen-mode.md). */
-  zenModePluginDir: string
-  /** Full-screen-mode toolbar toggle (docs/tickets/full-screen-mode.md). */
-  fullScreenModePluginDir: string
+  /** Mode-switcher toolbar cluster (docs-internal/tickets/mode-switcher.md). */
+  modeSwitcherPluginDir: string
 }
 
 export class QuartzConfigGenerator {
@@ -41,9 +39,8 @@ export class QuartzConfigGenerator {
     localPlugins: Partial<LocalPluginDirs> = {},
   ): Record<string, unknown> {
     const canvasPluginDir = localPlugins.canvasPluginDir ?? defaultLocalPluginDir("canvas-plugin")
-    const zenModePluginDir = localPlugins.zenModePluginDir ?? defaultLocalPluginDir("zen-mode")
-    const fullScreenModePluginDir =
-      localPlugins.fullScreenModePluginDir ?? defaultLocalPluginDir("full-screen-mode")
+    const modeSwitcherPluginDir =
+      localPlugins.modeSwitcherPluginDir ?? defaultLocalPluginDir("mode-switcher")
     const explorerPluginDir =
       localPlugins.explorerPluginDir ?? defaultLocalPluginDir("vintrin-explorer")
     const breadcrumbsPluginDir =
@@ -82,22 +79,16 @@ export class QuartzConfigGenerator {
         // Our canvas pageType+emitter plugin (ADR 0001). Local sources are
         // symlinked by Quartz's loader — no publishing, no build step.
         { source: canvasPluginDir, enabled: true, order: 55 },
-        // Our zen-mode toolbar toggle (plan/zen-mode.md): hides sidebar chrome
-        // AND collapses the grid so content reclaims the sidebar width.
-        // Priority 40 = immediately after reader-mode (35) in the toolbar row.
+        // Our mode-switcher cluster (docs-internal/tickets/mode-switcher.md):
+        // the search magnifier + the two radio-style mode groups — reading
+        // mode (plain/reader/zen, replacing the zen-mode plugin AND the stock
+        // reader-mode toggle disabled above) and screen mode
+        // (normal/fullscreen/fullscreen-canvas, replacing the full-screen-mode
+        // plugin). Priority 40 = right of darkmode (30) in the toolbar row.
         {
-          source: zenModePluginDir,
+          source: modeSwitcherPluginDir,
           enabled: true,
           layout: { position: "left", priority: 40, group: "toolbar" },
-        },
-        // Our full-screen-mode toggle (docs/tickets/full-screen-mode.md):
-        // native fullscreen on <html>, site-wide. Priority 45 = rightmost in
-        // the toolbar; it stays visible inside reader/zen mode (their hide
-        // rules allowlist it) so any reading mode can be upgraded to fullscreen.
-        {
-          source: fullScreenModePluginDir,
-          enabled: true,
-          layout: { position: "left", priority: 45, group: "toolbar" },
         },
         // Folder-shaped Explorer over stable-id URLs; replaces the stock
         // explorer disabled above (plan/folder-nav-over-id-urls.md, spike C).
@@ -279,11 +270,10 @@ const PLUGIN_ENTRIES: PluginEntry[] = [
     enabled: true,
     layout: { position: "left", priority: 30, group: "toolbar" },
   },
-  {
-    source: "reader-mode",
-    enabled: true,
-    layout: { position: "left", priority: 35, group: "toolbar" },
-  },
+  // reader-mode DISABLED: its book toggle is now the "Reader" option of OUR
+  // mode-switcher's reading-mode radio group (which owns the sidebar-dim CSS
+  // too) — two writers for the reading mode would be ambiguous.
+  { source: "reader-mode", enabled: false },
   // breadcrumbs DISABLED: slug-trie crumbs (Home > n > docid); replaced by OUR
   // vintrin-breadcrumbs local plugin (folder-nav plan §3.1, §4.3).
   { source: "breadcrumbs", enabled: false },
@@ -316,20 +306,21 @@ const PLUGIN_ENTRIES: PluginEntry[] = [
 /** Layout groups + per-pageType tweaks (mirrors Quartz defaults, minus bases). */
 const LAYOUT: Record<string, unknown> = {
   groups: {
-    // The mode-toggle cluster: darkmode + reader-mode + zen-mode +
-    // full-screen-mode, the ONLY group in the left sidebar. SiteChromeStyles
-    // pins it to the top-right viewport corner (ref.ap.0zwhQQya81CGNQ9pmqKkM.E).
+    // The mode-toggle cluster: darkmode + mode-switcher (search magnifier +
+    // the two mode groups), the ONLY group in the left sidebar.
+    // SiteChromeStyles pins it to the top-right viewport corner
+    // (ref.ap.0zwhQQya81CGNQ9pmqKkM.E).
     toolbar: { priority: 35, direction: "row", gap: "0.5rem" },
   },
   byPageType: {
     "404": { positions: { beforeBody: [], left: [], right: [] } },
     content: {},
     // No `folder` entry: folder-page is disabled (collapse-only folders).
-    tag: { exclude: ["reader-mode"], positions: { right: [] } },
+    tag: { positions: { right: [] } },
     // Our canvas pageType (layout name declared in canvas-plugin/index.js).
     // Keeps default chrome — graph + backlinks on canvas pages is a
-    // differentiator (plan §4.1). reader-mode (book icon) stays: it is the
-    // toggle for the graph sidebar, so canvas pages need it too.
+    // differentiator (plan §4.1). The mode-switcher stays: reader mode is the
+    // dim toggle for the graph sidebar, so canvas pages need it too.
     // content-meta excluded: canvas virtual pages carry no dates, so it would
     // only render a reading-time estimate ("N min read") — meaningless for a canvas.
     canvas: { exclude: ["table-of-contents", "content-meta"] },

@@ -4,4 +4,4 @@
  * (vendor/quartz/quartz/plugins/loader/gitLoader.ts getPluginSubpathEntry);
  * export names must match `quartz.components` keys in package.json.
  */
-export { FullScreenMode } from "../src/fullScreenMode.js"
+export { ModeSwitcher } from "../src/modeSwitcher.js"

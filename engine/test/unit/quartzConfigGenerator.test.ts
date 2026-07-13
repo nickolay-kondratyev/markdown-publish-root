@@ -140,9 +140,9 @@ describe("QuartzConfigGenerator — plugin set", () => {
     assert.notEqual(generate().layout.byPageType.canvas, undefined)
   })
 
-  test("GIVEN any site WHEN generating THEN canvas pages keep reader-mode (book icon toggles graph sidebar)", () => {
+  test("GIVEN any site WHEN generating THEN canvas pages keep the mode-switcher (reader dim toggles the graph sidebar)", () => {
     const canvasExclude: string[] = generate().layout.byPageType.canvas.exclude ?? []
-    assert.equal(canvasExclude.includes("reader-mode"), false)
+    assert.equal(canvasExclude.includes("mode-switcher"), false)
   })
 
   test("GIVEN any site WHEN generating THEN canvas pages exclude content-meta (canvases have no dates, only reading-time would show)", () => {
@@ -161,14 +161,17 @@ describe("QuartzConfigGenerator — plugin set", () => {
     assert.deepEqual(entry?.layout, { position: "left", priority: 20 })
   })
 
-  test("GIVEN any site WHEN generating THEN darkmode and reader-mode form the corner mode-toggle cluster", () => {
-    const doc = generate()
-    const groupOf = (name: string) =>
-      (pluginEntry(doc, name) as { layout?: { group?: string } })?.layout?.group
-    assert.deepEqual(
-      { darkmode: groupOf("darkmode"), readerMode: groupOf("reader-mode") },
-      { darkmode: "toolbar", readerMode: "toolbar" },
-    )
+  test("GIVEN any site WHEN generating THEN darkmode joins the corner mode-toggle cluster", () => {
+    const entry = pluginEntry(generate(), "darkmode") as { layout?: { group?: string } }
+    assert.equal(entry?.layout?.group, "toolbar")
+  })
+
+  test("GIVEN any site WHEN generating THEN the stock reader-mode toggle is disabled (replaced by the mode-switcher's Reader option)", () => {
+    assert.equal(pluginEntry(generate(), "reader-mode")?.enabled, false)
+  })
+
+  test("GIVEN any site WHEN generating THEN tag pages get no reader-mode exclude (all reading options are offered everywhere)", () => {
+    assert.deepEqual(generate().layout.byPageType.tag, { positions: { right: [] } })
   })
 
   test("GIVEN any site WHEN generating THEN core markdown pipeline plugins are enabled", () => {
@@ -179,56 +182,35 @@ describe("QuartzConfigGenerator — plugin set", () => {
   })
 })
 
-describe("QuartzConfigGenerator — zen-mode plugin", () => {
-  function zenEntry(doc: ConfigDoc) {
-    return doc.plugins.find((p) => typeof p.source === "string" && p.source.endsWith("/zen-mode"))
-  }
-
-  test("GIVEN a zen-mode plugin dir WHEN generating THEN it is an enabled local source", () => {
-    const doc = QuartzConfigGenerator.generateConfigObject(siteConfig(), {
-      zenModePluginDir: "/abs/path/zen-mode",
-    }) as ConfigDoc
-    assert.equal(doc.plugins.find((p) => p.source === "/abs/path/zen-mode")?.enabled, true)
-  })
-
-  test("GIVEN any site WHEN generating THEN zen-mode sits in the toolbar right after reader-mode (priority 40)", () => {
-    const entry = zenEntry(generate()) as { layout?: Record<string, unknown> } | undefined
-    assert.deepEqual(entry?.layout, { position: "left", priority: 40, group: "toolbar" })
-  })
-
-  test("GIVEN the default zen-mode dir WHEN inspected THEN it is a component-category quartz plugin", () => {
-    const source = zenEntry(generate())?.source as string
-    const pkg = JSON.parse(fs.readFileSync(path.join(source, "package.json"), "utf-8"))
-    assert.equal(pkg.quartz?.category, "component")
-  })
-})
-
-describe("QuartzConfigGenerator — full-screen-mode plugin (docs/tickets/full-screen-mode.md)", () => {
-  function fullScreenEntry(doc: ConfigDoc) {
+describe("QuartzConfigGenerator — mode-switcher plugin (docs-internal/tickets/mode-switcher.md)", () => {
+  function modeSwitcherEntry(doc: ConfigDoc) {
     return doc.plugins.find(
-      (p) => typeof p.source === "string" && p.source.endsWith("/full-screen-mode"),
+      (p) => typeof p.source === "string" && p.source.endsWith("/mode-switcher"),
     )
   }
 
-  test("GIVEN a full-screen-mode plugin dir WHEN generating THEN it is an enabled local source", () => {
+  test("GIVEN a mode-switcher plugin dir WHEN generating THEN it is an enabled local source", () => {
     const doc = QuartzConfigGenerator.generateConfigObject(siteConfig(), {
-      fullScreenModePluginDir: "/abs/path/full-screen-mode",
+      modeSwitcherPluginDir: "/abs/path/mode-switcher",
     }) as ConfigDoc
-    assert.equal(doc.plugins.find((p) => p.source === "/abs/path/full-screen-mode")?.enabled, true)
+    assert.equal(doc.plugins.find((p) => p.source === "/abs/path/mode-switcher")?.enabled, true)
   })
 
-  test("GIVEN any site WHEN generating THEN full-screen-mode is the RIGHTMOST toolbar icon (priority 45)", () => {
-    const entry = fullScreenEntry(generate()) as { layout?: Record<string, unknown> } | undefined
-    assert.deepEqual(entry?.layout, { position: "left", priority: 45, group: "toolbar" })
+  test("GIVEN any site WHEN generating THEN mode-switcher sits in the toolbar right of darkmode (priority 40)", () => {
+    const entry = modeSwitcherEntry(generate()) as { layout?: Record<string, unknown> } | undefined
+    assert.deepEqual(entry?.layout, { position: "left", priority: 40, group: "toolbar" })
   })
 
-  test("GIVEN any site WHEN generating THEN canvas pages keep full-screen-mode (the ubiquitous fullscreen affordance)", () => {
-    const canvasExclude: string[] = generate().layout.byPageType.canvas.exclude ?? []
-    assert.equal(canvasExclude.includes("full-screen-mode"), false)
+  test("GIVEN the retired standalone mode plugins WHEN generating THEN no zen-mode/full-screen-mode sources remain", () => {
+    const sources = generate().plugins.map((p) => String(p.source))
+    assert.equal(
+      sources.some((s) => s.endsWith("/zen-mode") || s.endsWith("/full-screen-mode")),
+      false,
+    )
   })
 
-  test("GIVEN the default full-screen-mode dir WHEN inspected THEN it is a component-category quartz plugin", () => {
-    const source = fullScreenEntry(generate())?.source as string
+  test("GIVEN the default mode-switcher dir WHEN inspected THEN it is a component-category quartz plugin", () => {
+    const source = modeSwitcherEntry(generate())?.source as string
     const pkg = JSON.parse(fs.readFileSync(path.join(source, "package.json"), "utf-8"))
     assert.equal(pkg.quartz?.category, "component")
   })

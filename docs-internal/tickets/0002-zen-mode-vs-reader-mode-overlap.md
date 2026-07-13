@@ -1,6 +1,10 @@
 # Decide whether zen-mode subsumes reader-mode
 
-Status: OPEN
+Status: RESOLVED (2026-07-13 — by the mode-switcher refactor,
+docs-internal/tickets/mode-switcher.md: Plain/Reader/Zen became a STRICT
+radio group in one popover switcher, so the two "focus" toggles no longer sit
+side by side and can no longer stack. Reader stays available everywhere,
+including canvas pages, as the graph-sidebar dim.)
 Origin: zen-mode implementation (2026-07-10, plan/zen-mode.md §3.5 follow-up).
 
 The toolbar now carries two "focus" toggles side by side:

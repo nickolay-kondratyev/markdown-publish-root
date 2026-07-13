@@ -1,5 +1,14 @@
 # Zen Mode: hide sidebars AND reclaim their width (no Quartz fork)
 
+**Addendum (2026-07-13) — plugin retired, zen lives on:** the standalone
+`zen-mode/` plugin was absorbed into `mode-switcher/` (see
+docs-internal/tickets/mode-switcher.md). Zen is now the `reading-mode="zen"`
+option of a strict Plain/Reader/Zen radio; the width-reclaim CSS moved
+verbatim to `mode-switcher/src/modeSwitcher.js` (selectors renamed
+`zen-mode="on"` → `reading-mode="zen"`), the `.zen-search` magnifier became
+`.mode-search`, and the old `zen-mode` localStorage key is ignored (no
+migration). Everything below is the historical design record.
+
 **Status:** IMPLEMENTED (2026-07-10) — see `zen-mode/`, `scripts/e2e-zen-mode.mjs`, `docs/tickets/0002`. Implementation correction to §3.3: base sidebar rules nest under `.page > #quartz-body` (an **ID**), so zen sidebar selectors must carry `#quartz-body` too or they lose the cascade — the "root-attribute selectors out-specify base" claim below was wrong for those rules (the full-width-frame precedent works only because frames drop sidebars from the DOM).
 
 **Addendum (2026-07-11) — search-in-zen:** zen hid the search bar with no way to search without exiting. The `ZenMode` component now renders a second button, `.zen-search` (magnifier), left of the lotus, whose click delegates to the real (hidden) `.search-button`, keeping search logic single-source. The zen CSS exempts the `.search` ROOT from the sidebar-children hiding (only `.search-button` is hidden) so the fixed search overlay can render; this also makes Ctrl/Cmd+K work in zen. WHY a sibling button instead of a second plugin component: the config loader supports one layout slot per plugin entry (`config-loader.ts buildLayoutForEntries` resolves one registry component per entry).
