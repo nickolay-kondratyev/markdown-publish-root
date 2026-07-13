@@ -15,8 +15,10 @@
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { h } from "preact"
 import { CanvasRewriter } from "./src/canvasRewriter.js"
 import { parseCanvas } from "./src/canvasSchema.js"
+import { cspFrameSrcContent } from "./src/linkProviders.js"
 import { CanvasPageBody } from "./src/pageBody.js"
 import { VaultLinkResolver, vaultPathToSlug } from "./src/resolver.js"
 
@@ -65,6 +67,25 @@ export default function VintrinCanvasPage() {
           },
         },
       }))
+    },
+
+    /**
+     * Defense in depth behind the provider whitelist (linkProviders.js): a
+     * frame-src CSP on CANVAS pages only, so an unknown URL can never
+     * accidentally frame even if a payload slipped past the classifier.
+     * Accepted limitation: a <meta> CSP applies from the ENTRY document, so
+     * SPA navigation onto a canvas page carries no CSP — the whitelist in the
+     * rewritten node JSON remains the primary control.
+     */
+    externalResources() {
+      return {
+        additionalHead: [
+          (pageData) =>
+            pageData.vintrinCanvas === undefined
+              ? null
+              : h("meta", { "http-equiv": "Content-Security-Policy", content: cspFrameSrcContent() }),
+        ],
+      }
     },
 
     /** emitter phase: note fragments + viewer bundle (only when canvases exist). */

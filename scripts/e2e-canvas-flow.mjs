@@ -122,9 +122,12 @@ const dom = await page.evaluate(() => {
     minimapNodes: q(".react-flow__minimap-node").length,
     controlTitles: q(".react-flow__controls button").map((b) => b.getAttribute("title")),
     linkHeaderHref: nodeEl("link-card")?.querySelector(".canvas-link-url")?.getAttribute("href") ?? "",
-    linkIframe: {
-      src: nodeEl("link-card")?.querySelector("iframe")?.getAttribute("src") ?? "",
-      sandbox: nodeEl("link-card")?.querySelector("iframe")?.getAttribute("sandbox") ?? "",
+    linkCard: {
+      // jsoncanvas.org is not a whitelisted embed provider -> link card, no iframe
+      // (scripts/e2e-link-cards.mjs covers the embed/card matrix in depth).
+      iframeCount: nodeEl("link-card")?.querySelectorAll("iframe").length ?? -1,
+      cardHref: nodeEl("link-card")?.querySelector("a.canvas-link-card")?.getAttribute("href") ?? "",
+      domainText: nodeEl("link-card")?.querySelector(".canvas-link-card-domain")?.textContent ?? "",
     },
     imageSrc: nodeEl("file-image")?.querySelector("img")?.getAttribute("src") ?? "",
     imageFit: getComputedStyle(nodeEl("file-image")?.querySelector("img")).objectFit,
@@ -140,12 +143,14 @@ const dom = await page.evaluate(() => {
 })
 
 check(
-  "all 10 nodes render with their JSON Canvas ids",
+  "all 11 nodes render with their JSON Canvas ids",
   JSON.stringify(dom.nodeIds) ===
     JSON.stringify(
       [
         "group-intro", "text-welcome", "text-colors", "file-note-full", "file-note-subpath",
         "file-note-usage", "file-image", "file-private", "file-canvas-card", "link-card",
+        // Card pointing at the URL-canvas fixture (canvases/impl/Canvas With Url.canvas).
+        "3c0efaf16624d732",
       ].sort(),
     ),
   dom.nodeIds.join(","),
@@ -190,8 +195,13 @@ check(
 )
 check("link card shows the URL affordance", dom.linkHeaderHref === "https://jsoncanvas.org/")
 check(
-  "link card embeds the page in a sandboxed iframe",
-  dom.linkIframe.src === "https://jsoncanvas.org/" && dom.linkIframe.sandbox.includes("allow-scripts"),
+  "non-framable link renders a link card (no iframe -> no browser error frame)",
+  // Footer shows og:site_name when the live metadata fetch succeeded, the raw
+  // domain otherwise — non-empty covers both (offline builds stay green).
+  dom.linkCard.iframeCount === 0 &&
+    dom.linkCard.cardHref === "https://jsoncanvas.org/" &&
+    dom.linkCard.domainText.trim() !== "",
+  JSON.stringify(dom.linkCard),
 )
 check("image card resolved through attachments map", dom.imageSrc.includes("attachments/diagram.png"))
 check("image fits inside its card (object-fit contain)", dom.imageFit === "contain")

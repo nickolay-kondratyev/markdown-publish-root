@@ -20,11 +20,20 @@ const OUT_DIR = path.join(REPO_ROOT, ".build", "integration-canvas-out")
 // Stable-id slugs (plan/id-based-publishing.md): read from the stamped fixtures.
 const MAIN_CANVAS_SLUG = `n/${docIdOf("canvases/main.canvas")}.canvas`
 const SECOND_CANVAS_SLUG = `n/${docIdOf("canvases/second.canvas")}.canvas`
+const URL_CANVAS_SLUG = `n/${docIdOf("canvases/impl/Canvas With Url.canvas")}.canvas`
 const GETTING_STARTED_SLUG = `n/${docIdOf("notes/getting-started.md")}`
 const ARCHITECTURE_SLUG = `n/${docIdOf("notes/architecture.md")}`
 
 const MAIN_CANVAS_PAGE = `${MAIN_CANVAS_SLUG}.html`
 const SECOND_CANVAS_PAGE = `${SECOND_CANVAS_SLUG}.html`
+const URL_CANVAS_PAGE = `${URL_CANVAS_SLUG}.html`
+
+// Canned metadata stub returned by the injected fetcher for google.com
+// (deterministic + offline: integration builds must never hit the network).
+const STUB_GOOGLE_TITLE = "STUB-GOOGLE-TITLE"
+const CANNED_OG_BY_URL: Record<string, string> = {
+  "https://www.google.com": `<meta property="og:title" content="${STUB_GOOGLE_TITLE}"><meta property="og:description" content="stub description">`,
+}
 
 interface CanvasPayload {
   canvas: { nodes: any[]; edges: any[] }
@@ -41,7 +50,16 @@ describe("SiteBuilder integration — builds test-vault WITH canvases", () => {
       publishFilter: { includeFolders: ["canvases"] },
     })
     fs.rmSync(OUT_DIR, { recursive: true, force: true })
-    await new SiteBuilder().buildSite({ vaultDir: VAULT_DIR, siteConfig, outDir: OUT_DIR })
+    await new SiteBuilder().buildSite({
+      vaultDir: VAULT_DIR,
+      siteConfig,
+      outDir: OUT_DIR,
+      linkMetadataFetcher: async (url) => ({
+        ok: url in CANNED_OG_BY_URL,
+        status: url in CANNED_OG_BY_URL ? 200 : 404,
+        text: async () => CANNED_OG_BY_URL[url] ?? "",
+      }),
+    })
   })
 
   after(() => fs.rmSync(OUT_DIR, { recursive: true, force: true }))
@@ -284,6 +302,61 @@ describe("SiteBuilder integration — builds test-vault WITH canvases", () => {
   test("THEN the embedded client payload stays lean (no previewParts in the data script)", () => {
     const payload = readCanvasPayload(MAIN_CANVAS_PAGE)
     assert.equal("previewParts" in payload, false)
+  })
+
+  // --- link nodes: provider embeds + link cards (canvases/impl/Canvas With Url) --
+
+  test("THEN YouTube watch/shorts link nodes carry nocookie embed URLs", () => {
+    const payload = readCanvasPayload(URL_CANVAS_PAGE)
+    const linkOf = (id: string) => payload.canvas.nodes.find((n) => n.id === id)?.vintrinLink
+    assert.deepEqual(
+      { watch: linkOf("37709759f2fb9207"), shorts: linkOf("cc1662f44426b3a5") },
+      {
+        watch: { mode: "embed", embedUrl: "https://www.youtube-nocookie.com/embed/Jk71bPz5VLo" },
+        shorts: { mode: "embed", embedUrl: "https://www.youtube-nocookie.com/embed/aj09fctv1Mc" },
+      },
+    )
+  })
+
+  test("THEN the non-framable google.com node is a link card with fetched metadata", () => {
+    const payload = readCanvasPayload(URL_CANVAS_PAGE)
+    const node = payload.canvas.nodes.find((n) => n.id === "453ef57832cea649")
+    assert.deepEqual(node?.vintrinLink, {
+      mode: "card",
+      meta: {
+        domain: "www.google.com",
+        title: STUB_GOOGLE_TITLE,
+        description: "stub description",
+      },
+    })
+  })
+
+  test("THEN the engine-internal vintrinLinkMeta key never reaches the client payload", () => {
+    const payload = readCanvasPayload(URL_CANVAS_PAGE)
+    assert.deepEqual(
+      payload.canvas.nodes.filter((n) => "vintrinLinkMeta" in n).map((n) => n.id),
+      [],
+    )
+  })
+
+  test("THEN the fetched card title lands in the canvas's search content", () => {
+    assert.match(readContentIndex()[URL_CANVAS_SLUG].content, new RegExp(STUB_GOOGLE_TITLE))
+  })
+
+  test("THEN canvas pages carry the frame-src CSP meta; note pages do not", () => {
+    // Preact renders attribute values with literal single quotes (no escaping).
+    const cspMeta = /<meta http-equiv="Content-Security-Policy" content="frame-src 'self'/
+    const canvasHtml = fs.readFileSync(path.join(OUT_DIR, URL_CANVAS_PAGE), "utf-8")
+    const noteHtml = fs.readFileSync(path.join(OUT_DIR, `${GETTING_STARTED_SLUG}.html`), "utf-8")
+    assert.deepEqual(
+      { canvas: cspMeta.test(canvasHtml), note: noteHtml.includes("Content-Security-Policy") },
+      { canvas: true, note: false },
+    )
+  })
+
+  test("THEN the CSP whitelists the youtube-nocookie embed origin", () => {
+    const canvasHtml = fs.readFileSync(path.join(OUT_DIR, URL_CANVAS_PAGE), "utf-8")
+    assert.match(canvasHtml, /https:\/\/www\.youtube-nocookie\.com/)
   })
 
   test("THEN the private note contributes NOTHING to the canvas's search content", () => {

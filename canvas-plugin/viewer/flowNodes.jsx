@@ -137,23 +137,70 @@ function PlaintextContent({ url }) {
   )
 }
 
-/** Link card: the external URL in a header + the page embedded in a sandboxed iframe. */
+/**
+ * Link node: the external URL in a header, then either a whitelisted-provider
+ * embed iframe or a rich link card (the DEFAULT — arbitrary origins refuse
+ * framing, so a raw iframe shows a browser error page on the published site).
+ * The embed-vs-card decision is prebaked by the rewriter
+ * (ref CanvasRewriter.rewriteLinkNode); no provider logic runs client-side.
+ */
 export function CanvasLinkNode({ data, selected }) {
+  const { url, link } = data
   return (
     <CardShell selected={selected} colorValue={data.colorValue} className="canvas-link-node">
       <div className="canvas-link-header">
-        <a className="canvas-link-url" href={data.url} target="_blank" rel="noopener noreferrer">
-          {data.url}
+        <a className="canvas-link-url" href={url} target="_blank" rel="noopener noreferrer">
+          {url}
         </a>
       </div>
-      <iframe
-        className="canvas-link-frame"
-        src={data.url}
-        title={data.url}
-        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-        loading="lazy"
-      />
+      {link.mode === "embed" ? <LinkEmbed embedUrl={link.embedUrl} /> : <LinkCard url={url} meta={link.meta} />}
     </CardShell>
+  )
+}
+
+function LinkEmbed({ embedUrl }) {
+  return (
+    <iframe
+      className="canvas-link-frame"
+      src={embedUrl}
+      title={embedUrl}
+      sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+      allow="autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write"
+      allowFullScreen
+      loading="lazy"
+    />
+  )
+}
+
+/**
+ * Rich link card: publish-time OpenGraph metadata (title/description/domain)
+ * with an optional HOTLINKED thumbnail. A failed image load hides the
+ * thumbnail (remote images rot / block hotlinking) — the card degrades to
+ * text-only, never a broken-image icon.
+ */
+function LinkCard({ url, meta }) {
+  const [imageFailed, setImageFailed] = useState(false)
+  const title = meta.title ?? meta.domain ?? url
+  return (
+    <a className="canvas-link-card" href={url} target="_blank" rel="noopener noreferrer">
+      {meta.image !== undefined && !imageFailed && (
+        <img
+          className="canvas-link-card-image"
+          src={meta.image}
+          alt=""
+          loading="lazy"
+          draggable={false}
+          onError={() => setImageFailed(true)}
+        />
+      )}
+      <div className="canvas-link-card-text">
+        <div className="canvas-link-card-title">{title}</div>
+        {meta.description !== undefined && (
+          <div className="canvas-link-card-description">{meta.description}</div>
+        )}
+        <div className="canvas-link-card-domain">{meta.siteName ?? meta.domain ?? ""}</div>
+      </div>
+    </a>
   )
 }
 

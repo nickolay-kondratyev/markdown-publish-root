@@ -39,6 +39,7 @@ describe("Folder-nav integration — explorer + breadcrumbs on the fixture vault
   test("THEN the explorer shows the nested ORIGINAL folder structure", () => {
     const html = pageHtml("index.html")
     const folderPaths = [...html.matchAll(/data-folderpath="([^"]+)"/g)].map((m) => m[1]).sort()
+    // canvases/impl: the URL-canvas fixture folder (canvases/impl/Canvas With Url.canvas).
     assert.deepEqual(folderPaths, ["canvases", "canvases/impl", "notes", "notes/guides"])
   })
 
