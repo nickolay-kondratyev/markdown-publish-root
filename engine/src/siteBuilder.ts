@@ -2,6 +2,8 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { CanvasLinkEnricher } from "./canvasLinkEnrichment.ts"
+import { LinkMetadataResolver, type FetchLike } from "./linkMetadata.ts"
 import { PublishFilter } from "./publishFilter.ts"
 import { QuartzConfigGenerator } from "./quartzConfigGenerator.ts"
 import { QuartzRunner } from "./quartzRunner.ts"
@@ -38,6 +40,12 @@ export interface BuildSiteOptions {
    * BuildSiteResult.validation either way. Leak findings ALWAYS fail the build.
    */
   strictLinks?: boolean
+  /**
+   * Fetch used for publish-time link-card metadata (canvas link nodes).
+   * Default: real network fetch. Tests inject a fake for determinism; fetch
+   * failures NEVER fail the build (linkMetadataWarnings + domain-only cards).
+   */
+  linkMetadataFetcher?: FetchLike
 }
 
 /** Result of a successful build. */
@@ -48,6 +56,8 @@ export interface BuildSiteResult {
   stagingDir: string
   /** Validation-pass outcome. leaks is always empty here (leaks throw instead). */
   validation: ValidationResult
+  /** Non-fatal link-card metadata fetch issues (canvas link nodes). */
+  linkMetadataWarnings: string[]
 }
 
 const STAGING_DIR_PREFIX = "publish-staging-"
@@ -91,6 +101,7 @@ export class SiteBuilder {
       if (staging.stagedCanvasFiles.length > 0) {
         this.assertViewerBundleReady()
       }
+      const linkMetadataWarnings = await this.enrichCanvasLinks(options, staging, stagingDir)
 
       this.runner.writeConfig(
         QuartzConfigGenerator.generateYaml(options.siteConfig, {
@@ -115,12 +126,43 @@ export class SiteBuilder {
         throw new BrokenInternalLinksError(validation.brokenLinks)
       }
 
-      return { outDir: path.resolve(options.outDir), staging, stagingDir, validation }
+      return {
+        outDir: path.resolve(options.outDir),
+        staging,
+        stagingDir,
+        validation,
+        linkMetadataWarnings,
+      }
     } finally {
       if (options.keepStaging !== true) {
         fs.rmSync(stagingDir, { recursive: true, force: true })
       }
     }
+  }
+
+  /**
+   * Publish-time link-card metadata (canvas link nodes): fetched HERE because
+   * the Quartz child process is sync and cannot await network calls; results
+   * are baked into the staged canvas JSON (CanvasLinkEnricher). Warnings only —
+   * a metadata fetch never fails the build.
+   */
+  private async enrichCanvasLinks(
+    options: BuildSiteOptions,
+    staging: StagingResult,
+    stagingDir: string,
+  ): Promise<string[]> {
+    if (staging.stagedCanvasFiles.length === 0) return []
+    const stagedCanvasPaths = staging.stagedCanvasFiles.map(
+      (vaultPath) => staging.stagedPathByVaultPath[vaultPath],
+    )
+    const enricher = new CanvasLinkEnricher(
+      new LinkMetadataResolver({ fetchFn: options.linkMetadataFetcher }),
+    )
+    const { warnings } = await enricher.enrich(stagingDir, stagedCanvasPaths)
+    for (const warning of warnings) {
+      console.warn(`[link-metadata] ${warning}`)
+    }
+    return warnings
   }
 
   /**
