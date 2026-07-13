@@ -12,7 +12,7 @@ PREVIEW_PORT := 8080
 # Vault targeted by vault-add-ids (override: make vault-add-ids VAULT=/path/to/vault).
 VAULT        := $(TEST_VAULT)
 
-.PHONY: test-vault-build test-vault-run-locally vault-add-ids test-vault-add-ids setup
+.PHONY: test-vault-build test-vault-run-locally vault-add-ids test-vault-add-ids setup test
 
 # Stamps a stable docid into every .md/.canvas of $(VAULT) (idempotent).
 vault-add-ids:
@@ -30,3 +30,6 @@ test-vault-run-locally: test-vault-build
 
 setup:
 	$(NODE_ENV) && npm install && npm run setup
+
+test:
+	npm run test
