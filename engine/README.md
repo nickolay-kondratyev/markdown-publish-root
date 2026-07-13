@@ -124,6 +124,9 @@ First matching rule wins:
 | 10 | any other non-markdown asset (images, PDFs, ...) | published (default allow) |
 
 Notes:
+- **Truly private data belongs in a separate vault** the publish pipeline
+  never reads — these rules are defense in depth, not a vault boundary
+  (`docs/publish-exclusion.md`).
 - `publish: false` always wins over `includeFolders` (rule 4 before rule 6).
 - The `private` rule (rule 2) is purely file-path based — never note titles or
   content. Examples and rationale: `docs/publish-exclusion.md`.

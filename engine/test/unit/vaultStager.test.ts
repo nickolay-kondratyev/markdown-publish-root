@@ -14,6 +14,8 @@ import {
 const ID_INDEX = "docid_iiiiiiiiiiiiiiiiiiiii_e"
 const ID_NOTE = "docid_nnnnnnnnnnnnnnnnnnnnn_e"
 const ID_CANVAS = "docid_ggggggggggggggggggggg_e"
+const ID_PRIVATE_TREE = "docid_ppppppppppppppppppppp_e"
+const ID_PRIVATE_FILE = "docid_qqqqqqqqqqqqqqqqqqqqq_e"
 
 const FILTER = new PublishFilter({ includeFolders: ["boards", "notes"], excludeFolders: [] })
 
@@ -30,6 +32,18 @@ describe("VaultStager", () => {
     writeFile(vaultDir, "index.md", `---\nid: ${ID_INDEX}\npublish: true\n---\n# Home\n\n[[note]]\n`)
     writeFile(vaultDir, "notes/note.md", `---\nid: ${ID_NOTE}\npublish: true\n---\nBody\n`)
     writeFile(vaultDir, "notes/private.md", "---\npublish: false\n---\nSECRET\n")
+    // Private-name rule fixtures: publish:true and valid ids, so ONLY the
+    // path-based rule can explain their exclusion (docs/publish-exclusion.md).
+    writeFile(
+      vaultDir,
+      "notes/Private-Area/deep/leaky.md",
+      `---\nid: ${ID_PRIVATE_TREE}\npublish: true\n---\nSECRET-TREE\n`,
+    )
+    writeFile(
+      vaultDir,
+      "notes/team-PRIVATE-plan.md",
+      `---\nid: ${ID_PRIVATE_FILE}\npublish: true\n---\nSECRET-FILE\n`,
+    )
     writeFile(vaultDir, "notes/broken.md", "---\npublish: [unclosed\n---\nbody\n")
     writeFile(vaultDir, "attachments/img.png", "png-bytes")
     writeFile(
@@ -92,6 +106,22 @@ describe("VaultStager", () => {
 
   test("THEN the private note is NOT copied", () => {
     assert.equal(fs.existsSync(path.join(stagingDir, "notes/private.md")), false)
+  })
+
+  test("THEN a publish:true note under a folder whose name contains 'Private' is NOT staged (private rule wins)", () => {
+    assert.equal(fs.existsSync(path.join(stagingDir, `n/${ID_PRIVATE_TREE}.md`)), false)
+  })
+
+  test("THEN a publish:true note whose file name contains 'PRIVATE' is NOT staged (private rule wins)", () => {
+    assert.equal(fs.existsSync(path.join(stagingDir, `n/${ID_PRIVATE_FILE}.md`)), false)
+  })
+
+  test("THEN nothing from the private-named tree leaks anywhere in the staging dir", () => {
+    const stagedContents = fs
+      .readdirSync(stagingDir, { recursive: true, withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => fs.readFileSync(path.join(entry.parentPath, entry.name)))
+    assert.equal(stagedContents.some((c) => c.includes("SECRET-TREE") || c.includes("SECRET-FILE")), false)
   })
 
   test("THEN the malformed-frontmatter note is NOT copied (fail closed)", () => {

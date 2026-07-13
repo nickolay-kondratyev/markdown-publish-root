@@ -75,9 +75,24 @@ describe("PublishFilter — 'private' path segments (never published, wins over 
     assert.equal(filter.isMarkdownPublished("notes/private-secret.md", true), false)
   })
 
-  test("GIVEN uppercase 'Private' segment WHEN deciding THEN not published (case-insensitive)", () => {
+  test("GIVEN uppercase 'Private' folder WHEN deciding THEN not published (case-insensitive)", () => {
     const filter = new PublishFilter(INCLUDE_ALL)
     assert.equal(filter.isMarkdownPublished("notes/Private/a.md", true), false)
+  })
+
+  test("GIVEN ALL-CAPS 'PRIVATE' in a file name WHEN deciding THEN not published", () => {
+    const filter = new PublishFilter(INCLUDE_ALL)
+    assert.equal(filter.isMarkdownPublished("notes/TEAM-PRIVATE-PLAN.md", true), false)
+  })
+
+  test("GIVEN mixed-case 'PrIvAtE' in a file name WHEN deciding THEN not published", () => {
+    const filter = new PublishFilter(INCLUDE_ALL)
+    assert.equal(filter.isMarkdownPublished("notes/PrIvAtE-thoughts.md", true), false)
+  })
+
+  test("GIVEN private folder several levels up the chain WHEN deciding THEN not published", () => {
+    const filter = new PublishFilter(INCLUDE_ALL)
+    assert.equal(filter.isMarkdownPublished("work/private/sub/deep/a.md", true), false)
   })
 
   test("GIVEN canvas file name containing 'private' WHEN deciding THEN not published", () => {

@@ -4,6 +4,13 @@ What never gets published, and why. Decision logic lives in
 `engine/src/publishFilter.ts`; full precedence table in `engine/README.md`
 ("Publish filter semantics").
 
+> **Truly private data: keep it in a separate vault.** The rules below are
+> defense in depth, not a vault boundary. Never point publishing at a vault
+> (or folder tree) containing data that must never leak — keep that data in a
+> completely separate vault/folder the publish pipeline never reads. A filter
+> bug, a rename (`private/` → `personal/`), or a misconfiguration cannot leak
+> what the pipeline cannot see.
+
 ## Always excluded (wins over everything, including `publish: true`)
 
 Checked against the vault-relative **file path only** — never against note
