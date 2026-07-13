@@ -2,7 +2,7 @@
 
 **Status:** Accepted (Phase 1, 2026-07-08)
 **Context:** Phase 0 found Quartz 5 is NOT published to npm and requires a
-one-time `plugin install` bootstrap after checkout (docs/status/phase-0.md).
+one-time `plugin install` bootstrap after checkout (docs-internal/status/phase-0.md).
 The engine therefore needs a managed Quartz checkout, and Phase 0 left the
 mechanism (clone vs submodule/subtree) as an open question.
 

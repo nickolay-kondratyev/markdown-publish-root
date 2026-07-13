@@ -1,6 +1,6 @@
 # ADR 0005: Folder-shaped navigation via local component plugins (no fork)
 
-**Status:** Accepted (2026-07-10) · **Plan:** `plan/folder-nav-over-id-urls.md` · **Spike:** `docs/spikes/spike-C-local-component-plugin.md`
+**Status:** Accepted (2026-07-10) · **Plan:** `plan/folder-nav-over-id-urls.md` · **Spike:** `docs-internal/spikes/spike-C-local-component-plugin.md`
 
 ## Context
 

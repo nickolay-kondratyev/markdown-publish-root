@@ -4,16 +4,16 @@
 
 ## What was built
 
-- `docs/spikes/spike-A-quartz-plugin-api.md` — Quartz 5 plugin API proven
+- `docs-internal/spikes/spike-A-quartz-plugin-api.md` — Quartz 5 plugin API proven
   hands-on: local pageType plugin claimed a dummy extension, emitted an HTML
   page with inline script, registered links (backlinks + graph + wikilink
   resolution). Spike C recipe included (`transformLink`/`slugifyFilePath` from
   `@quartz-community/utils`).
-- `docs/spikes/spike-B-hesprs-viewer.md` — hesprs viewer surface verified from
+- `docs-internal/spikes/spike-B-hesprs-viewer.md` — hesprs viewer surface verified from
   source + headless smoke test (21/21). Self-hosted esbuild bundle proven
   (129.7 KB min / 40.5 KB gz).
 - `test-vault/` — fixture vault exercising the full parity checklist.
-- `docs/decisions/0001-own-pagetype-plugin-with-hesprs-viewer.md`.
+- `docs-internal/decisions/0001-own-pagetype-plugin-with-hesprs-viewer.md`.
 
 ## Deviations from plan/main.md (reality wins)
 

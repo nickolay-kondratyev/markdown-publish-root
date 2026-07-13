@@ -10,7 +10,7 @@ e2e green, vendor/quartz tracked diff empty, docs + ADR 0005 updated.
 
 Local `component`-category plugin proven end-to-end against the vendored
 Quartz pin — mount, naming rule, options flow, `not-index` condition,
-css+script shipping. Full findings: `docs/spikes/spike-C-local-component-plugin.md`.
+css+script shipping. Full findings: `docs-internal/spikes/spike-C-local-component-plugin.md`.
 No fork needed; plan proceeds as written. No deviations.
 
 ## Phase 1 — Staging injection + validation (DONE, 2026-07-10)
@@ -90,10 +90,10 @@ No fork needed; plan proceeds as written. No deviations.
 
 ## Phase 5 — Docs + ADR (DONE, 2026-07-10)
 
-- ADR `docs/decisions/0005-folder-nav-local-component-plugins.md`.
+- ADR `docs-internal/decisions/0005-folder-nav-local-component-plugins.md`.
 - READMEs: new `vintrin-explorer/`, `vintrin-breadcrumbs/`; updated
   `engine/README.md` (vintrinPath injection + folder-nav section),
-  `canvas-plugin/README.md` (passthrough), `docs/current/dev.md`
+  `canvas-plugin/README.md` (passthrough), `docs-internal/current/dev.md`
   (modules, design points, test counts).
 - Plans cross-linked: folder-nav plan marked DONE;
   id-based-publishing §8.3 marked DONE.

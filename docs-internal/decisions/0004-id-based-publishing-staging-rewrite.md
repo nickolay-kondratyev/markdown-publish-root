@@ -19,7 +19,7 @@ path — renames/moves never change published URLs.
    across re-saves — verified by Nickolay, Spike S1).
 3. **URL shape:** `/n/<docid>` for notes, `/n/<docid>.canvas` for canvases.
    Extension-preserving slugs keep Quartz, the canvas plugin's slug logic, and
-   the hosting contract (`docs/hosting.md`) untouched. Root `index.md` stays at
+   the hosting contract (`docs-internal/hosting.md`) untouched. Root `index.md` stays at
    `/`. Assets stay path-addressed (no id carrier).
 4. **Rewrite locus: staging-time ONLY.** The vault keeps human-readable
    `[[wiki-links]]`; `VaultStager` stages docs *named by id* (`n/<docid>.*`),

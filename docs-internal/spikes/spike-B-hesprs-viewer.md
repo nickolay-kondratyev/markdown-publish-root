@@ -68,7 +68,7 @@ type CompArgs<N> = {                          // OverlayManager.ts:37-44
 };
 ```
 
-Instance API (augmented at runtime): `load()`, `dispose()`, `changeTheme(theme?)`, `resetView()`, `toggleFullscreen()`, `pan/panToCoords/zoom/zoomToScale`, hooks `onStart/onRestart/onDispose/onRefresh/onResize/onToggleFullscreen/onChangeTheme/onNodeActive/onNodeLosesActive` (docs/2 & the modules' `Augmentation` types).
+Instance API (augmented at runtime): `load()`, `dispose()`, `changeTheme(theme?)`, `resetView()`, `toggleFullscreen()`, `pan/panToCoords/zoom/zoomToScale`, hooks `onStart/onRestart/onDispose/onRefresh/onResize/onToggleFullscreen/onChangeTheme/onNodeActive/onNodeLosesActive` (docs-internal/2 & the modules' `Augmentation` types).
 
 ## 3. `parser` option
 
@@ -79,7 +79,7 @@ Instance API (augmented at runtime): `load()`, `dispose()`, `changeTheme(theme?)
 
 ## 4. `attachments` option
 
-- Shape: `Record<string, string>` — key = original `node.file` value in the canvas JSON, value = served URL (`DataManager.ts:17`, docs/2:74-81).
+- Shape: `Record<string, string>` — key = original `node.file` value in the canvas JSON, value = served URL (`DataManager.ts:17`, docs-internal/2:74-81).
 - Applied to **all file nodes** regardless of media kind (md, image, audio, video — `DataManager.ts:129-137`); skipped when the path contains `://` (line 134).
 - Implementation detail (**caveat**): it **mutates `node.file` in place** on the canvas object you passed — pass a fresh/cloned object per `load()`, and custom components see the URL, not the vault path (proven in smoke test).
 - **Missing key**: `node.file` used as-is → relative fetch. `fetch()` does not reject on HTTP 404, so for a missing .md the **404 response body is parsed and rendered as the card content** (proven: card showed "not found"). The `Failed to load content.` fallback (`OverlayManager.ts:114-117`) only triggers on network-level errors. Images/audio/video just show broken media. Our build must guarantee the map is complete.
@@ -208,7 +208,7 @@ Build-time companion (`canvas-transform.ts`, pure function, unit-testable): take
 | Edges: arrow endpoints (`toEnd:'none'`, `fromEnd:'arrow'`, bidirectional) | ❌ always exactly one arrow at destination (`Renderer.ts:197`) | Low-Med (visual fidelity) | accept for MVP (most Obsidian edges are single-arrow default); else upstream PR — it's a ~10-line unconditional call |
 | Pan/zoom (mouse+touch), zoom 0.05–20× | ✅ | — | — |
 | Minimap, controls, fullscreen, mistouch-prevention | ✅ optional modules (proven) | — | — |
-| Light/dark, runtime switch | ✅ `changeTheme()` proven on vanilla build | — | wrapper wires site theme toggle + `prefers-color-scheme`; card typography is viewer-scoped CSS, override under `.JSON-Canvas-Viewer` to match site (docs/6) |
+| Light/dark, runtime switch | ✅ `changeTheme()` proven on vanilla build | — | wrapper wires site theme toggle + `prefers-color-scheme`; card typography is viewer-scoped CSS, override under `.JSON-Canvas-Viewer` to match site (docs-internal/6) |
 | Wikilinks resolving everywhere | ✅ via one custom parser (text + note cards — proven) | — | links only clickable after card activation (matches "first click selects") |
 | Self-hosting / no CDN | ✅ esbuild bundle 129.7 KB min / 40.5 KB gzip; or ship `dist/chimp.js` (ESM) | — | no UMD exists; `type="module"` required |
 

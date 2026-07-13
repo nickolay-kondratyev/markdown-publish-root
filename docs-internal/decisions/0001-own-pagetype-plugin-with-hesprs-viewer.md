@@ -2,7 +2,7 @@
 
 **Status:** Accepted (Nickolay, 2026-07-08). Renderer choice superseded by
 ADR 0003 (React Flow, 2026-07-10); the own-pageType-plugin decision stands.
-**Context:** Phase 0 spikes (see `docs/spikes/`).
+**Context:** Phase 0 spikes (see `docs-internal/spikes/`).
 
 ## New fact discovered
 

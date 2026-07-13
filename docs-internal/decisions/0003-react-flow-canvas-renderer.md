@@ -53,7 +53,7 @@ Structure (the new isolation boundary is the whole `viewer/` directory):
 
 ## Amendments
 
-- 2026-07-11 (ticket `docs/tickets/full-screen-mode.md`): the canvas-local
+- 2026-07-11 (ticket `docs-internal/tickets/full-screen-mode.md`): the canvas-local
   fullscreen control and `fullscreenRetention.js` were REMOVED. Fullscreen is
   now the site-wide `full-screen-mode` toolbar plugin, which fullscreens
   `<html>` — an element the SPA router never swaps, so fullscreen survives

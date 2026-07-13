@@ -2,7 +2,7 @@
 
 **Result: DEFINITION OF DONE MET.** 38/38 behavioral checks pass in real
 Chromium (desktop + mobile 390x844). Full evidence:
-`docs/status/phase-4-qa-report.md` (screenshots in `/.out/qa-phase4/`, not
+`docs-internal/status/phase-4-qa-report.md` (screenshots in `/.out/qa-phase4/`, not
 source-controlled).
 
 ## What was verified (plan §5 definition of done)
