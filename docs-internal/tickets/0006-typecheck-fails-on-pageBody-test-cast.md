@@ -1,7 +1,8 @@
 # `npm run typecheck` fails on pageBody.test.ts component cast
 
-Status: OPEN (found 2026-07-13, pre-existing on main — unrelated to the
-always-visible search-icon change during which it surfaced)
+Status: RESOLVED (2026-07-13 — cast through `unknown` in
+`canvas-plugin/test/unit/pageBody.test.ts`, done alongside the mode-switcher
+refactor; `npm run typecheck` is clean again)
 
 ## Symptom
 

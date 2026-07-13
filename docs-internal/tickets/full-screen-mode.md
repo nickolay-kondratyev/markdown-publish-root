@@ -1,5 +1,14 @@
 # Full screen mode: site-wide toolbar toggle
 
+Amendment (2026-07-13, mode-UX refactor — SUPERSEDES both notes below): the
+standalone `full-screen-mode/` plugin AND the reinstated in-canvas control are
+retired. Fullscreen is now the **screen-mode radio switcher** in the
+`mode-switcher/` plugin (Normal / Full screen / Canvas full screen), state on
+`<html screen-mode>`; "Canvas full screen" is html-level fullscreen + a pure
+CSS mount expansion, and `fullscreenRetention.js` is deleted (the attribute
+survives SPA navigation on `<html>` for free). Full rationale and the state
+contract: docs-internal/tickets/mode-switcher.md.
+
 Status: RESOLVED (2026-07-11 — `full-screen-mode/` local plugin, rightmost corner
 icon; native Fullscreen API on `<html>` so the mode survives SPA navigation
 (canvas opens already fullscreen); aria-label CSS tooltips on all corner icons
