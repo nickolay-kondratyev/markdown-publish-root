@@ -56,12 +56,15 @@ const measure = () =>
       zenInRightHalf: zenRect !== undefined && zenRect.x > window.innerWidth / 2,
       // The mode-toggle cluster is ALWAYS pinned top-right (custom.scss,
       // ref.ap.0zwhQQya81CGNQ9pmqKkM.E) — darkmode stands in for the cluster.
+      // NOTE: .search-button (not .search) — the search ROOT deliberately
+      // stays renderable in zen (zero-size) so the overlay can open.
       modeIconsInRightHalf:
         dark !== null && dark.getBoundingClientRect().x > window.innerWidth / 2,
       otherToolbarIconsWidth:
-        rectWidth(".sidebar.left .search") +
+        rectWidth(".sidebar.left .search-button") +
         rectWidth(".sidebar.left button.darkmode") +
         rectWidth(".sidebar.left button.readermode"),
+      zenSearchWidth: rectWidth("button.zen-search"),
       dividerHrVisible: rectWidth(".center > hr") > 0,
       breadcrumbsVisible: rectWidth(".center .breadcrumb-container") > 0,
       // DOCUMENT_POSITION_PRECEDING (2): reader-mode button comes BEFORE zen.
@@ -85,6 +88,7 @@ check("zen button renders next to (after) the reader-mode book icon", off.zenAft
 check("initial state is zen off", off.mode === "off")
 check("right sidebar visible before toggle", off.rightSidebarWidth > 0, `w=${off.rightSidebarWidth}`)
 check("other toolbar icons visible before toggle", off.otherToolbarIconsWidth > 0)
+check("zen-search icon hidden while zen off (full search bar is there)", off.zenSearchWidth === 0)
 check("mode toggles pinned to the top-right corner while zen off", off.modeIconsInRightHalf)
 check("article/footer divider visible before toggle", off.dividerHrVisible)
 check("breadcrumbs visible before toggle", off.breadcrumbsVisible)
@@ -111,9 +115,35 @@ check(
 check("zen button still visible in zen (exit stays reachable)", on.zenButtonWidth > 0)
 check("zen button pinned to the top-right corner", on.zenInRightHalf)
 check("all OTHER toolbar icons hidden in zen", on.otherToolbarIconsWidth === 0)
+check("zen-search icon visible in zen", on.zenSearchWidth > 0)
 check("article/footer divider hidden in zen", !on.dividerHrVisible)
 check("breadcrumbs hidden in zen", !on.breadcrumbsVisible)
 await screenshotFromTop("zen-mode-on.png")
+
+// --- 2b. Search from zen: the corner magnifier opens the REAL search ---------
+// The icon delegates to the hidden .search-button, so all search behavior
+// (focus, results, Escape) is the stock search plugin's — just re-entered.
+await page.click("button.zen-search")
+await page.waitForSelector(".search-container.active .search-bar")
+const searchBarFocused = await page.evaluate(
+  () => document.activeElement?.classList.contains("search-bar") === true,
+)
+check("zen-search click opens search with the bar focused", searchBarFocused)
+await page.fill(".search-bar", "Basic usage instructions")
+// Results render async (FlexSearch addAsync + DOM build) — no completion
+// event is exposed, so settle on a fixed debounce-safe delay (e2e-search.mjs).
+await page.waitForTimeout(700)
+const zenSearchResults = await page.evaluate(
+  () => document.querySelectorAll(".result-card:not(.no-match)").length,
+)
+check("searching from zen yields results", zenSearchResults > 0, `results=${zenSearchResults}`)
+await screenshotFromTop("zen-mode-search-open.png")
+await page.keyboard.press("Escape")
+const afterSearchClose = await measure()
+check(
+  "escape closes search and zen stays on",
+  (await page.$(".search-container.active")) === null && afterSearchClose.mode === "on",
+)
 
 // --- 3. Toggle OFF: stock layout returns ------------------------------------
 await page.click("button.zenmode")
@@ -122,6 +152,7 @@ check("second click restores zen-mode=off", restored.mode === "off")
 check("right sidebar restored", restored.rightSidebarWidth === off.rightSidebarWidth)
 check("center width restored", restored.centerWidth === off.centerWidth)
 check("toolbar icons restored", restored.otherToolbarIconsWidth === off.otherToolbarIconsWidth)
+check("zen-search icon hidden again after exiting zen", restored.zenSearchWidth === 0)
 check("article/footer divider restored", restored.dividerHrVisible)
 check("breadcrumbs restored", restored.breadcrumbsVisible)
 
