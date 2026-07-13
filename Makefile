@@ -6,7 +6,7 @@ SHELL := /bin/bash
 NODE_ENV := source ~/.nvm/nvm.sh && nvm use >/dev/null
 
 TEST_VAULT   := test-vault
-SITE_CONFIG  := docs/current/config/minimal-site.json
+SITE_CONFIG  := docs-internal/current/config/minimal-site.json
 OUT_DIR      := out/public
 PREVIEW_PORT := 8080
 # Vault targeted by vault-add-ids (override: make vault-add-ids VAULT=/path/to/vault).

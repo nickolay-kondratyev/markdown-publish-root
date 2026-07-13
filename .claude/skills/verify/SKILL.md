@@ -13,7 +13,7 @@ description: Build the test-vault site, serve it with the real preview server, a
 ```bash
 unset -f node npm npx; export PATH=~/.local/node22/bin:$PATH
 npm run bundle:viewer   # REQUIRED if canvas-plugin/viewer/* changed (self-hosted React Flow bundle)
-node cli/bin/publish.mjs build test-vault --config docs/current/config/minimal-site.json --out out/public
+node cli/bin/publish.mjs build test-vault --config docs-internal/current/config/minimal-site.json --out out/public
 ```
 Serve either with `node cli/bin/publish.mjs preview out/public --port 8080`, or in a driver script import the real server (or reuse `scripts/lib/e2eHarness.mjs` — build/serve/launch/error-filter helpers used by both e2e scripts):
 ```js
