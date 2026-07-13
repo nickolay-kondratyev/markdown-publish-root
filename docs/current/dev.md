@@ -40,7 +40,8 @@ Two inviolable rules:
 ## Dev workflow
 
 ```bash
-source ~/.nvm/nvm.sh && nvm use 26        # Node >= 22 required
+scripts/setup-dev-env.sh                  # one-command bootstrap (installs nvm/Node per .nvmrc, deps, Quartz, runs tests)
+source ~/.nvm/nvm.sh && nvm use           # Node >= 22 required; version pinned in .nvmrc
 npm install && npm run setup              # idempotent Quartz bootstrap
 npm run typecheck && npm test             # unit + integration (node:test, BDD GIVEN/WHEN/THEN)
 npm run test:e2e                          # headless-Chromium e2e via the real preview server (smoke, canvas viewer, zen-mode, folder-nav)
