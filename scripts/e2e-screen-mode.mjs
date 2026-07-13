@@ -159,6 +159,40 @@ const fullyExited = await measure()
 check("browser exit from canvas-expanded resets to normal", fullyExited.mode === "normal" && !fullyExited.htmlFullscreen)
 check("mount collapses when fullscreen drops", !fullyExited.mountCoversViewport)
 
+// --- 11. Search Enter-nav while Canvas full screen: the mode must survive ------
+// The vendored search plugin's Enter handler detaches the focused result card
+// (hideSearch) BEFORE synthetically clicking it; a detached anchor's click
+// cannot bubble to the SPA router, so the browser used to do a FULL page load —
+// dropping html fullscreen and resetting the intent (ticket 0007). The
+// mode-switcher's capture-phase Enter shim re-routes to an attached click.
+await selectScreenMode("fullscreen-canvas")
+check("re-entered canvas full screen for the search-nav check", (await measure()).mountCoversViewport)
+
+const NOTE_ID = docIdOf("notes/getting-started.md")
+await page.click(".mode-search")
+await page.waitForSelector(".search-container.active .search-bar", { timeout: 5000 })
+await page.fill(".search-bar", "Basic usage instructions")
+await page.waitForTimeout(700) // results render async (FlexSearch), no completion event
+await page.hover(`.result-card[href*="${NOTE_ID}"]`) // deterministic keyboard focus target
+await page.keyboard.press("Enter")
+await page.waitForTimeout(1200)
+const afterEnterNav = await measure()
+check("Enter-nav from search lands on the note", page.url().includes(NOTE_ID))
+check("Enter-nav from search keeps html fullscreen", afterEnterNav.htmlFullscreen)
+check("Enter-nav from search keeps the fullscreen-canvas intent", afterEnterNav.mode === "fullscreen-canvas")
+
+// --- 12. Search click-nav back to the canvas: the mount re-expands -------------
+await page.click(".mode-search")
+await page.waitForSelector(".search-container.active .search-bar", { timeout: 5000 })
+await page.fill(".search-bar", "Intro Group")
+await page.waitForTimeout(700)
+await page.click(`.result-card[href*="${MAIN_CANVAS_ID}"]`)
+await page.waitForSelector(".react-flow", { timeout: 10000 })
+await page.waitForTimeout(900)
+const backOnCanvas = await measure()
+check("search-nav back to the canvas keeps html fullscreen", backOnCanvas.htmlFullscreen && backOnCanvas.mode === "fullscreen-canvas")
+check("canvas mount re-expands after the search round-trip", backOnCanvas.mountCoversViewport)
+
 const ownErrors = filterOwnErrors(errors, base)
 check("no console/page errors from our origin", ownErrors.length === 0, ownErrors.join(" | "))
 

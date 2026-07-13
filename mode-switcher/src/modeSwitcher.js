@@ -559,6 +559,33 @@ const applyScreenMode = (value) => {
   }
 }
 
+// Search Enter-nav shim (docs-internal/tickets/0007-*.md): the vendored
+// search plugin's Enter handler calls hideSearch() — which DETACHES the
+// focused result anchor — before synthetically clicking it. A detached
+// anchor's click cannot bubble to the SPA router's window listener, so the
+// browser performs a FULL page load, destroying html-level fullscreen and
+// resetting screen-mode (the state contract above). Re-route Enter to a click
+// on the still-ATTACHED card: it then takes the exact same path as a mouse
+// click (the search plugin stores the term + hides itself in its results
+// click handler, the SPA router navigates). Capture phase on document fires
+// before the plugin's target-phase listener on the search bar.
+document.addEventListener(
+  "keydown",
+  (event) => {
+    if (event.key !== "Enter" || event.isComposing) return
+    if (!(event.target instanceof Element) || event.target.closest(".search-container.active") === null) return
+    // The tag-autocomplete dropdown owns Enter while open — defer to the plugin.
+    const tagDropdown = document.querySelector(".search-container.active .tag-suggestions")
+    if (tagDropdown !== null && tagDropdown.style.display !== "none") return
+    const focused = document.querySelector(".search-container.active .result-card.focus:not(.no-match)")
+    if (!(focused instanceof HTMLAnchorElement)) return
+    event.preventDefault()
+    event.stopImmediatePropagation() // the plugin's own handler would re-click the (by then detached) anchor
+    focused.click()
+  },
+  true,
+)
+
 // Browser fullscreen is ground truth: Esc/F11 exits must reset the intent.
 // The check is <html>.matches(":fullscreen") — the one fullscreen level we use.
 document.addEventListener("fullscreenchange", () => {
