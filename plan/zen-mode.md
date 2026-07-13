@@ -1,6 +1,8 @@
 # Zen Mode: hide sidebars AND reclaim their width (no Quartz fork)
 
 **Status:** IMPLEMENTED (2026-07-10) — see `zen-mode/`, `scripts/e2e-zen-mode.mjs`, `docs/tickets/0002`. Implementation correction to §3.3: base sidebar rules nest under `.page > #quartz-body` (an **ID**), so zen sidebar selectors must carry `#quartz-body` too or they lose the cascade — the "root-attribute selectors out-specify base" claim below was wrong for those rules (the full-width-frame precedent works only because frames drop sidebars from the DOM).
+
+**Addendum (2026-07-11) — search-in-zen:** zen hid the search bar with no way to search without exiting. The `ZenMode` component now renders a second button, `.zen-search` (magnifier), left of the lotus — visible ONLY in zen — whose click delegates to the real (hidden) `.search-button`, keeping search logic single-source. The zen CSS exempts the `.search` ROOT from the sidebar-children hiding (only `.search-button` is hidden) so the fixed search overlay can render; this also makes Ctrl/Cmd+K work in zen. WHY a sibling button instead of a second plugin component: the config loader supports one layout slot per plugin entry (`config-loader.ts buildLayoutForEntries` resolves one registry component per entry).
 **Owner:** Nickolay
 **Audience:** Implementation agent. All extension points below were verified by reading the vendored source; file refs are exact.
 
