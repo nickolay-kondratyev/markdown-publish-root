@@ -194,9 +194,9 @@
 }
 
 /* ---- Controls / minimap tweaks ------------------------------------------------- */
-.canvas-flow-fullscreen {
-  font-size: 1rem;
-}
+/* .canvas-flow-fullscreen needs no rule: its glyph is an SVG (canvasApp.jsx)
+   sized by React Flow's own .react-flow__controls-button svg rules — same
+   sizing as the zoom/fit icons. */
 
 /* Minimap collapse/expand toggle. Pinned to the minimap's bottom-right corner
    (15px = React Flow's panel margin) so the SAME button remains in place as

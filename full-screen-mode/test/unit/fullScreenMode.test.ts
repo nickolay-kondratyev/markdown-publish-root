@@ -40,6 +40,21 @@ describe("FullScreenMode component — rendering", () => {
       ["fullscreenEnterIcon", "fullscreenExitIcon"],
     )
   })
+
+  test("GIVEN the canvas viewer's fullscreen control WHEN compared THEN both render the SAME glyph pair (ref.ap.rv8cIwZWjlbPzjNjY1Dy4.E — duplicated across plugin packages, must stay in sync)", async () => {
+    const { readFile } = await import("node:fs/promises")
+    const canvasAppSource = await readFile(
+      new URL("../../../canvas-plugin/viewer/canvasApp.jsx", import.meta.url),
+      "utf8",
+    )
+    const vnode = component({}) as unknown as {
+      props: { children: { props: { children: [unknown, { props: { d: string } }] } }[] }
+    }
+    for (const glyph of vnode.props.children) {
+      const path = glyph.props.children[1].props.d
+      assert.equal(canvasAppSource.includes(path), true, `canvasApp.jsx is missing glyph path [${path.slice(0, 40)}…]`)
+    }
+  })
 })
 
 describe("FullScreenMode component — CSS", () => {

@@ -94,6 +94,21 @@ describe("SiteChromeStyles — reader-mode exit affordance", () => {
     )
   })
 
+  test("GIVEN the vendored book icon (uneditable plugin) WHEN styling the selected state THEN the inline SVG is replaced by a CSS-masked glyph pair", () => {
+    // Off state: Phosphor book-open via mask on ::before (::after is the tooltip's).
+    const beforeRule = scss().match(/\.readermode::before\s*\{([^}]*)\}/)?.[1] ?? ""
+    assert.equal(
+      scss().includes(".readermode svg {\n  display: none;") &&
+        beforeRule.includes("mask: url(") &&
+        beforeRule.includes("background-color: var(--darkgray)"),
+      true,
+    )
+  })
+
+  test("GIVEN reader on WHEN inspected THEN the book glyph swaps to its FILLED variant (selected-state cue)", () => {
+    assert.equal(readerRule(".readermode::before").includes("mask-image: url("), true)
+  })
+
   test("GIVEN the reader rules WHEN zen is also on THEN none apply (zen keeps precedence)", () => {
     // Every reader-mode rule must carry the :not([zen-mode="on"]) guard.
     const readerSelectors = scss().match(/^[^\n{]*\[reader-mode="on"\][^\n{]*\{/gm) ?? []

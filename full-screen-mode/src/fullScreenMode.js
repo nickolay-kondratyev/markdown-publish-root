@@ -23,13 +23,18 @@ import { h } from "preact"
 
 const FULL_SCREEN_MODE_LABEL = "Full screen"
 
-// Phosphor Icons "corners-out" / "corners-in" (regular), 256x256 viewBox.
+// Phosphor Icons "arrows-out-simple" / "arrows-in-simple" (regular), 256x256
+// viewBox: two DIAGONAL arrows — pointing outward = enter, inward = exit — an
+// unambiguous state cue (plain corner brackets read the same in both states).
+// ap.rv8cIwZWjlbPzjNjY1Dy4.E: the canvas viewer's fullscreen control renders
+// these SAME two paths (canvas-plugin/viewer/canvasApp.jsx) so both fullscreen
+// levels share one visual language. Keep the copies in sync.
 // Source: https://github.com/phosphor-icons/core/tree/main/assets/regular
 // License: MIT — https://github.com/phosphor-icons/core/blob/main/LICENSE
-const CORNERS_OUT_ICON_PATH =
-  "M216,48V88a8,8,0,0,1-16,0V56H168a8,8,0,0,1,0-16h40A8,8,0,0,1,216,48ZM88,200H56V168a8,8,0,0,0-16,0v40a8,8,0,0,0,8,8H88a8,8,0,0,0,0-16Zm120-40a8,8,0,0,0-8,8v32H168a8,8,0,0,0,0,16h40a8,8,0,0,0,8-8V168A8,8,0,0,0,208,160ZM88,40H48a8,8,0,0,0-8,8V88a8,8,0,0,0,16,0V56H88a8,8,0,0,0,0-16Z"
-const CORNERS_IN_ICON_PATH =
-  "M208,96H168a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0V80h32a8,8,0,0,1,0,16ZM88,160H48a8,8,0,0,0,0,16H80v32a8,8,0,0,0,16,0V168A8,8,0,0,0,88,160Zm120,0H168a8,8,0,0,0-8,8v40a8,8,0,0,0,16,0V176h32a8,8,0,0,0,0-16ZM88,40a8,8,0,0,0-8,8V80H48a8,8,0,0,0,0,16H88a8,8,0,0,0,8-8V48A8,8,0,0,0,88,40Z"
+const ARROWS_OUT_ICON_PATH =
+  "M216,48V96a8,8,0,0,1-16,0V67.31l-50.34,50.35a8,8,0,0,1-11.32-11.32L188.69,56H160a8,8,0,0,1,0-16h48A8,8,0,0,1,216,48ZM106.34,138.34,56,188.69V160a8,8,0,0,0-16,0v48a8,8,0,0,0,8,8H96a8,8,0,0,0,0-16H67.31l50.35-50.34a8,8,0,0,0-11.32-11.32Z"
+const ARROWS_IN_ICON_PATH =
+  "M213.66,53.66,163.31,104H192a8,8,0,0,1,0,16H144a8,8,0,0,1-8-8V64a8,8,0,0,1,16,0V92.69l50.34-50.35a8,8,0,0,1,11.32,11.32ZM112,136H64a8,8,0,0,0,0,16H92.69L42.34,202.34a8,8,0,0,0,11.32,11.32L104,163.31V192a8,8,0,0,0,16,0V144A8,8,0,0,0,112,136Z"
 
 /** Quartz component constructor (same shape as zen-mode's ZenMode). */
 export function FullScreenMode() {
@@ -60,8 +65,8 @@ export function FullScreenMode() {
       [
         // Both glyphs render; CSS shows exactly one per <html full-screen-mode>
         // (same pattern as darkmode's day/night icon pair).
-        icon({ iconPath: CORNERS_OUT_ICON_PATH, iconClass: "fullscreenEnterIcon" }),
-        icon({ iconPath: CORNERS_IN_ICON_PATH, iconClass: "fullscreenExitIcon" }),
+        icon({ iconPath: ARROWS_OUT_ICON_PATH, iconClass: "fullscreenEnterIcon" }),
+        icon({ iconPath: ARROWS_IN_ICON_PATH, iconClass: "fullscreenExitIcon" }),
       ],
     )
   }

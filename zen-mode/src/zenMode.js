@@ -17,32 +17,46 @@ const ZEN_SEARCH_LABEL = "Search"
 const LOTUS_ICON_PATH =
   "M245.83,121.63a15.53,15.53,0,0,0-9.52-7.33,73.51,73.51,0,0,0-22.17-2.22c4-19.85,1-35.55-2.06-44.86a16.15,16.15,0,0,0-18.79-10.88,85.53,85.53,0,0,0-28.55,12.12,94.58,94.58,0,0,0-27.11-33.25,16.05,16.05,0,0,0-19.26,0A94.48,94.48,0,0,0,91.26,68.46,85.53,85.53,0,0,0,62.71,56.34,16.15,16.15,0,0,0,43.92,67.22c-3,9.31-6,25-2.06,44.86a73.51,73.51,0,0,0-22.17,2.22,15.53,15.53,0,0,0-9.52,7.33,16,16,0,0,0-1.6,12.27c3.39,12.57,13.8,36.48,45.33,55.32S113.13,208,128.05,208s42.67,0,74-18.78c31.53-18.84,41.94-42.75,45.33-55.32A16,16,0,0,0,245.83,121.63ZM59.14,72.14a.2.2,0,0,1,.23-.15A70.43,70.43,0,0,1,85.18,83.66,118.65,118.65,0,0,0,80,119.17c0,18.74,3.77,34,9.11,46.28A123.59,123.59,0,0,1,69.57,140C51.55,108.62,55.3,84,59.14,72.14Zm3,103.35C35.47,159.57,26.82,140.05,24,129.7a59.82,59.82,0,0,1,22.5-1.17,129.08,129.08,0,0,0,9.15,19.41,142.28,142.28,0,0,0,34,39.56A114.92,114.92,0,0,1,62.1,175.49ZM128,190.4c-9.33-6.94-32-28.23-32-71.23C96,76.7,118.38,55.24,128,48c9.62,7.26,32,28.72,32,71.19C160,162.17,137.33,183.46,128,190.4ZM170.82,83.66A70.43,70.43,0,0,1,196.63,72a.2.2,0,0,1,.23.15C200.7,84,204.45,108.62,186.43,140a123.32,123.32,0,0,1-19.54,25.48c5.34-12.26,9.11-27.54,9.11-46.28A118.65,118.65,0,0,0,170.82,83.66ZM232,129.72c-2.77,10.25-11.4,29.81-38.09,45.77a114.92,114.92,0,0,1-27.55,12,142.28,142.28,0,0,0,34-39.56,129.08,129.08,0,0,0,9.15-19.41A59.69,59.69,0,0,1,232,129.71Z"
 
+// Phosphor Icons "flower-lotus" (fill), 256x256 viewBox — the SELECTED-state
+// glyph: the filled silhouette signals "zen is on" (CSS swaps the pair below,
+// same darkmode/fullscreenmode two-glyph pattern).
+// Source: https://github.com/phosphor-icons/core/blob/main/assets/fill/flower-lotus-fill.svg
+// License: MIT — https://github.com/phosphor-icons/core/blob/main/LICENSE
+const LOTUS_FILL_ICON_PATH =
+  "M245.83,121.63a15.53,15.53,0,0,0-9.52-7.33,73.55,73.55,0,0,0-22.17-2.22c4-19.85,1-35.55-2-44.86a16.17,16.17,0,0,0-18.8-10.88,85.53,85.53,0,0,0-28.55,12.12,94.58,94.58,0,0,0-27.11-33.25,16.05,16.05,0,0,0-19.26,0A94.58,94.58,0,0,0,91.26,68.46,85.53,85.53,0,0,0,62.71,56.34,16.14,16.14,0,0,0,43.92,67.22c-3,9.31-6,25-2.06,44.86a73.55,73.55,0,0,0-22.17,2.22,15.53,15.53,0,0,0-9.52,7.33,16,16,0,0,0-1.6,12.26c3.39,12.58,13.8,36.49,45.33,55.33S113.13,208,128.05,208s42.67,0,74-18.78c31.53-18.84,41.94-42.75,45.33-55.33A16,16,0,0,0,245.83,121.63ZM62.1,175.49C35.47,159.57,26.82,140.05,24,129.7a59.61,59.61,0,0,1,22.5-1.17,129.08,129.08,0,0,0,9.15,19.41,142.28,142.28,0,0,0,34,39.56A114.92,114.92,0,0,1,62.1,175.49ZM128,190.4c-9.33-6.94-32-28.23-32-71.23C96,76.7,118.38,55.24,128,48c9.62,7.26,32,28.72,32,71.19C160,162.17,137.33,183.46,128,190.4Zm104-60.68c-2.77,10.24-11.4,29.81-38.09,45.77a114.92,114.92,0,0,1-27.55,12,142.28,142.28,0,0,0,34-39.56,129.08,129.08,0,0,0,9.15-19.41A59.69,59.69,0,0,1,232,129.71Z"
+
 // Phosphor Icons "magnifying-glass" (regular), 256x256 viewBox.
 // Source: https://github.com/phosphor-icons/core/blob/main/assets/regular/magnifying-glass.svg
 // License: MIT — https://github.com/phosphor-icons/core/blob/main/LICENSE
 const MAGNIFIER_ICON_PATH =
   "M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"
 
-/** 20px toolbar icon button (lotus/magnifier) — shared shape for the cluster. */
-function iconButton({ className, label, iconPath, displayClass }) {
+/**
+ * 20px toolbar icon button (lotus/magnifier) — shared shape for the cluster.
+ * `glyphs` holds one {iconPath, iconClass} per visual state; buttons with two
+ * states render both and let CSS show exactly one (ZEN_MODE_CSS).
+ */
+function iconButton({ className, label, glyphs, displayClass }) {
   return h(
     "button",
     {
       class: [className, displayClass].filter(Boolean).join(" "),
       "aria-label": label,
     },
-    h(
-      "svg",
-      {
-        xmlns: "http://www.w3.org/2000/svg",
-        class: "zenIcon",
-        fill: "currentColor",
-        viewBox: "0 0 256 256",
-        width: "64px",
-        height: "64px",
-        "aria-label": label,
-      },
-      [h("title", null, label), h("path", { d: iconPath })],
+    glyphs.map(({ iconPath, iconClass }) =>
+      h(
+        "svg",
+        {
+          xmlns: "http://www.w3.org/2000/svg",
+          class: iconClass,
+          fill: "currentColor",
+          viewBox: "0 0 256 256",
+          width: "64px",
+          height: "64px",
+          "aria-label": label,
+        },
+        [h("title", null, label), h("path", { d: iconPath })],
+      ),
     ),
   )
 }
@@ -66,13 +80,18 @@ export function ZenMode() {
       iconButton({
         className: "zen-search",
         label: ZEN_SEARCH_LABEL,
-        iconPath: MAGNIFIER_ICON_PATH,
+        glyphs: [{ iconPath: MAGNIFIER_ICON_PATH, iconClass: "zenIcon" }],
         displayClass,
       }),
       iconButton({
         className: "zenmode",
         label: ZEN_MODE_LABEL,
-        iconPath: LOTUS_ICON_PATH,
+        // Both glyphs render; CSS shows outline while off, filled while on —
+        // the fill IS the selected-state indicator (fullscreenmode pattern).
+        glyphs: [
+          { iconPath: LOTUS_ICON_PATH, iconClass: "zenOffIcon" },
+          { iconPath: LOTUS_FILL_ICON_PATH, iconClass: "zenOnIcon" },
+        ],
         displayClass,
       }),
     ])
@@ -143,6 +162,15 @@ const ZEN_MODE_CSS = `
   top: calc(50% - 10px);
   left: 0;
   fill: var(--darkgray);
+}
+/* Selected-state cue: outline lotus while off, FILLED lotus while zen is on
+   (attribute set pre-paint by beforeDOMLoaded — no glyph flash). */
+.zenmode .zenOnIcon,
+:root[zen-mode="on"] .zenmode .zenOffIcon {
+  display: none;
+}
+:root[zen-mode="on"] .zenmode .zenOnIcon {
+  display: block;
 }
 /* Both buttons ship in ONE Flex wrapper div (one layout slot per plugin).
    Dissolve it so each button becomes its own flex item of the toolbar row:
