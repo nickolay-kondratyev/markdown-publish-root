@@ -20,4 +20,6 @@ This is the home page of the test vault used to verify the publish engine.
 - [[main.canvas]] — the primary test canvas exercising the parity checklist.
 - [[second.canvas]] — the canvas navigated to from a canvas card.
 
-An image embed: ![[diagram.png]]
+An image embed:
+
+ ![[diagram.png]]
