@@ -1,8 +1,8 @@
-# Kondratyev Source Available License, Version 2.2
+# Kondratyev Source Available License, Version 2.3
 
 ## Abbreviation
 
-KSAL-2.2
+KSAL-2.3
 
 ## Notice
 
@@ -172,6 +172,16 @@ The Software is and remains the sole and exclusive property of the Licensor.
 All rights not expressly granted to you in these Terms and Conditions are
 reserved by the Licensor. No rights are granted by implication, estoppel, or
 otherwise.
+
+### User Content Responsibility
+
+You are solely responsible for the content, data, and materials you select,
+configure, or submit for processing or publication using the Software,
+including verifying before publication that such content does not include
+information you do not intend to make public. The Licensor has no obligation
+to review, filter, or prevent the publication of any content, and bears no
+responsibility or liability for any disclosure of information resulting from
+your use of the Software.
 
 ### Termination
 
