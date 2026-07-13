@@ -9,8 +9,7 @@ const CANVAS_EXTENSION = ".canvas"
  * Precedence (first match wins; full prose in engine/README.md and
  * docs/publish-exclusion.md):
  *   1. hidden path segment (leading ".", e.g. .obsidian/)  -> NOT published
- *   2. "private" path segment (any folder or file name
- *      containing "private", case-insensitive)             -> NOT published
+ *   2. path contains "private" anywhere (case-insensitive) -> NOT published
  *   3. under an excludeFolder                              -> NOT published
  *   4. markdown with frontmatter `publish: false`          -> NOT published
  *      (malformed frontmatter fails closed, same outcome)
@@ -60,7 +59,7 @@ export class PublishFilter {
   /** Rules 1-3: exclusions that win over everything (incl. `publish: true`). */
   private isAlwaysExcluded(relPath: string): boolean {
     if (hasHiddenSegment(relPath)) return true
-    if (hasPrivateSegment(relPath)) return true
+    if (hasPrivateMarker(relPath)) return true
     return this.isUnderAny(relPath, this.rules.excludeFolders)
   }
 
@@ -82,12 +81,14 @@ function hasHiddenSegment(relPath: string): boolean {
 }
 
 /**
- * Name-based privacy rule (docs/publish-exclusion.md): any folder OR file
- * whose name contains "private" (case-insensitive) is never published.
- * Deliberately substring + case-insensitive — a privacy rule fails closed.
+ * Name-based privacy rule (docs/publish-exclusion.md): a path containing
+ * "private" anywhere (case-insensitive) is never published. Deliberately
+ * substring + case-insensitive — a privacy rule fails closed. Whole-path
+ * matching equals per-segment matching: the marker has no "/", so it can
+ * never span a segment boundary.
  */
-const PRIVATE_SEGMENT_MARKER = "private"
+const PRIVATE_MARKER = "private"
 
-function hasPrivateSegment(relPath: string): boolean {
-  return relPath.split("/").some((segment) => segment.toLowerCase().includes(PRIVATE_SEGMENT_MARKER))
+function hasPrivateMarker(relPath: string): boolean {
+  return relPath.toLowerCase().includes(PRIVATE_MARKER)
 }

@@ -113,7 +113,7 @@ First matching rule wins:
 | # | Rule | Decision |
 |---|------|----------|
 | 1 | any path segment starts with `.` (e.g. `.obsidian/`) | NOT published |
-| 2 | any path segment (folder or file name) contains `private`, case-insensitive | NOT published |
+| 2 | path contains `private` anywhere (folder or file name), case-insensitive | NOT published |
 | 3 | under an `excludeFolders` entry | NOT published |
 | 4 | markdown with frontmatter `publish: false` | NOT published |
 | 5 | markdown with frontmatter `publish: true` | published |
