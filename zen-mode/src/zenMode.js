@@ -53,10 +53,11 @@ function iconButton({ className, label, iconPath, displayClass }) {
  * Renders TWO buttons in the toolbar cluster (the config loader supports only
  * one layout slot per plugin, so the zen-search affordance ships as a sibling
  * of the lotus rather than as its own plugin entry):
- *   - .zen-search  magnifier, visible ONLY in zen — re-opens search after zen
- *                  hides the full-width search bar. Delegates to the real
- *                  .search-button (see TOGGLE_SCRIPT).
- *   - .zenmode     lotus toggle (rightmost, so it never moves).
+ *   - .zen-search  magnifier, ALWAYS visible and LEFTMOST in the cluster
+ *                  (flex order: -1, see ZEN_MODE_CSS) — opens search in and
+ *                  out of zen. Delegates to the real .search-button
+ *                  (see TOGGLE_SCRIPT).
+ *   - .zenmode     lotus toggle (rightmost of the two, so it never moves).
  */
 export function ZenMode() {
   /** @param {{displayClass?: string}} props */
@@ -143,16 +144,21 @@ const ZEN_MODE_CSS = `
   left: 0;
   fill: var(--darkgray);
 }
-/* Zen-search magnifier: hidden in stock layout (the full-width search bar is
-   already there), shown ONLY in zen as the way back into search. Both buttons
-   share ONE Flex wrapper div, so the toolbar group gap does not apply between
-   them — the margin reproduces it (toolbar gap: 0.5rem, quartzConfigGenerator). */
-.zen-search {
-  display: none;
-  margin-right: 0.5rem;
+/* Both buttons ship in ONE Flex wrapper div (one layout slot per plugin).
+   Dissolve it so each button becomes its own flex item of the toolbar row:
+   the group gap (0.5rem, quartzConfigGenerator) then applies around each
+   button naturally, and the magnifier can be flex-ordered independently of
+   the lotus. The wrapper's inline flex-item styles are moot at 0/1/auto with
+   fixed-height buttons. */
+.sidebar.left .flex-component > div:has(> .zenmode) {
+  display: contents;
 }
-:root[zen-mode="on"] .zen-search {
-  display: inline-block;
+/* Search magnifier: ALWAYS visible and the cluster's LEFTMOST icon, in and
+   out of zen — a permanently discoverable way into search. The lotus keeps
+   its natural (next-to-fullscreen) slot, so it still never moves when zen
+   hides the other icons. */
+.zen-search {
+  order: -1;
 }
 
 /* Collapse the grid: single column, no sidebar areas
@@ -189,15 +195,17 @@ const ZEN_MODE_CSS = `
 :root[zen-mode="on"] #quartz-body .sidebar.left > .search > .search-button {
   display: none;
 }
-/* Inside the mode-toggle cluster, hide every icon except zen, zen-search, and
-   fullscreen. zen-search only EXISTS visually in zen (see its display rules
-   above); the fullscreen toggle STACKS with zen so the reading experience can
-   be upgraded further from inside zen (ticket full-screen-mode.md). Each item
-   sits in an inline-styled wrapper div (Flex.tsx); hiding the CONTENT (not the
-   wrapper) stays generic — new cluster plugins hide automatically. The empty
-   wrappers keep 0 width, and zen is the LAST (rightmost) item, so the lotus
-   does not move when the others vanish. */
-:root[zen-mode="on"] #quartz-body .sidebar.left .flex-component > div > *:not(.zenmode):not(.zen-search):not(.fullscreenmode) {
+/* Inside the mode-toggle cluster, hide every icon WRAPPER except the zen slot
+   (search magnifier + lotus, dissolved to display:contents above) and
+   fullscreen — the fullscreen toggle STACKS with zen so the reading experience
+   can be upgraded further from inside zen (ticket full-screen-mode.md).
+   Hiding by :has() content stays generic — new cluster plugins hide
+   automatically (pattern shared with reader-mode in the engine's custom.scss).
+   WHY wrappers and not content: emptied wrappers would keep their flex-gap
+   slots BETWEEN the surviving icons (the magnifier now sits leftmost), leaving
+   ~1rem of dead space mid-cluster. Items right of the lotus (fullscreen) stay,
+   so the lotus still does not move when the others vanish. */
+:root[zen-mode="on"] #quartz-body .sidebar.left .flex-component > div:not(:has(.zenmode)):not(:has(.fullscreenmode)) {
   display: none;
 }
 /* Reclaim the .page cap too — zen means full available width. */

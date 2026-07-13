@@ -44,9 +44,10 @@ const SITE_CHROME_SCSS = `@use "./variables.scss" as *;
     right: 1rem;
   }
   /* The header row's spacer pushes search to the right edge — reserve the
-     cluster's footprint (4 icons + gaps + gutter) so they never overlap. */
+     cluster's footprint (5 icons + gaps + gutter; the zen plugin's search
+     magnifier is always visible) so they never overlap. */
   #quartz-body .sidebar.left {
-    padding-right: 7.5rem;
+    padding-right: 9.25rem;
   }
 }
 

@@ -48,23 +48,29 @@ describe("ZenMode component — CSS (the width reclaim)", () => {
     assert.equal(component.css.includes("grid-template-columns: auto"), true)
   })
 
-  test("GIVEN the css WHEN inspected THEN all toolbar icons except zen, zen-search AND fullscreen are hidden in zen", () => {
-    // zen-search only exists visually in zen; the fullscreen toggle stacks with
-    // zen (ticket full-screen-mode.md) — both stay visible in the cluster.
+  test("GIVEN the css WHEN inspected THEN all toolbar icon WRAPPERS except the zen slot AND fullscreen are hidden in zen", () => {
+    // Wrapper-level (not content-level) hiding: emptied wrappers would keep
+    // their flex-gap slots between the surviving icons. The fullscreen toggle
+    // stacks with zen (ticket full-screen-mode.md) — it stays in the cluster.
     assert.equal(
       component.css.includes(
-        ".flex-component > div > *:not(.zenmode):not(.zen-search):not(.fullscreenmode)",
+        ".flex-component > div:not(:has(.zenmode)):not(:has(.fullscreenmode))",
       ),
       true,
     )
   })
 
-  test("GIVEN the css WHEN inspected THEN the zen-search icon is hidden in stock layout and shown in zen", () => {
-    // Stock layout already has the full-width search bar; the magnifier only
-    // appears once zen hides that bar.
+  test("GIVEN the css WHEN inspected THEN the zen-search icon is ALWAYS visible and LEFTMOST in the cluster", () => {
+    // The plugin's shared Flex wrapper is dissolved (display: contents) so the
+    // magnifier is its own flex item and order: -1 puts it first — a
+    // permanently discoverable way into search, in and out of zen.
+    // Every rule whose selector ends at .zen-search (includes the shared
+    // .zenmode,.zen-search base rule): one must order it first, none may hide it.
+    const zenSearchRules = [...component.css.matchAll(/\.zen-search\s*\{([^}]*)\}/g)].map(([, body]) => body)
     assert.equal(
-      component.css.includes(".zen-search {\n  display: none;") &&
-        component.css.includes(':root[zen-mode="on"] .zen-search'),
+      component.css.includes(".flex-component > div:has(> .zenmode) {\n  display: contents;") &&
+        zenSearchRules.some((body) => body.includes("order: -1")) &&
+        !zenSearchRules.some((body) => body.includes("display: none")),
       true,
     )
   })
