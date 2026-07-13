@@ -13,45 +13,65 @@ check FAILS the build; broken-internal-link report, `--strict-links` to
 escalate), and `publish deploy` ships the output to S3 + CloudFront with
 cache-classed headers. Next: Phase 4 dogfood.
 
-## Quick start
+## Quick start: vault → HTML
 
-**1. Get the repo + all dependencies** (one command, idempotent — installs
-nvm, the pinned Node, npm deps, the vendored Quartz, and runs the tests):
+Turn any Obsidian vault into a directory of static HTML you can host
+anywhere. One-time setup (steps 1–2), then step 3 is the whole publish loop.
+
+**1. Get the repo + all dependencies** — one command, idempotent (installs
+nvm, the pinned Node, npm deps, the vendored Quartz, and runs the tests;
+`--no-verify` skips the test run):
 
 ```bash
 git clone <this-repo-url> markdown-publish && cd markdown-publish
 scripts/setup-dev-env.sh
 ```
 
-**2. Configure your vault.** Drop a `.external_publish_config.json` at the
-vault root (full format + examples: [docs/config-format.md](docs/config-format.md)):
+**2. Prepare your vault** — drop a `.external_publish_config.json` at the
+vault root (full format + examples: [docs/config-format.md](docs/config-format.md))
+and stamp stable doc ids (page URLs are `/n/<docid>`, so they survive
+renames; idempotent, safe to re-run after adding notes):
 
-```json
+```bash
+cat > /path/to/vault/.external_publish_config.json <<'EOF'
 {
   "title": "My Site",
   "baseUrl": "notes.example.com",
   "publishFilter": { "publishAll": true },
   "output_dir": ".publish_out"
 }
+EOF
+make vault-add-ids VAULT=/path/to/vault
 ```
 
-**3. Build + preview:**
+`publishAll: true` publishes the whole vault; hidden paths, paths containing
+`private`, and `publish: false` frontmatter are always excluded. To publish
+only selected folders, use `includeFolders` instead (docs/config-format.md).
+
+**3. Generate the HTML:**
 
 ```bash
-make vault-add-ids VAULT=/path/to/vault    # once: stamp stable docids (idempotent)
 node cli/bin/publish.mjs build /path/to/vault
-node cli/bin/publish.mjs preview /path/to/vault/.publish_out
 ```
 
 No `--config`/`--out` needed — the in-vault config supplies both (flags still
 override; a working example is `test-vault/.external_publish_config.json`).
+The static site lands in the config's `output_dir` (here
+`/path/to/vault/.publish_out`): plain HTML/CSS/JS, ready for any static host.
 
-**4. Ship it** (needs AWS CLI v2 + credentials; `--dry-run` previews the aws
-commands):
+**4. View / ship it:**
 
 ```bash
+# Local preview (production URL routing, e.g. extensionless /n/<docid> pages):
+node cli/bin/publish.mjs preview /path/to/vault/.publish_out
+
+# Deploy to S3 + CloudFront (needs AWS CLI v2 + credentials; --dry-run previews):
 node cli/bin/publish.mjs deploy /path/to/vault/.publish_out --deploy-config deploy.json --dry-run
 ```
+
+Real hosting must map extensionless page URLs to their `.html` files — the
+contract (plus a paste-ready CloudFront Function) lives in
+`docs-internal/hosting.md`.
 
 ## Repo layout
 
