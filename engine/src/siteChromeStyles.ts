@@ -152,4 +152,30 @@ $readingMeasure: 70ch;
 :root[reader-mode="on"]:not([zen-mode="on"]) .sidebar.left > .search:has(.search-container.active) {
   opacity: 1;
 }
+
+/* Reader-mode SELECTED-state cue: outline book while off, FILLED book while
+   on — same fill-when-active language as the zen lotus and fullscreen arrows
+   (their plugins are ours and swap real glyph pairs; see zenMode.js).
+   The vendored reader-mode plugin cannot be edited (gitignored pinned
+   checkout), so the swap happens HERE: hide its inline SVG and paint a
+   CSS-masked glyph pair instead. Phosphor "book-open"/"book-open-fill"
+   (MIT — https://github.com/phosphor-icons/core/blob/main/LICENSE), matching
+   the rest of the cluster's Phosphor set.
+   WHY-NOT ::after: the cluster's hover tooltip (above) already owns it. */
+.readermode svg {
+  display: none;
+}
+.readermode::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: calc(50% - 10px);
+  left: 0;
+  background-color: var(--darkgray);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M232,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H24a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h72a8,8,0,0,0,8-8V56A8,8,0,0,0,232,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+:root[reader-mode="on"]:not([zen-mode="on"]) .readermode::before {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M240,56V200a8,8,0,0,1-8,8H160a24,24,0,0,0-24,23.94,7.9,7.9,0,0,1-5.12,7.55A8,8,0,0,1,120,232a24,24,0,0,0-24-24H24a8,8,0,0,1-8-8V56a8,8,0,0,1,8-8H88a32,32,0,0,1,32,32v87.73a8.17,8.17,0,0,0,7.47,8.25,8,8,0,0,0,8.53-8V80a32,32,0,0,1,32-32h64A8,8,0,0,1,240,56Z'/%3E%3C/svg%3E");
+}
 `

@@ -37,6 +37,16 @@ describe("ZenMode component — rendering", () => {
     const classes = renderButtons("desktop-only").map((b) => b.props.class)
     assert.deepEqual(classes, ["zen-search desktop-only", "zenmode desktop-only"])
   })
+
+  test("GIVEN the zenmode button WHEN rendered THEN it holds BOTH state glyphs (outline off / filled on, fullscreenmode pattern)", () => {
+    const zen = renderButtons().find((b) => b.props.class.includes("zenmode")) as unknown as {
+      props: { children: { props: { class: string } }[] }
+    }
+    assert.deepEqual(
+      zen.props.children.map((glyph) => glyph.props.class),
+      ["zenOffIcon", "zenOnIcon"],
+    )
+  })
 })
 
 describe("ZenMode component — CSS (the width reclaim)", () => {
@@ -46,6 +56,14 @@ describe("ZenMode component — CSS (the width reclaim)", () => {
 
   test("GIVEN the css WHEN inspected THEN the grid collapses to a single column", () => {
     assert.equal(component.css.includes("grid-template-columns: auto"), true)
+  })
+
+  test("GIVEN the css WHEN zen is on THEN the outline glyph hides and the FILLED glyph shows (selected-state cue)", () => {
+    assert.equal(
+      component.css.includes(':root[zen-mode="on"] .zenmode .zenOffIcon') &&
+        component.css.includes(':root[zen-mode="on"] .zenmode .zenOnIcon'),
+      true,
+    )
   })
 
   test("GIVEN the css WHEN inspected THEN all toolbar icon WRAPPERS except the zen slot AND fullscreen are hidden in zen", () => {

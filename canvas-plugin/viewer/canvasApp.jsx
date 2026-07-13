@@ -43,6 +43,26 @@ const PRO_OPTIONS = Object.freeze({ hideAttribution: true })
 // One global preference shared by every canvas page (survives SPA navigation).
 const minimapPreference = new MinimapPreference(window.localStorage)
 
+// Phosphor Icons "arrows-out-simple" / "arrows-in-simple" (regular), 256x256
+// viewBox — ref.ap.rv8cIwZWjlbPzjNjY1Dy4.E: the SAME glyph pair as the site-wide
+// toolbar toggle (full-screen-mode/src/fullScreenMode.js), so the two fullscreen
+// levels share one visual language. Keep the copies in sync (separate Quartz
+// plugin packages — no shared module to import from).
+// License: MIT — https://github.com/phosphor-icons/core/blob/main/LICENSE
+const ARROWS_OUT_ICON_PATH =
+  "M216,48V96a8,8,0,0,1-16,0V67.31l-50.34,50.35a8,8,0,0,1-11.32-11.32L188.69,56H160a8,8,0,0,1,0-16h48A8,8,0,0,1,216,48ZM106.34,138.34,56,188.69V160a8,8,0,0,0-16,0v48a8,8,0,0,0,8,8H96a8,8,0,0,0,0-16H67.31l50.35-50.34a8,8,0,0,0-11.32-11.32Z"
+const ARROWS_IN_ICON_PATH =
+  "M213.66,53.66,163.31,104H192a8,8,0,0,1,0,16H144a8,8,0,0,1-8-8V64a8,8,0,0,1,16,0V92.69l50.34-50.35a8,8,0,0,1,11.32,11.32ZM112,136H64a8,8,0,0,0,0,16H92.69L42.34,202.34a8,8,0,0,0,11.32,11.32L104,163.31V192a8,8,0,0,0,16,0V144A8,8,0,0,0,112,136Z"
+
+/** Enter/exit fullscreen glyph (sized by React Flow's controls-button CSS). */
+function FullscreenGlyph({ iconPath }) {
+  return (
+    <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+      <path d={iconPath} />
+    </svg>
+  )
+}
+
 /** Minimap pictogram (outer map + viewport dot) — stable across both toggle states. */
 function MinimapToggleIcon() {
   return (
@@ -140,7 +160,7 @@ export function CanvasApp({ flow, theme, fullscreenTarget, restoreFullscreen }) 
             onClick={toggleCanvasFullscreen}
             title={isCanvasFullscreen ? "Exit canvas fullscreen" : "Enter canvas fullscreen"}
           >
-            {isCanvasFullscreen ? "🡼" : "⛶"}
+            <FullscreenGlyph iconPath={isCanvasFullscreen ? ARROWS_IN_ICON_PATH : ARROWS_OUT_ICON_PATH} />
           </ControlButton>
         </Controls>
         {!minimapCollapsed && (
