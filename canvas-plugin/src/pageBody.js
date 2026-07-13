@@ -108,6 +108,9 @@ const CANVAS_PAGE_CSS = `
 .canvas-page-mount {
   width: 100%;
   height: min(75vh, 56rem);
+  /* Breathing room below the page heading — content-meta used to supply this
+     gap; it is excluded on canvas pages (quartzConfigGenerator canvas layout). */
+  margin-top: 1rem;
   border: 1px solid var(--lightgray);
   border-radius: 8px;
   overflow: hidden;
@@ -161,6 +164,10 @@ const CANVAS_PAGE_CSS = `
   flex: 1;
   height: auto;
   min-height: 0;
+  /* Flex chain owns the vertical layout here; the heading gap is set by
+     .page-header's margin, so drop the embed's top margin to avoid overflowing
+     the 100dvh column. */
+  margin-top: 0;
 }
 /* Rewritten cards: canvas->canvas, PDF, unsupported files, private placeholders. */
 .canvas-card {

@@ -145,6 +145,11 @@ describe("QuartzConfigGenerator — plugin set", () => {
     assert.equal(canvasExclude.includes("reader-mode"), false)
   })
 
+  test("GIVEN any site WHEN generating THEN canvas pages exclude content-meta (canvases have no dates, only reading-time would show)", () => {
+    const canvasExclude: string[] = generate().layout.byPageType.canvas.exclude ?? []
+    assert.equal(canvasExclude.includes("content-meta"), true)
+  })
+
   test("GIVEN any site WHEN generating THEN remove-draft is disabled (PublishFilter is the only filter surface)", () => {
     assert.equal(pluginEntry(generate(), "remove-draft")?.enabled, false)
   })
