@@ -57,6 +57,45 @@ describe("PublishFilter — markdown", () => {
   })
 })
 
+describe("PublishFilter — 'private' path segments (never published, wins over everything)", () => {
+  const INCLUDE_ALL = { includeFolders: ["notes", "canvases", "work"], excludeFolders: [] }
+
+  test("GIVEN markdown under a folder named 'private' with publish true WHEN deciding THEN not published", () => {
+    const filter = new PublishFilter(INCLUDE_ALL)
+    assert.equal(filter.isMarkdownPublished("notes/private/a.md", true), false)
+  })
+
+  test("GIVEN markdown under a folder whose name contains 'private' WHEN deciding THEN not published", () => {
+    const filter = new PublishFilter(INCLUDE_ALL)
+    assert.equal(filter.isMarkdownPublished("work/my-private-notes/a.md", true), false)
+  })
+
+  test("GIVEN markdown file name containing 'private' outside any private folder WHEN deciding THEN not published", () => {
+    const filter = new PublishFilter(INCLUDE_ALL)
+    assert.equal(filter.isMarkdownPublished("notes/private-secret.md", true), false)
+  })
+
+  test("GIVEN uppercase 'Private' segment WHEN deciding THEN not published (case-insensitive)", () => {
+    const filter = new PublishFilter(INCLUDE_ALL)
+    assert.equal(filter.isMarkdownPublished("notes/Private/a.md", true), false)
+  })
+
+  test("GIVEN canvas file name containing 'private' WHEN deciding THEN not published", () => {
+    const filter = new PublishFilter(INCLUDE_ALL)
+    assert.equal(filter.isCanvasPublished("canvases/private-board.canvas"), false)
+  })
+
+  test("GIVEN asset under a private folder WHEN deciding THEN not published", () => {
+    const filter = new PublishFilter(INCLUDE_ALL)
+    assert.equal(filter.isAssetPublished("private/diagram.png"), false)
+  })
+
+  test("GIVEN name containing 'priv' but not 'private' WHEN deciding THEN published (no false positive)", () => {
+    const filter = new PublishFilter(INCLUDE_ALL)
+    assert.equal(filter.isMarkdownPublished("notes/privacy-policy.md", undefined), true)
+  })
+})
+
 describe("PublishFilter — assets", () => {
   test("GIVEN plain asset WHEN deciding THEN published (default allow)", () => {
     const filter = new PublishFilter(NO_RULES)

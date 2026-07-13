@@ -113,17 +113,20 @@ First matching rule wins:
 | # | Rule | Decision |
 |---|------|----------|
 | 1 | any path segment starts with `.` (e.g. `.obsidian/`) | NOT published |
-| 2 | under an `excludeFolders` entry | NOT published |
-| 3 | markdown with frontmatter `publish: false` | NOT published |
-| 4 | markdown with frontmatter `publish: true` | published |
-| 5 | markdown under an `includeFolders` entry | published |
-| 6 | any other markdown | NOT published (default deny) |
-| 7 | canvas under an `includeFolders` entry | published |
-| 8 | any other canvas | NOT published (default deny) |
-| 9 | any other non-markdown asset (images, PDFs, ...) | published (default allow) |
+| 2 | any path segment (folder or file name) contains `private`, case-insensitive | NOT published |
+| 3 | under an `excludeFolders` entry | NOT published |
+| 4 | markdown with frontmatter `publish: false` | NOT published |
+| 5 | markdown with frontmatter `publish: true` | published |
+| 6 | markdown under an `includeFolders` entry | published |
+| 7 | any other markdown | NOT published (default deny) |
+| 8 | canvas under an `includeFolders` entry | published |
+| 9 | any other canvas | NOT published (default deny) |
+| 10 | any other non-markdown asset (images, PDFs, ...) | published (default allow) |
 
 Notes:
-- `publish: false` always wins over `includeFolders` (rule 3 before rule 5).
+- `publish: false` always wins over `includeFolders` (rule 4 before rule 6).
+- The `private` rule (rule 2) is purely file-path based — never note titles or
+  content. Examples and rationale: `docs/publish-exclusion.md`.
 - `excludeFolders` wins over everything, including `publish: true` — it is
   meant for machinery folders (`templates/`, ...), like Quartz's own
   `ignorePatterns`.
