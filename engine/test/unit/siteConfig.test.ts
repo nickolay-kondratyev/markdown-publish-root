@@ -27,6 +27,28 @@ describe("SiteConfigParser.parse — happy path", () => {
     })
     assert.deepEqual(parsed.publishFilter.includeFolders, ["notes", "blog/public"])
   })
+
+  test("GIVEN publishAll true WHEN parsing THEN it is carried through", () => {
+    const parsed = SiteConfigParser.parse({
+      ...MINIMAL_VALID,
+      publishFilter: { publishAll: true },
+    })
+    assert.equal(parsed.publishFilter.publishAll, true)
+  })
+
+  test("GIVEN no publishAll WHEN parsing THEN publishAll is absent (default deny)", () => {
+    const parsed = SiteConfigParser.parse({ ...MINIMAL_VALID, publishFilter: {} })
+    assert.equal(parsed.publishFilter.publishAll, undefined)
+  })
+})
+
+describe("SiteConfigParser.parse — publishAll validation", () => {
+  test("GIVEN non-boolean publishAll WHEN parsing THEN it is rejected", () => {
+    assert.throws(
+      () => SiteConfigParser.parse({ ...MINIMAL_VALID, publishFilter: { publishAll: "yes" } }),
+      /publishFilter\.publishAll: expected a boolean/,
+    )
+  })
 })
 
 describe("SiteConfigParser.parse — validation errors", () => {

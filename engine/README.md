@@ -95,11 +95,16 @@ implementation detail.
     }
   },
   "publishFilter": {               // optional
+    "publishAll": false,           // true = whole-vault opt-in; rules 1-4 below still exclude
     "includeFolders": ["blog"],    // vault-relative, "/"-separated, no leading/trailing slash
     "excludeFolders": ["templates"]
   }
 }
 ```
+
+End users normally author this schema inside their vault as
+`.external_publish_config.json` (plus the CLI-level `output_dir` key the
+engine never sees) — see `docs/config-format.md`.
 
 Validation is strict at the boundary: unknown keys are rejected (typo
 protection) and all problems are reported at once. This schema is
@@ -117,9 +122,9 @@ First matching rule wins:
 | 3 | under an `excludeFolders` entry | NOT published |
 | 4 | markdown with frontmatter `publish: false` | NOT published |
 | 5 | markdown with frontmatter `publish: true` | published |
-| 6 | markdown under an `includeFolders` entry | published |
+| 6 | markdown under an `includeFolders` entry, or `publishAll: true` | published |
 | 7 | any other markdown | NOT published (default deny) |
-| 8 | canvas under an `includeFolders` entry | published |
+| 8 | canvas under an `includeFolders` entry, or `publishAll: true` | published |
 | 9 | any other canvas | NOT published (default deny) |
 | 10 | any other non-markdown asset (images, PDFs, ...) | published (default allow) |
 
@@ -127,6 +132,9 @@ Notes:
 - **Truly private data belongs in a separate vault** the publish pipeline
   never reads — these rules are defense in depth, not a vault boundary
   (`docs/publish-exclusion.md`).
+- `publishAll` is the EXPLICIT whole-vault opt-in — the default stays
+  fail-closed (an empty config publishes no markdown/canvas). Rules 1-4
+  (hidden, `private`, `excludeFolders`, `publish: false`) still win over it.
 - `publish: false` always wins over `includeFolders` (rule 4 before rule 6).
 - The `private` rule (rule 2) is purely file-path based — never note titles or
   content. Examples and rationale: `docs/publish-exclusion.md`.

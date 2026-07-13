@@ -14,9 +14,9 @@ const CANVAS_EXTENSION = ".canvas"
  *   4. markdown with frontmatter `publish: false`          -> NOT published
  *      (malformed frontmatter fails closed, same outcome)
  *   5. markdown with frontmatter `publish: true`           -> published
- *   6. markdown under an includeFolder                     -> published
+ *   6. markdown under an includeFolder OR publishAll       -> published
  *   7. other markdown                                      -> NOT published
- *   8. canvas under an includeFolder                       -> published
+ *   8. canvas under an includeFolder OR publishAll         -> published
  *   9. other canvas                                        -> NOT published
  *  10. non-markdown, non-canvas asset                      -> published
  *
@@ -42,18 +42,24 @@ export class PublishFilter {
     if (this.isAlwaysExcluded(relPath)) return false
     if (publishFlag === false) return false
     if (publishFlag === true) return true
-    return this.isUnderAny(relPath, this.rules.includeFolders)
+    return this.isIncludedByDefault(relPath)
   }
 
   /** Decision for a `.canvas` file (frontmatter is N/A for canvas JSON). */
   isCanvasPublished(relPath: string): boolean {
     if (this.isAlwaysExcluded(relPath)) return false
-    return this.isUnderAny(relPath, this.rules.includeFolders)
+    return this.isIncludedByDefault(relPath)
   }
 
   /** Decision for a non-markdown, non-canvas asset (images, PDFs, ...). */
   isAssetPublished(relPath: string): boolean {
     return !this.isAlwaysExcluded(relPath)
+  }
+
+  /** Rules 6/8: content-bearing files opt in via publishAll or an includeFolder. */
+  private isIncludedByDefault(relPath: string): boolean {
+    if (this.rules.publishAll === true) return true
+    return this.isUnderAny(relPath, this.rules.includeFolders)
   }
 
   /** Rules 1-3: exclusions that win over everything (incl. `publish: true`). */
