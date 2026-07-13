@@ -62,7 +62,8 @@ export class ReservedFrontmatterKeyError extends Error {
  * id transformation surface: docs are staged under `n/<docid>.*` (root
  * index.md excepted), titles are injected, and wikilinks / canvas file nodes
  * are rewritten to docid targets. Ids are validated hard BEFORE anything is
- * written — missing/malformed/duplicate ids throw DocIdValidationError.
+ * written — missing/non-string/empty ids and URL-segment collisions throw
+ * DocIdValidationError (foreign ids are accepted via UrlSegment derivation).
  */
 export class VaultStager {
   private readonly filter: PublishFilter

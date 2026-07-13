@@ -26,12 +26,36 @@ describe("IdMap", () => {
       assert.equal(map.stagedPathOf("index.md"), "index.md")
     })
 
-    test("THEN docIdOf returns the harvested id", () => {
-      assert.equal(map.docIdOf("notes/foo.md"), ID_A)
+    test("THEN urlSegmentOf returns the harvested id verbatim", () => {
+      assert.equal(map.urlSegmentOf("notes/foo.md"), ID_A)
     })
 
-    test("THEN docIdOf is undefined for unknown paths (assets)", () => {
-      assert.equal(map.docIdOf("attachments/img.png"), undefined)
+    test("THEN urlSegmentOf is undefined for unknown paths (assets)", () => {
+      assert.equal(map.urlSegmentOf("attachments/img.png"), undefined)
+    })
+  })
+
+  describe("GIVEN foreign ids (not our grammar)", () => {
+    const map = IdMap.build([
+      { vaultPath: "notes/safe.md", idValue: "my-note_42" },
+      { vaultPath: "notes/cased.md", idValue: "MyNote42" },
+      { vaultPath: "notes/unsafe.md", idValue: "my note!" },
+    ])
+
+    test("THEN an already URL-safe id is used verbatim", () => {
+      assert.equal(map.urlSegmentOf("notes/safe.md"), "my-note_42")
+    })
+
+    test("THEN a mixed-case id gets the lc_ marker prefix", () => {
+      assert.equal(map.urlSegmentOf("notes/cased.md"), "lc_mynote42")
+    })
+
+    test("THEN a non-URL-friendly id gets the ue_ marker prefix", () => {
+      assert.match(map.urlSegmentOf("notes/unsafe.md") ?? "", /^ue_[0-9a-z]+$/)
+    })
+
+    test("THEN staged paths use the derived segment, not the raw id", () => {
+      assert.equal(map.stagedPathOf("notes/cased.md"), "n/lc_mynote42.md")
     })
   })
 
@@ -43,9 +67,17 @@ describe("IdMap", () => {
     )
   })
 
-  test("GIVEN a doc with a malformed id THEN build fails naming the file", () => {
+  test("GIVEN a doc with a non-string id THEN build fails naming the file", () => {
     assert.throws(
-      () => IdMap.build([{ vaultPath: "notes/foo.md", idValue: "not-a-docid" }]),
+      () => IdMap.build([{ vaultPath: "notes/foo.md", idValue: 42 }]),
+      (error: unknown) =>
+        error instanceof DocIdValidationError && error.message.includes("notes/foo.md"),
+    )
+  })
+
+  test("GIVEN a doc with an empty-string id THEN build fails naming the file", () => {
+    assert.throws(
+      () => IdMap.build([{ vaultPath: "notes/foo.md", idValue: "" }]),
       (error: unknown) =>
         error instanceof DocIdValidationError && error.message.includes("notes/foo.md"),
     )
@@ -60,6 +92,22 @@ describe("IdMap", () => {
         ]),
       (error: unknown) =>
         error instanceof DocIdValidationError &&
+        error.message.includes("notes/a.md") &&
+        error.message.includes("notes/b.md"),
+    )
+  })
+
+  test("GIVEN distinct ids whose DERIVED segments collide THEN build fails naming both files", () => {
+    // [Foo] and [fOO] both derive lc_foo — distinct raw ids, same URL.
+    assert.throws(
+      () =>
+        IdMap.build([
+          { vaultPath: "notes/a.md", idValue: "Foo" },
+          { vaultPath: "notes/b.md", idValue: "fOO" },
+        ]),
+      (error: unknown) =>
+        error instanceof DocIdValidationError &&
+        error.message.includes("lc_foo") &&
         error.message.includes("notes/a.md") &&
         error.message.includes("notes/b.md"),
     )

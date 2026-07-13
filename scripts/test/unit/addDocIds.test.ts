@@ -53,8 +53,13 @@ describe("MarkdownIdStamper", () => {
     assert.equal(outcome.action, "skip")
   })
 
-  test("GIVEN a malformed existing id WHEN stamping THEN it errors and never overwrites", () => {
+  test("GIVEN a foreign existing id WHEN stamping THEN it is skipped (publishable via UrlSegment, never overwritten)", () => {
     const outcome = MarkdownIdStamper.stamp("---\nid: not-a-docid\n---\nBody\n", ID)
+    assert.equal(outcome.action, "skip")
+  })
+
+  test("GIVEN a non-string existing id WHEN stamping THEN it errors and never overwrites", () => {
+    const outcome = MarkdownIdStamper.stamp("---\nid: 42\n---\nBody\n", ID)
     assert.equal(outcome.action, "error")
   })
 
@@ -100,9 +105,17 @@ describe("CanvasIdStamper", () => {
     assert.equal(outcome.action, "skip")
   })
 
-  test("GIVEN a malformed existing id WHEN stamping THEN it errors and never overwrites", () => {
+  test("GIVEN a foreign existing id WHEN stamping THEN it is skipped (publishable via UrlSegment, never overwritten)", () => {
     const outcome = CanvasIdStamper.stamp(
       `{"nodes":[],"edges":[],"metadata":{"frontmatter":{"id":"nope"}}}`,
+      ID,
+    )
+    assert.equal(outcome.action, "skip")
+  })
+
+  test("GIVEN a non-string existing id WHEN stamping THEN it errors and never overwrites", () => {
+    const outcome = CanvasIdStamper.stamp(
+      `{"nodes":[],"edges":[],"metadata":{"frontmatter":{"id":42}}}`,
       ID,
     )
     assert.equal(outcome.action, "error")
@@ -135,7 +148,7 @@ describe("VaultIdStamper", () => {
   test("GIVEN any malformed file WHEN running THEN nothing at all is written (error atomicity)", () => {
     const vaultDir = makeVault({
       "good.md": "# fine\n",
-      "bad.md": "---\nid: broken-id\n---\n",
+      "bad.md": "---\nid: 42\n---\n",
     })
     const result = new VaultIdStamper().run(vaultDir)
     assert.equal(result.errors.length, 1)

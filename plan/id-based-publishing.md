@@ -16,7 +16,7 @@ Every published doc page (note `.md`, canvas `.canvas`) is served at a URL deriv
 | Id location | md: frontmatter `id:`; canvas: top-level `metadata.frontmatter.id` |
 | URL shape | `/n/<docid>` for notes; `/n/<docid>.canvas` for canvases (extension-preserving slugs keep Quartz + canvas-plugin untouched; see §6.1) |
 | Missing id on a publishable doc | **Hard fail the build, early** (staging time), listing every offending file |
-| Duplicate / malformed id | Hard fail the build |
+| Duplicate / malformed id | Hard fail the build. **Amended 2026-07-13 (ADR 0006):** foreign non-empty-string ids are ACCEPTED — published at derived `lc_`/`ue_` marker-prefixed URL segments (`engine/src/urlSegment.ts`); non-string/empty ids and derived-segment collisions still hard fail. |
 | Id-addition script scope | ALL `.md` + `.canvas` files in the vault, regardless of publish status |
 | Legacy path-URL redirects | **None** (nothing published publicly yet) |
 | Rewrite locus | **Staging-time only** — the source vault keeps human-readable `[[some-note]]` links; the engine rewrites the staged copy each build |

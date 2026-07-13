@@ -12,6 +12,10 @@ import crypto from "node:crypto"
  * URL segment to lowercase and stays unpatched by design, so a lowercase-only
  * grammar keeps frontmatter id == URL segment byte-for-byte. Base36 at 21
  * chars is ~108 bits of entropy — ample for global uniqueness.
+ *
+ * This grammar governs ids WE GENERATE. Publishing also accepts foreign ids
+ * (stamped by other tooling) — see UrlSegment for how those are transformed
+ * into URL-safe segments with `lc_`/`ue_` marker prefixes.
  */
 export class DocId {
   /** Full-match grammar: `docid_<21 chars base36 lowercase>_e`. */

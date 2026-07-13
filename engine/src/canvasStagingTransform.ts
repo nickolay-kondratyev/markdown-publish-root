@@ -38,7 +38,7 @@ export class CanvasStagingTransformer {
     canvas.metadata.frontmatter.vintrinPath = options.vintrinPath
     for (const node of canvas.nodes ?? []) {
       if (node?.type === "file" && typeof node.file === "string") {
-        if (options.idMap.docIdOf(node.file) !== undefined) {
+        if (options.idMap.urlSegmentOf(node.file) !== undefined) {
           node.file = options.idMap.stagedPathOf(node.file)
         }
       } else if (node?.type === "text" && typeof node.text === "string") {
