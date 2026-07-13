@@ -26,6 +26,39 @@ export class SiteChromeStyles {
 // the one stable selector for it. zen-mode's CSS relies on the same fact.
 const SITE_CHROME_SCSS = `@use "./variables.scss" as *;
 
+/* Markdown reading measure (~65-70ch): ch is measured against the body font,
+   so the cap tracks typography changes instead of hardcoding pixels. */
+$readingMeasure: 70ch;
+
+/* Viewport-anchored layout: the rails, not the page, define the frame.
+   Quartz centers .page under a ~1500px cap — right for markdown, wasted width
+   for canvas. Dropping the cap anchors the fixed $sidePanelWidth sidebar
+   columns to the viewport edges on EVERY page, so they never move between
+   markdown and canvas; the center track absorbs the rest (the grid's auto
+   track stretches to fill free space, so no grid-template override needed).
+   The reading-width constraint moves onto the center column below. */
+.page {
+  max-width: none;
+}
+
+/* Center track: markdown keeps the reading measure, centered in the track
+   (side gutters expected); canvas pages use the full track. Scoped to the
+   default frame — full-width/minimal frames size their own center, and these
+   UNLAYERED rules would otherwise beat them. Canvas detection via
+   :has(.canvas-page) mirrors the canvas plugin's own zen rules; only a real
+   canvas page body renders that class (popover/search clones carry
+   .canvas-text-preview instead — see canvas-plugin pageBody.js). */
+.page[data-frame="default"] > #quartz-body > .center {
+  max-width: $readingMeasure;
+  min-width: 0; /* release base.scss's min-width: 100% so the measure binds */
+  margin-left: auto;
+  margin-right: auto;
+}
+.page[data-frame="default"] > #quartz-body > .center:has(.canvas-page) {
+  max-width: 100%;
+  min-width: 100%;
+}
+
 /* Mode-toggle cluster (ap.0zwhQQya81CGNQ9pmqKkM.E, see siteChromeStyles.ts):
    pinned to the top-right viewport corner, out of the left sidebar's flow, so
    the search bar keeps the full sidebar width. Desktop's right sidebar starts

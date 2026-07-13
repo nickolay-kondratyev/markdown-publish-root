@@ -2,9 +2,10 @@
 /**
  * E2e: zen mode (plan/zen-mode.md). Builds test-vault through the real engine,
  * serves it with the real preview server, then drives headless Chromium to
- * prove the lotus toggle actually RECLAIMS the sidebar width (the thing stock
- * reader-mode does not do), survives SPA navigation and reloads, and stays
- * exitable at desktop/tablet/mobile widths.
+ * prove the lotus toggle strips the chrome (sidebars, breadcrumbs, divider)
+ * while markdown KEEPS the site-wide reading measure (siteChromeStyles.ts —
+ * wall-to-wall prose is not a reading upgrade), survives SPA navigation and
+ * reloads, and stays exitable at desktop/tablet/mobile widths.
  *
  * Run: `npm run test:e2e` (Node >= 22 via nvm; system Chromium at /usr/bin/chromium).
  * Screenshots -> .out/zen-mode-{off,on}.png (visual lotus-icon check).
@@ -113,14 +114,17 @@ const screenshotFromTop = async (name) => {
 }
 await screenshotFromTop("zen-mode-off.png")
 
-// --- 2. Toggle ON: the width reclaim ----------------------------------------
+// --- 2. Toggle ON: chrome stripped, reading measure kept ---------------------
 await page.click("button.zenmode")
 const on = await measure()
 check("toggle sets zen-mode=on on :root", on.mode === "on")
 check("right sidebar gone", on.rightSidebarWidth === 0, `w=${on.rightSidebarWidth}`)
+// The old "width reclaim" is gone by design: the viewport-anchored layout
+// (siteChromeStyles.ts) caps markdown at the reading measure on EVERY page,
+// zen included — sidebars vanish, prose width must not change.
 check(
-  "center RECLAIMS sidebar width (strictly wider than stock)",
-  on.centerWidth > off.centerWidth,
+  "center KEEPS the reading measure in zen (no wall-to-wall prose)",
+  Math.abs(on.centerWidth - off.centerWidth) <= 1,
   `off=${off.centerWidth} on=${on.centerWidth}`,
 )
 check("zen button still visible in zen (exit stays reachable)", on.zenButtonWidth > 0)

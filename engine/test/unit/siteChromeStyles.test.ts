@@ -42,6 +42,46 @@ describe("SiteChromeStyles — mode-toggle cluster pin", () => {
   })
 })
 
+// Viewport-anchored layout: rails pinned to the viewport edges on EVERY page,
+// reading measure moved off the page grid onto the markdown center column so
+// canvas pages can use the full track (see siteChromeStyles.ts layout block).
+describe("SiteChromeStyles — viewport-anchored layout", () => {
+  const scss = () => SiteChromeStyles.scss()
+  /** Body of the rule with the given selector. */
+  const ruleBody = (selector: string) => {
+    const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    return scss().match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`))?.[1] ?? ""
+  }
+  const CENTER_SELECTOR = '.page[data-frame="default"] > #quartz-body > .center'
+  const CANVAS_CENTER_SELECTOR = `${CENTER_SELECTOR}:has(.canvas-page)`
+
+  test("GIVEN the scss WHEN inspected THEN the page-level width cap is removed (rails anchor to viewport edges on all pages)", () => {
+    assert.equal(/\.page\s*\{[^}]*max-width: none/.test(scss()), true)
+  })
+
+  test("GIVEN the scss WHEN inspected THEN a reading measure of ~65-70ch is defined", () => {
+    assert.equal(scss().includes("$readingMeasure: 70ch"), true)
+  })
+
+  test("GIVEN a default-frame page WHEN inspected THEN the center column is capped at the reading measure", () => {
+    assert.equal(ruleBody(CENTER_SELECTOR).includes("max-width: $readingMeasure"), true)
+  })
+
+  test("GIVEN a default-frame page WHEN inspected THEN quartz's min-width floor is released so the measure can bind", () => {
+    assert.equal(ruleBody(CENTER_SELECTOR).includes("min-width: 0"), true)
+  })
+
+  test("GIVEN a default-frame page WHEN inspected THEN the center is centered within the track", () => {
+    const rule = ruleBody(CENTER_SELECTOR)
+    assert.equal(rule.includes("margin-left: auto") && rule.includes("margin-right: auto"), true)
+  })
+
+  test("GIVEN a canvas page WHEN inspected THEN the center reclaims the full track width", () => {
+    const rule = ruleBody(CANVAS_CENTER_SELECTOR)
+    assert.equal(rule.includes("max-width: 100%") && rule.includes("min-width: 100%"), true)
+  })
+})
+
 // Reader-mode exit affordance (ticket 0005, mirrors zen): reader-mode dims
 // .sidebar.left to opacity 0, which would fade the reader icon itself. These
 // rules keep the book icon visible top-right as the lone exit affordance.
