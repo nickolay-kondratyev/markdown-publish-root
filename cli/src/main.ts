@@ -2,23 +2,25 @@ import path from "node:path"
 import {
   SiteBuilder,
   SiteConfigError,
-  SiteConfigParser,
   formatBrokenLinkReport,
 } from "../../engine/src/index.ts"
 import { requireValue } from "./argv.ts"
+import { ExternalPublishConfigLoader, VAULT_CONFIG_FILE_NAME } from "./externalPublishConfig.ts"
 import { DeployCommand } from "./deploy/deployCommand.ts"
 import { PreviewCommand } from "./preview/previewCommand.ts"
 import { DEFAULT_PREVIEW_PORT } from "./preview/previewPathResolver.ts"
 
 const USAGE = `Usage:
-  publish build <vault-dir> --config <site.json> --out <output-dir>
+  publish build <vault-dir> [--config <site.json>] [--out <output-dir>]
   publish preview <site-dir> [--port <n>]
   publish deploy <site-dir> --deploy-config <deploy.json> [--dry-run]
 
 build: builds an Obsidian vault (markdown + canvases) into a static site.
   <vault-dir>          Path to the Obsidian vault.
-  --config <file>      Site settings JSON (see engine/README.md for the schema).
-  --out <dir>          Output directory for the static site.
+  --config <file>      Site settings JSON (docs/config-format.md). Default:
+                       ${VAULT_CONFIG_FILE_NAME} at the vault root.
+  --out <dir>          Output directory for the static site. Default: the
+                       config's output_dir (relative to the config file).
   --keep-staging       Keep the temporary staging directory (debugging).
   --strict-links       Fail the build if the validation pass finds broken
                        internal links (leak findings ALWAYS fail the build).
@@ -56,12 +58,20 @@ export class CliMain {
     }
 
     try {
-      const siteConfig = SiteConfigParser.parseFile(args.configPath)
+      const configPath = ExternalPublishConfigLoader.resolveConfigPath(args.vaultDir, args.configPath)
+      const config = ExternalPublishConfigLoader.load(configPath)
+      const outDir = args.outDir ?? config.outputDir
+      if (outDir === undefined) {
+        console.error(
+          `publish: no output directory: pass --out <dir> or set "output_dir" in ${configPath}\n\n${USAGE}`,
+        )
+        return 2
+      }
       const builder = new SiteBuilder()
       const result = await builder.buildSite({
         vaultDir: args.vaultDir,
-        siteConfig,
-        outDir: args.outDir,
+        siteConfig: config.siteConfig,
+        outDir,
         keepStaging: args.keepStaging,
         strictLinks: args.strictLinks,
       })
@@ -96,8 +106,10 @@ export class CliMain {
 
 interface BuildArgs {
   vaultDir: string
-  configPath: string
-  outDir: string
+  /** Absent -> discover VAULT_CONFIG_FILE_NAME at the vault root. */
+  configPath: string | undefined
+  /** Absent -> use the config's output_dir. */
+  outDir: string | undefined
   keepStaging: boolean
   strictLinks: boolean
 }
@@ -121,12 +133,10 @@ function parseBuildArgs(argv: string[]): BuildArgs {
   }
 
   if (vaultDir === undefined) throw new Error("missing <vault-dir>")
-  if (configPath === undefined) throw new Error("missing --config <site.json>")
-  if (outDir === undefined) throw new Error("missing --out <output-dir>")
   return {
     vaultDir: path.resolve(vaultDir),
-    configPath: path.resolve(configPath),
-    outDir: path.resolve(outDir),
+    configPath: configPath === undefined ? undefined : path.resolve(configPath),
+    outDir: outDir === undefined ? undefined : path.resolve(outDir),
     keepStaging,
     strictLinks,
   }

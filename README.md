@@ -15,31 +15,42 @@ cache-classed headers. Next: Phase 4 dogfood.
 
 ## Quick start
 
+**1. Get the repo + all dependencies** (one command, idempotent — installs
+nvm, the pinned Node, npm deps, the vendored Quartz, and runs the tests):
+
 ```bash
-scripts/setup-dev-env.sh   # one-command bootstrap: nvm + Node (pinned in .nvmrc) + npm install + npm run setup + npm test
-# or manually:
-source ~/.nvm/nvm.sh && nvm use   # Node >= 22 required; version pinned in .nvmrc
-
-npm install
-npm run setup        # one-time: clones pinned Quartz + installs its deps/plugins (needs network)
-
-node cli/bin/publish.mjs build test-vault --config site.json --out ./public
-python3 -m http.server -d ./public 8080   # note: real hosting maps /page -> page.html
-
-# Ship it (needs AWS CLI v2 + credentials; --dry-run previews the aws commands):
-node cli/bin/publish.mjs deploy ./public --deploy-config deploy.json --dry-run
+git clone <this-repo-url> markdown-publish && cd markdown-publish
+scripts/setup-dev-env.sh
 ```
 
-Minimal `site.json` (full schema: `engine/README.md`; canvases publish via
-`includeFolders` — canvas JSON has no frontmatter, so folder rules are its
-opt-in surface):
+**2. Configure your vault.** Drop a `.external_publish_config.json` at the
+vault root (full format + examples: [docs/config-format.md](docs/config-format.md)):
 
 ```json
 {
   "title": "My Site",
   "baseUrl": "notes.example.com",
-  "publishFilter": { "includeFolders": ["canvases"] }
+  "publishFilter": { "publishAll": true },
+  "output_dir": ".publish_out"
 }
+```
+
+**3. Build + preview:**
+
+```bash
+make vault-add-ids VAULT=/path/to/vault    # once: stamp stable docids (idempotent)
+node cli/bin/publish.mjs build /path/to/vault
+node cli/bin/publish.mjs preview /path/to/vault/.publish_out
+```
+
+No `--config`/`--out` needed — the in-vault config supplies both (flags still
+override; a working example is `test-vault/.external_publish_config.json`).
+
+**4. Ship it** (needs AWS CLI v2 + credentials; `--dry-run` previews the aws
+commands):
+
+```bash
+node cli/bin/publish.mjs deploy /path/to/vault/.publish_out --deploy-config deploy.json --dry-run
 ```
 
 ## Repo layout
@@ -53,6 +64,7 @@ opt-in surface):
 | `scripts/setup-quartz.mjs` | The `npm run setup` bootstrap. |
 | `test-vault/` | Fixture vault exercising the parity checklist (incl. a private-note leak sentinel). |
 | `plan/main.md` | Authoritative product/architecture plan. |
+| `docs/config-format.md` | The `.external_publish_config.json` publish-config format (schema + examples). |
 | `docs/decisions/` | ADRs. `docs/spikes/` — Phase 0 spike reports. `docs/status/` — per-phase status notes. |
 
 ## Development

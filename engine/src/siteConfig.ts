@@ -70,6 +70,13 @@ export interface PublishFilterRules {
   includeFolders: string[]
   /** Nothing under these folders is EVER published (wins over everything, incl. `publish: true`). */
   excludeFolders: string[]
+  /**
+   * Explicit whole-vault opt-in: markdown and canvas publish WITHOUT listing
+   * includeFolders. The always-exclude rules (hidden segments, "private"
+   * paths, excludeFolders) and frontmatter `publish: false` still win.
+   * Absent/false keeps the fail-closed default-deny.
+   */
+  publishAll?: boolean
 }
 
 export const DEFAULT_LOCALE = "en-US"
@@ -189,11 +196,14 @@ function parsePublishFilter(raw: unknown, problems: string[]): PublishFilterRule
   if (raw === undefined) return empty
   const obj = asObject(raw, "publishFilter", problems)
   if (obj === undefined) return empty
-  rejectUnknownKeys(obj, "publishFilter", ["includeFolders", "excludeFolders"], problems)
-  return {
+  rejectUnknownKeys(obj, "publishFilter", ["includeFolders", "excludeFolders", "publishAll"], problems)
+  const rules: PublishFilterRules = {
     includeFolders: parseFolderList(obj["includeFolders"], "publishFilter.includeFolders", problems),
     excludeFolders: parseFolderList(obj["excludeFolders"], "publishFilter.excludeFolders", problems),
   }
+  const publishAll = optionalBoolean(obj, "publishFilter.publishAll", "publishAll", problems)
+  if (publishAll !== undefined) rules.publishAll = publishAll
+  return rules
 }
 
 function parseFolderList(raw: unknown, path: string, problems: string[]): string[] {
@@ -244,6 +254,21 @@ function requireString(obj: Record<string, unknown>, key: string, problems: stri
   const value = obj[key]
   if (typeof value !== "string" || value === "") {
     problems.push(`${key}: required non-empty string`)
+    return undefined
+  }
+  return value
+}
+
+function optionalBoolean(
+  obj: Record<string, unknown>,
+  path: string,
+  key: string,
+  problems: string[],
+): boolean | undefined {
+  const value = obj[key]
+  if (value === undefined) return undefined
+  if (typeof value !== "boolean") {
+    problems.push(`${path}: expected a boolean`)
     return undefined
   }
   return value

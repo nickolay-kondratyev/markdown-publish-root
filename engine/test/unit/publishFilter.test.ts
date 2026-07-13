@@ -111,6 +111,55 @@ describe("PublishFilter — 'private' path segments (never published, wins over 
   })
 })
 
+describe("PublishFilter — publishAll (explicit whole-vault opt-in)", () => {
+  const PUBLISH_ALL = { includeFolders: [], excludeFolders: [], publishAll: true }
+
+  test("GIVEN publishAll WHEN deciding markdown outside any includeFolder THEN published", () => {
+    const filter = new PublishFilter(PUBLISH_ALL)
+    assert.equal(filter.isMarkdownPublished("anywhere/a.md", undefined), true)
+  })
+
+  test("GIVEN publishAll WHEN deciding vault-root markdown THEN published", () => {
+    const filter = new PublishFilter(PUBLISH_ALL)
+    assert.equal(filter.isMarkdownPublished("index.md", undefined), true)
+  })
+
+  test("GIVEN publishAll WHEN deciding canvas outside any includeFolder THEN published", () => {
+    const filter = new PublishFilter(PUBLISH_ALL)
+    assert.equal(filter.isCanvasPublished("boards/main.canvas"), true)
+  })
+
+  test("GIVEN publishAll and frontmatter publish false WHEN deciding THEN not published (publish false wins)", () => {
+    const filter = new PublishFilter(PUBLISH_ALL)
+    assert.equal(filter.isMarkdownPublished("notes/a.md", false), false)
+  })
+
+  test("GIVEN publishAll and a 'private' path WHEN deciding THEN not published (privacy rule wins)", () => {
+    const filter = new PublishFilter(PUBLISH_ALL)
+    assert.equal(filter.isMarkdownPublished("notes/private-secret.md", undefined), false)
+  })
+
+  test("GIVEN publishAll and a hidden segment WHEN deciding THEN not published", () => {
+    const filter = new PublishFilter(PUBLISH_ALL)
+    assert.equal(filter.isMarkdownPublished(".obsidian/readme.md", undefined), false)
+  })
+
+  test("GIVEN publishAll and an excludeFolder WHEN deciding a file under it THEN not published", () => {
+    const filter = new PublishFilter({ includeFolders: [], excludeFolders: ["templates"], publishAll: true })
+    assert.equal(filter.isMarkdownPublished("templates/daily.md", undefined), false)
+  })
+
+  test("GIVEN publishAll and an excludeFolder WHEN deciding a canvas under it THEN not published", () => {
+    const filter = new PublishFilter({ includeFolders: [], excludeFolders: ["templates"], publishAll: true })
+    assert.equal(filter.isCanvasPublished("templates/board.canvas"), false)
+  })
+
+  test("GIVEN publishAll false explicitly WHEN deciding markdown outside includeFolders THEN not published", () => {
+    const filter = new PublishFilter({ includeFolders: [], excludeFolders: [], publishAll: false })
+    assert.equal(filter.isMarkdownPublished("notes/a.md", undefined), false)
+  })
+})
+
 describe("PublishFilter — assets", () => {
   test("GIVEN plain asset WHEN deciding THEN published (default allow)", () => {
     const filter = new PublishFilter(NO_RULES)
