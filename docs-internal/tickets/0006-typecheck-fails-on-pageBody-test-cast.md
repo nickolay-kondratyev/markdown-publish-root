@@ -12,7 +12,10 @@ to type '((props: Record<string, unknown>) => unknown) & { css: string; }'
 may be a mistake because neither type sufficiently overlaps with the other.
 ```
 
-`npm run test:unit` passes (432/432) — this is a compile-time-only failure.
+`npm run test:unit` passes — this is a compile-time-only failure (Node type
+stripping, not tsc). Impact: `npm run typecheck` exits non-zero, masking any
+NEW type errors elsewhere. Independently confirmed pre-existing via a
+clean-tree `git stash` baseline during the canvas link-cards work.
 
 ## Analysis
 

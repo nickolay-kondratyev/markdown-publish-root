@@ -79,9 +79,13 @@ describe("CanvasRewriter — invariants", () => {
     assert.deepEqual(rewriteNodes(group).canvas.nodes[0], group)
   })
 
-  test("GIVEN a web link node WHEN rewriting THEN it passes through unchanged", () => {
+  test("GIVEN a web link node WHEN rewriting THEN id/coords/url are preserved", () => {
     const link = baseNode("l1", { type: "link", url: "https://jsoncanvas.org/" })
-    assert.deepEqual(rewriteNodes(link).canvas.nodes[0], link)
+    const node = rewriteNodes(link).canvas.nodes[0]
+    assert.deepEqual(
+      { id: node.id, x: node.x, y: node.y, width: node.width, height: node.height, url: node.url },
+      { id: "l1", x: 10, y: 20, width: 400, height: 300, url: "https://jsoncanvas.org/" },
+    )
   })
 
   test("GIVEN remaining file nodes WHEN rewriting THEN every one has a content URL (media: attachments, notes: per-node fragmentUrl)", () => {
@@ -96,6 +100,52 @@ describe("CanvasRewriter — invariants", () => {
       },
       { media: true, note: true },
     )
+  })
+})
+
+describe("CanvasRewriter — link nodes", () => {
+  test("GIVEN a whitelisted provider URL WHEN rewriting THEN an embed with the provider embed URL", () => {
+    const result = rewriteNodes(
+      baseNode("l1", { type: "link", url: "https://www.youtube.com/watch?v=Jk71bPz5VLo" }),
+    )
+    assert.deepEqual(result.canvas.nodes[0].vintrinLink, {
+      mode: "embed",
+      embedUrl: "https://www.youtube-nocookie.com/embed/Jk71bPz5VLo",
+    })
+  })
+
+  test("GIVEN an arbitrary URL WHEN rewriting THEN a card with the domain (never a raw iframe)", () => {
+    const result = rewriteNodes(baseNode("l1", { type: "link", url: "https://www.google.com/" }))
+    assert.deepEqual(result.canvas.nodes[0].vintrinLink, {
+      mode: "card",
+      meta: { domain: "www.google.com" },
+    })
+  })
+
+  test("GIVEN engine-fetched vintrinLinkMeta WHEN rewriting THEN baked into the card and the raw key stripped", () => {
+    const result = rewriteNodes(
+      baseNode("l1", {
+        type: "link",
+        url: "https://example.com/post",
+        vintrinLinkMeta: { domain: "example.com", title: "A Post", description: "About things" },
+      }),
+    )
+    const node = result.canvas.nodes[0]
+    assert.deepEqual(
+      { vintrinLink: node.vintrinLink, rawKeyStripped: !("vintrinLinkMeta" in node) },
+      {
+        vintrinLink: {
+          mode: "card",
+          meta: { domain: "example.com", title: "A Post", description: "About things" },
+        },
+        rawKeyStripped: true,
+      },
+    )
+  })
+
+  test("GIVEN a link node without a url WHEN rewriting THEN a domainless card (conversion stays total)", () => {
+    const result = rewriteNodes(baseNode("l1", { type: "link" }))
+    assert.deepEqual(result.canvas.nodes[0].vintrinLink, { mode: "card", meta: { domain: "" } })
   })
 })
 
@@ -228,9 +278,27 @@ describe("CanvasRewriter — searchText covers ALL visible canvas content (searc
     assert.match(result.searchText, /Intro Group/)
   })
 
-  test("GIVEN a web link node WHEN rewriting THEN its URL lands in searchText", () => {
+  test("GIVEN a metadata-less link card WHEN rewriting THEN its URL lands in searchText", () => {
     const result = rewriteNodes(baseNode("l1", { type: "link", url: "https://jsoncanvas.org/" }))
     assert.match(result.searchText, /jsoncanvas\.org/)
+  })
+
+  test("GIVEN a link card with metadata WHEN rewriting THEN title and description land in searchText", () => {
+    const result = rewriteNodes(
+      baseNode("l1", {
+        type: "link",
+        url: "https://example.com/post",
+        vintrinLinkMeta: { domain: "example.com", title: "CARD-TITLE", description: "CARD-DESC" },
+      }),
+    )
+    assert.match(result.searchText, /CARD-TITLE CARD-DESC/)
+  })
+
+  test("GIVEN a provider embed link WHEN rewriting THEN its URL lands in searchText", () => {
+    const result = rewriteNodes(
+      baseNode("l1", { type: "link", url: "https://www.youtube.com/watch?v=Jk71bPz5VLo" }),
+    )
+    assert.match(result.searchText, /youtube\.com/)
   })
 
   test("GIVEN a canvas card WHEN rewriting THEN the target canvas title lands in searchText", () => {

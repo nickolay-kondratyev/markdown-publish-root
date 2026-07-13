@@ -21,6 +21,7 @@
  *     directory — so one label serves both and no existence oracle leaks.
  */
 import { classifyFileTarget, FileTargetKind } from "./canvasSchema.js"
+import { classifyLinkUrl, domainOf, LinkMode } from "./linkProviders.js"
 import { CanvasMarkdownRenderer } from "./markdownRenderer.js"
 import { NoteFragmentExtractor } from "./noteFragments.js"
 import { VaultLinkResolver } from "./resolver.js"
@@ -104,8 +105,7 @@ export class CanvasRewriter {
         if (node.label) searchParts.push(node.label)
         return structuredClone(node)
       case "link":
-        if (node.url) searchParts.push(node.url)
-        return structuredClone(node)
+        return this.rewriteLinkNode(node, searchParts)
       default:
         // Unknown future node types pass through untouched.
         return structuredClone(node)
@@ -161,6 +161,29 @@ export class CanvasRewriter {
         })
       }
     }
+  }
+
+  /**
+   * Link node -> embed (whitelisted provider iframe) or link card (default —
+   * arbitrary origins refuse framing, so a raw iframe would show a browser
+   * error page on the published site). `node.url` is always preserved for the
+   * card header/click-through.
+   */
+  rewriteLinkNode(node, searchParts) {
+    const clone = structuredClone(node)
+    // Engine-internal enrichment key (engine/src/canvasLinkEnrichment.ts) —
+    // consumed here, never emitted to the client payload.
+    delete clone.vintrinLinkMeta
+    const url = node.url ?? ""
+    const classified = classifyLinkUrl(url)
+    if (classified.mode === LinkMode.EMBED) {
+      if (url) searchParts.push(url)
+      return { ...clone, vintrinLink: { mode: LinkMode.EMBED, embedUrl: classified.embedUrl } }
+    }
+    const meta = { domain: domainOf(url), ...(node.vintrinLinkMeta ?? {}) }
+    // The card visibly shows title/description — index those; URL as fallback.
+    searchParts.push([meta.title, meta.description].filter(Boolean).join(" ") || url)
+    return { ...clone, vintrinLink: { mode: LinkMode.CARD, meta } }
   }
 
   rewriteNoteCard(node, resolved, result, searchParts) {
