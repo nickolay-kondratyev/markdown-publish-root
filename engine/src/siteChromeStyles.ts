@@ -44,9 +44,10 @@ const SITE_CHROME_SCSS = `@use "./variables.scss" as *;
     right: 1rem;
   }
   /* The header row's spacer pushes search to the right edge — reserve the
-     cluster's footprint (4 icons + gaps + gutter) so they never overlap. */
+     cluster's footprint (5 icons + gaps + gutter; the zen plugin's search
+     magnifier is always visible) so they never overlap. */
   #quartz-body .sidebar.left {
-    padding-right: 7.5rem;
+    padding-right: 9.25rem;
   }
 }
 
@@ -96,14 +97,26 @@ const SITE_CHROME_SCSS = `@use "./variables.scss" as *;
 :root[reader-mode="on"]:not([zen-mode="on"]) .sidebar.left:hover > *:not(.flex-component) {
   opacity: 1;
 }
-/* Book icon + fullscreen icon in the corner: hide the OTHER icon WRAPPERS
-   (Flex.tsx inline-styled divs), not just their content — zen's
-   hide-the-content trick would leave gap-width holes between the survivors.
-   The fullscreen toggle stays visible so the reading experience can be
-   upgraded to fullscreen from inside reader mode (ticket full-screen-mode.md);
-   with the other siblings gone, the shrink-to-fit fixed cluster leaves book +
-   fullscreen flush in the rightmost slots. */
-:root[reader-mode="on"]:not([zen-mode="on"]) .sidebar.left > .flex-component > div:not(:has(.readermode)):not(:has(.fullscreenmode)) {
+/* Corner icons in reader mode: the book (exit), the fullscreen toggle
+   (stacking upgrade, ticket full-screen-mode.md) AND the zen slot's search
+   magnifier (always-visible search affordance) stay; the OTHER icon WRAPPERS
+   (Flex.tsx inline-styled divs) hide entirely, not just their content —
+   emptied wrappers would leave gap-width holes between the survivors. */
+:root[reader-mode="on"]:not([zen-mode="on"]) .sidebar.left > .flex-component > div:not(:has(.readermode)):not(:has(.fullscreenmode)):not(:has(.zen-search)) {
   display: none;
+}
+/* The exempted zen wrapper is display:contents (zenMode.js), so its buttons
+   are their own flex items: hide just the lotus — the book icon stays the
+   lone mode-exit affordance (ticket 0005) — while the magnifier survives.
+   No gap hole: a display:none flex item gives up its gap slot. */
+:root[reader-mode="on"]:not([zen-mode="on"]) .sidebar.left > .flex-component button.zenmode {
+  display: none;
+}
+/* The magnifier opens the real search overlay (.search-container.active), a
+   DESCENDANT of the reader-dimmed .search root. Force the root opaque while
+   the overlay is open — hover-reveal alone cannot be relied on (touch devices
+   have no hover), and an opacity-0 ancestor hides the whole overlay. */
+:root[reader-mode="on"]:not([zen-mode="on"]) .sidebar.left > .search:has(.search-container.active) {
+  opacity: 1;
 }
 `

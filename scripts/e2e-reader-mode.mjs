@@ -5,9 +5,10 @@
  * reader icon itself. The engine's custom.scss (siteChromeStyles.ts) keeps the
  * book icon visible top-right as the lone exit affordance, mirroring zen mode.
  * This drives headless Chromium to prove: reader ON → book icon stays visible
- * in the rightmost (lotus) corner slot, darkmode/zen hide, the rest of the
- * chrome keeps the stock dim; one click exits; zen keeps precedence when both
- * modes are on.
+ * in the rightmost (lotus) corner slot, darkmode/zen hide while the search
+ * magnifier STAYS (always-visible search affordance) and still opens a
+ * visible overlay, the rest of the chrome keeps the stock dim; one click
+ * exits; zen keeps precedence when both modes are on.
  *
  * Run: `npm run test:e2e` (Node >= 22 via nvm; system Chromium at /usr/bin/chromium).
  * Screenshots -> .out/reader-mode-{off,on}.png.
@@ -61,6 +62,9 @@ const measure = () =>
       readerVisible: width("button.readermode") > 0 && effectiveOpacity("button.readermode") === 1,
       darkVisible: width("button.darkmode") > 0 && effectiveOpacity("button.darkmode") > 0,
       zenVisible: width("button.zenmode") > 0 && effectiveOpacity("button.zenmode") > 0,
+      // The zen slot's search magnifier: an always-visible search affordance,
+      // kept in reader mode too (custom.scss exempts it from the wrapper hide).
+      zenSearchVisible: width("button.zen-search") > 0 && effectiveOpacity("button.zen-search") > 0,
       searchOpacity: effectiveOpacity(".sidebar.left .search"),
       readerRightEdge: rect("button.readermode")?.right ?? 0,
       zenRightEdge: rect("button.zenmode")?.right ?? 0,
@@ -101,6 +105,7 @@ check("initial state is reader off", off.mode !== "on")
 check("reader icon visible before toggle", off.readerVisible)
 check("darkmode icon visible before toggle", off.darkVisible)
 check("zen icon visible before toggle", off.zenVisible)
+check("search magnifier visible before toggle", off.zenSearchVisible)
 check("search visible before toggle", off.searchOpacity === 1, `opacity=${off.searchOpacity}`)
 
 fs.mkdirSync(path.join(repoRoot, ".out"), { recursive: true })
@@ -112,6 +117,11 @@ await screenshotFromTop("reader-mode-off.png")
 
 // --- 2. Reader ON: book icon stays as the lone corner exit affordance --------
 await page.click("button.readermode")
+// The click leaves the pointer where the book WAS — the magnifier slides into
+// that slot when the other icons collapse, so the pointer would keep
+// .sidebar.left hovered and hover-reveal the dim. Park it over the article
+// before sampling the dim (pattern: e2e-full-screen-mode.mjs).
+await page.mouse.move(700, 400)
 const on = await measure()
 check("toggle sets reader-mode=on on :root", on.mode === "on")
 check("reader icon stays fully visible (the exit affordance)", on.readerVisible)
@@ -123,6 +133,7 @@ check(
 )
 check("darkmode icon hidden while reader on", !on.darkVisible)
 check("zen icon hidden while reader on", !on.zenVisible)
+check("search magnifier STAYS visible while reader on", on.zenSearchVisible)
 check("rest of chrome keeps the stock dim (search)", await searchOpacityBecomes(0))
 await screenshotFromTop("reader-mode-on.png")
 
@@ -130,6 +141,22 @@ await screenshotFromTop("reader-mode-on.png")
 await page.hover(".sidebar.left .search")
 check("hovering the sidebar reveals the dimmed chrome", await searchOpacityBecomes(1))
 await page.mouse.move(0, 0) // un-hover
+
+// --- 3b. Search from reader: the magnifier opens the REAL search -------------
+// The overlay (.search-container.active) is a DESCENDANT of the reader-dimmed
+// .search root — custom.scss forces the root opaque while the overlay is open,
+// else search would be invisible without a hover (impossible on touch).
+await page.click("button.zen-search")
+await page.waitForSelector(".search-container.active .search-bar")
+// The overlay inherits the .search root's effective opacity — the existing
+// helper (transition-safe) walks that exact ancestor chain.
+check("magnifier opens search from reader mode with an OPAQUE overlay", await searchOpacityBecomes(1))
+await page.keyboard.press("Escape")
+const afterSearchClose = await measure()
+check(
+  "escape closes search and reader stays on",
+  (await page.$(".search-container.active")) === null && afterSearchClose.mode === "on",
+)
 
 // --- 4. One click exits: stock cluster returns --------------------------------
 await page.click("button.readermode")

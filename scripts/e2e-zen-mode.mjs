@@ -65,6 +65,16 @@ const measure = () =>
         rectWidth(".sidebar.left button.darkmode") +
         rectWidth(".sidebar.left button.readermode"),
       zenSearchWidth: rectWidth("button.zen-search"),
+      // The magnifier must be the LEFTMOST visible icon of the corner cluster
+      // (flex order: -1, zenMode.js) — in AND out of zen.
+      zenSearchLeftmost: (() => {
+        const search = document.querySelector("button.zen-search")
+        if (search === null) return false
+        const searchLeft = search.getBoundingClientRect().left
+        return [...document.querySelectorAll(".sidebar.left .flex-component button")]
+          .filter((b) => b.getBoundingClientRect().width > 0)
+          .every((b) => searchLeft <= b.getBoundingClientRect().left)
+      })(),
       dividerHrVisible: rectWidth(".center > hr") > 0,
       breadcrumbsVisible: rectWidth(".center .breadcrumb-container") > 0,
       // DOCUMENT_POSITION_PRECEDING (2): reader-mode button comes BEFORE zen.
@@ -88,7 +98,8 @@ check("zen button renders next to (after) the reader-mode book icon", off.zenAft
 check("initial state is zen off", off.mode === "off")
 check("right sidebar visible before toggle", off.rightSidebarWidth > 0, `w=${off.rightSidebarWidth}`)
 check("other toolbar icons visible before toggle", off.otherToolbarIconsWidth > 0)
-check("zen-search icon hidden while zen off (full search bar is there)", off.zenSearchWidth === 0)
+check("zen-search icon visible while zen off (always-present search affordance)", off.zenSearchWidth > 0)
+check("zen-search is the LEFTMOST cluster icon while zen off", off.zenSearchLeftmost)
 check("mode toggles pinned to the top-right corner while zen off", off.modeIconsInRightHalf)
 check("article/footer divider visible before toggle", off.dividerHrVisible)
 check("breadcrumbs visible before toggle", off.breadcrumbsVisible)
@@ -116,6 +127,7 @@ check("zen button still visible in zen (exit stays reachable)", on.zenButtonWidt
 check("zen button pinned to the top-right corner", on.zenInRightHalf)
 check("all OTHER toolbar icons hidden in zen", on.otherToolbarIconsWidth === 0)
 check("zen-search icon visible in zen", on.zenSearchWidth > 0)
+check("zen-search stays the LEFTMOST cluster icon in zen", on.zenSearchLeftmost)
 check("article/footer divider hidden in zen", !on.dividerHrVisible)
 check("breadcrumbs hidden in zen", !on.breadcrumbsVisible)
 await screenshotFromTop("zen-mode-on.png")
@@ -152,7 +164,7 @@ check("second click restores zen-mode=off", restored.mode === "off")
 check("right sidebar restored", restored.rightSidebarWidth === off.rightSidebarWidth)
 check("center width restored", restored.centerWidth === off.centerWidth)
 check("toolbar icons restored", restored.otherToolbarIconsWidth === off.otherToolbarIconsWidth)
-check("zen-search icon hidden again after exiting zen", restored.zenSearchWidth === 0)
+check("zen-search icon still visible after exiting zen", restored.zenSearchWidth === off.zenSearchWidth && restored.zenSearchWidth > 0)
 check("article/footer divider restored", restored.dividerHrVisible)
 check("breadcrumbs restored", restored.breadcrumbsVisible)
 
@@ -196,17 +208,20 @@ const mobileOff = await page.evaluate(() => {
   const rect = (sel) => document.querySelector(sel)?.getBoundingClientRect()
   const search = rect(".sidebar.left .search")
   const dark = rect(".sidebar.left button.darkmode")
+  // The magnifier is the cluster's LEFTMOST icon (order: -1, zenMode.js) —
+  // it marks the cluster's left boundary for the overlap check.
+  const magnifier = rect(".sidebar.left button.zen-search")
   return {
     searchRight: search?.right ?? 0,
-    darkLeft: dark?.left ?? Number.POSITIVE_INFINITY,
+    clusterLeft: magnifier?.left ?? Number.POSITIVE_INFINITY,
     iconsInRightHalf: dark !== undefined && dark.x > window.innerWidth / 2,
   }
 })
 check("mobile zen-off: mode icons sit in the top-right corner", mobileOff.iconsInRightHalf)
 check(
   "mobile zen-off: search bar does not run under the corner icons",
-  mobileOff.searchRight <= mobileOff.darkLeft,
-  `searchRight=${mobileOff.searchRight} darkLeft=${mobileOff.darkLeft}`,
+  mobileOff.searchRight <= mobileOff.clusterLeft,
+  `searchRight=${mobileOff.searchRight} clusterLeft=${mobileOff.clusterLeft}`,
 )
 // (zen stays OFF here; clicking again at mobile would be eaten by the open
 // explorer panel — the second repro in ticket 0004. Section 6 is desktop.)

@@ -6,7 +6,7 @@ description: Build the test-vault site, serve it with the real preview server, a
 # Verify this repo's changes at the browser surface
 
 ## Environment
-- Node: `~/.local/node22/bin/node` (v22.21.1, linux-arm64 tarball; reinstalled 2026-07-11 — the earlier `~/.nvm/versions/node/v26.4.0` install did not survive the sandbox refresh). Default `node` is v20 — cannot type-strip `.ts` test files. ALSO `unset -f node npm npx` first: the profile defines a recursive `node()` function that shadows PATH (ticket 0003).
+- Node: `~/.local/node22/bin/node` (v22.21.1; installs do NOT survive sandbox refreshes — reinstalled 2026-07-13 for linux-x64 after the arm64 one vanished. Reinstall: `curl -fsSL https://nodejs.org/dist/v22.21.1/node-v22.21.1-linux-$(uname -m | sed -e s/x86_64/x64/ -e s/aarch64/arm64/).tar.xz | tar -xJ -C ~/.local && mv ~/.local/node-v22.21.1-* ~/.local/node22`). Default `node` is v20 — cannot type-strip `.ts` test files. ALSO `unset -f node npm npx` first: the profile defines a recursive `node()` function that shadows PATH (ticket 0003).
 - Browser: system Chromium at `/usr/bin/chromium` driven via `playwright-core` (already in node_modules). No downloaded Playwright browsers.
 
 ## Build + serve

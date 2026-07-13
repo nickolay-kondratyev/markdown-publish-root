@@ -71,11 +71,25 @@ describe("SiteChromeStyles — reader-mode exit affordance", () => {
     )
   })
 
-  test("GIVEN reader on WHEN inspected THEN sibling icon WRAPPERS hide EXCEPT book + fullscreen (fullscreen stacks with reader, ticket full-screen-mode.md)", () => {
+  test("GIVEN reader on WHEN inspected THEN sibling icon WRAPPERS hide EXCEPT book + fullscreen + the zen slot (its magnifier stays)", () => {
     assert.equal(
       readerRule(
-        ".sidebar.left > .flex-component > div:not(:has(.readermode)):not(:has(.fullscreenmode))",
+        ".sidebar.left > .flex-component > div:not(:has(.readermode)):not(:has(.fullscreenmode)):not(:has(.zen-search))",
       ).includes("display: none"),
+      true,
+    )
+  })
+
+  test("GIVEN reader on WHEN the zen wrapper is exempted (magnifier stays) THEN the lotus ITSELF is hidden (book is the lone mode-exit affordance)", () => {
+    assert.equal(
+      readerRule(".sidebar.left > .flex-component button.zenmode").includes("display: none"),
+      true,
+    )
+  })
+
+  test("GIVEN reader dims the .search root WHEN the search overlay is open THEN the root is forced opaque (touch has no hover-reveal)", () => {
+    assert.equal(
+      readerRule(".sidebar.left > .search:has(.search-container.active)").includes("opacity: 1"),
       true,
     )
   })
