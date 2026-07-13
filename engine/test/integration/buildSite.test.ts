@@ -9,6 +9,10 @@ import { SiteConfigParser } from "../../src/siteConfig.ts"
 // The fixture vault's private note carries this sentinel (test-vault/README.md);
 // it must appear NOWHERE in emitted output.
 const LEAK_SENTINEL = "LEAK-SENTINEL-9f3a72"
+// Private-NAME rule fixtures (docs/publish-exclusion.md): both declare
+// publish:true, so only the file-path rule can keep their sentinels out.
+const LEAK_SENTINEL_PRIVATE_TREE = "LEAK-SENTINEL-PRIVTREE-4c1d"
+const LEAK_SENTINEL_PRIVATE_FILE = "LEAK-SENTINEL-PRIVFILE-7b2e"
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..")
 const VAULT_DIR = path.join(REPO_ROOT, "test-vault")
@@ -19,6 +23,8 @@ const OUT_DIR = path.join(REPO_ROOT, ".build", "integration-out")
 const GETTING_STARTED_SLUG = `n/${docIdOf("notes/getting-started.md")}`
 const ARCHITECTURE_SLUG = `n/${docIdOf("notes/architecture.md")}`
 const PRIVATE_NOTE_SLUG = `n/${docIdOf("notes/private-secret.md")}`
+const PRIVATE_TREE_SLUG = `n/${docIdOf("notes/Private-tree-e2e/nested/leaky-tree-note.md")}`
+const PRIVATE_FILE_SLUG = `n/${docIdOf("notes/e2e-PRIVATE-file.md")}`
 
 describe("SiteBuilder integration — builds test-vault markdown-only", () => {
   // GIVEN the fixture vault WHEN building once (Quartz run is expensive)
@@ -66,6 +72,47 @@ describe("SiteBuilder integration — builds test-vault markdown-only", () => {
 
   test("THEN the leak sentinel appears NOWHERE in the output", () => {
     assert.deepEqual(filesContaining(OUT_DIR, LEAK_SENTINEL), [])
+  })
+
+  test("THEN a publish:true note under a 'Private*' folder up the chain is NOT emitted (private rule wins)", () => {
+    assert.deepEqual(
+      [
+        fs.existsSync(path.join(OUT_DIR, `${PRIVATE_TREE_SLUG}.html`)),
+        fs.existsSync(path.join(OUT_DIR, "notes/Private-tree-e2e/nested/leaky-tree-note.html")),
+      ],
+      [false, false],
+    )
+  })
+
+  test("THEN a publish:true note whose file name contains 'PRIVATE' is NOT emitted (private rule wins)", () => {
+    assert.deepEqual(
+      [
+        fs.existsSync(path.join(OUT_DIR, `${PRIVATE_FILE_SLUG}.html`)),
+        fs.existsSync(path.join(OUT_DIR, "notes/e2e-PRIVATE-file.html")),
+      ],
+      [false, false],
+    )
+  })
+
+  test("THEN the private-name-rule sentinels appear NOWHERE in the output", () => {
+    assert.deepEqual(
+      [
+        ...filesContaining(OUT_DIR, LEAK_SENTINEL_PRIVATE_TREE),
+        ...filesContaining(OUT_DIR, LEAK_SENTINEL_PRIVATE_FILE),
+      ],
+      [],
+    )
+  })
+
+  test("THEN the content index does NOT list the private-name-rule notes", () => {
+    const listed = Object.keys(readContentIndex()).filter(
+      (slug) =>
+        slug === PRIVATE_TREE_SLUG ||
+        slug === PRIVATE_FILE_SLUG ||
+        slug.toLowerCase().includes("private-tree-e2e") ||
+        slug.toLowerCase().includes("e2e-private-file"),
+    )
+    assert.deepEqual(listed, [])
   })
 
   test("THEN no canvas artifacts are emitted (no includeFolders cover the canvases)", () => {

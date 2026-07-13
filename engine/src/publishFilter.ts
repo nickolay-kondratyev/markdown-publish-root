@@ -6,17 +6,19 @@ const CANVAS_EXTENSION = ".canvas"
 /**
  * Decides which vault files are publishable. Pure decision logic — no I/O.
  *
- * Precedence (first match wins; full prose in engine/README.md):
+ * Precedence (first match wins; full prose in engine/README.md and
+ * docs/publish-exclusion.md):
  *   1. hidden path segment (leading ".", e.g. .obsidian/)  -> NOT published
- *   2. under an excludeFolder                              -> NOT published
- *   3. markdown with frontmatter `publish: false`          -> NOT published
+ *   2. path contains "private" anywhere (case-insensitive) -> NOT published
+ *   3. under an excludeFolder                              -> NOT published
+ *   4. markdown with frontmatter `publish: false`          -> NOT published
  *      (malformed frontmatter fails closed, same outcome)
- *   4. markdown with frontmatter `publish: true`           -> published
- *   5. markdown under an includeFolder                     -> published
- *   6. other markdown                                      -> NOT published
- *   7. canvas under an includeFolder                       -> published
- *   8. other canvas                                        -> NOT published
- *   9. non-markdown, non-canvas asset                      -> published
+ *   5. markdown with frontmatter `publish: true`           -> published
+ *   6. markdown under an includeFolder                     -> published
+ *   7. other markdown                                      -> NOT published
+ *   8. canvas under an includeFolder                       -> published
+ *   9. other canvas                                        -> NOT published
+ *  10. non-markdown, non-canvas asset                      -> published
  *
  * Canvas rationale (Phase 2, plan §4.4 + ADR 0001): canvas JSON carries
  * authored content but has NO frontmatter, so folder rules are its only
@@ -54,9 +56,10 @@ export class PublishFilter {
     return !this.isAlwaysExcluded(relPath)
   }
 
-  /** Rules 1-2: exclusions that win over everything (incl. `publish: true`). */
+  /** Rules 1-3: exclusions that win over everything (incl. `publish: true`). */
   private isAlwaysExcluded(relPath: string): boolean {
     if (hasHiddenSegment(relPath)) return true
+    if (hasPrivateMarker(relPath)) return true
     return this.isUnderAny(relPath, this.rules.excludeFolders)
   }
 
@@ -75,4 +78,17 @@ export function isCanvasPath(relPath: string): boolean {
 
 function hasHiddenSegment(relPath: string): boolean {
   return relPath.split("/").some((segment) => segment.startsWith("."))
+}
+
+/**
+ * Name-based privacy rule (docs/publish-exclusion.md): a path containing
+ * "private" anywhere (case-insensitive) is never published. Deliberately
+ * substring + case-insensitive — a privacy rule fails closed. Whole-path
+ * matching equals per-segment matching: the marker has no "/", so it can
+ * never span a segment boundary.
+ */
+const PRIVATE_MARKER = "private"
+
+function hasPrivateMarker(relPath: string): boolean {
+  return relPath.toLowerCase().includes(PRIVATE_MARKER)
 }
