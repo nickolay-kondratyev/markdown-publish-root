@@ -131,6 +131,18 @@ const CANVAS_PAGE_CSS = `
 .page > #quartz-body:has(.canvas-page) {
   row-gap: 0;
 }
+/* Lift the breadcrumbs header: base's .page-header carries margin-top
+   $topSpacing (6rem) to align prose with the sidebar content — dead space on
+   a canvas page, where every reclaimed rem goes to the mount via the flex
+   chain above. 2rem matches the pinned toggle cluster's top offset AND zen's
+   own header lift (mode-switcher plugin), so the header height is identical
+   across modes. Desktop/tablet only: base already zeroes this margin on
+   mobile (<800px), which this rule would otherwise override. */
+@media (min-width: 800px) {
+  #quartz-body .center:has(.canvas-page) .page-header {
+    margin-top: 2rem;
+  }
+}
 /* Breadcrumbs already name the canvas — the H1 and the article/footer divider
    only eat vertical canvas room, so drop both. Scoped via
    :has(.breadcrumb-container) so a homepage canvas (breadcrumbs render with

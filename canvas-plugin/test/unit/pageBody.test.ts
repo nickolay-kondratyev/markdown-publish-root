@@ -38,6 +38,14 @@ describe("CanvasPageBody — heading chrome reclaimed for the canvas", () => {
     assert.equal(zenTitleRule.includes("display: block"), true)
   })
 
+  test("GIVEN base's 6rem header offset is dead space over a canvas WHEN on a canvas page THEN the breadcrumbs header lifts to zen's 2rem", () => {
+    const headerRule =
+      component.css.match(
+        /#quartz-body \.center:has\(\.canvas-page\) \.page-header\s*\{([^}]*)\}/,
+      )?.[1] ?? ""
+    assert.equal(headerRule.includes("margin-top: 2rem"), true)
+  })
+
   test("GIVEN the article/footer divider adds no value on a canvas WHEN on a canvas page THEN it is hidden", () => {
     const hrRule =
       component.css.match(/^\.center:has\(\.canvas-page\) > hr\s*\{([^}]*)\}/m)?.[1] ?? ""
