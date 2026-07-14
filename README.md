@@ -65,8 +65,8 @@ node cli/bin/publish.mjs deploy /path/to/vault/.publish_out --deploy-config depl
 ```
 
 Real hosting must map extensionless page URLs to their `.html` files — the
-contract (plus a paste-ready CloudFront Function) lives in
-`docs-internal/hosting.md`.
+contract lives in `docs/hosting.md`; a step-by-step S3 + CloudFront guide
+(with the paste-ready CloudFront Function) in `docs/publish-to-s3.md`.
 
 ## License
 

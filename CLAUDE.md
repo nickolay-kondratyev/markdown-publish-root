@@ -23,8 +23,8 @@ Next: Phase 4 dogfood.
 | `scripts/setup-quartz.mjs` | The `npm run setup` bootstrap. |
 | `test-vault/` | Fixture vault exercising the parity checklist (incl. a private-note leak sentinel). |
 | `plan/main.md` | Authoritative product/architecture plan. |
-| `docs/config-format.md` | The `.external_publish_config.json` publish-config format (schema + examples). |
-| `docs/decisions/` | ADRs. `docs/spikes/` — Phase 0 spike reports. `docs/status/` — per-phase status notes. |
+| `docs/` | User-facing docs: `config-format.md` (publish-config schema), `hosting.md` (URL-routing contract every host must implement), `publish-to-s3.md` (S3 + CloudFront setup guide incl. the URL-rewrite Function). |
+| `docs-internal/decisions/` | ADRs. `docs-internal/spikes/` — Phase 0 spike reports. `docs-internal/status/` — per-phase status notes. `docs-internal/tickets/` — follow-up tickets. |
 
 ## Development
 

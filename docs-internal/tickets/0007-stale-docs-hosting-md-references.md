@@ -1,5 +1,9 @@
 # 0007: Stale `docs/hosting.md` references (file lives at `docs-internal/hosting.md`)
 
+**RESOLVED 2026-07-14** via option 2: `hosting.md` moved to `docs/hosting.md`
+(its S3+CloudFront recipe extracted to the new `docs/publish-to-s3.md` guide);
+all `docs-internal/hosting.md` referrers updated. Verified by repo-wide grep.
+
 ## Problem
 
 Multiple files reference the hosting URL-routing contract at `docs/hosting.md`,

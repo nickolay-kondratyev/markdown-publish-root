@@ -54,7 +54,7 @@ Optional: `locale`, `theme` (typography + named Quartz colors). Full schema + fi
 node cli/bin/publish.mjs preview ./public   # http://127.0.0.1:8080/ (--port <n> to change)
 ```
 
-Serves the built site with production URL routing (Quartz links pages without `.html`, so a plain static server 404s). Local-only (binds 127.0.0.1). For external hosting the same routing contract must be implemented server-side — see `docs-internal/hosting.md` (CloudFront Function recipe included).
+Serves the built site with production URL routing (Quartz links pages without `.html`, so a plain static server 404s). Local-only (binds 127.0.0.1). For external hosting the same routing contract must be implemented server-side — see `docs/hosting.md` (contract) and `docs/publish-to-s3.md` (S3 + CloudFront setup guide incl. the Function).
 
 ## Deploy (S3 + CloudFront)
 

@@ -24,7 +24,7 @@ Two inviolable rules:
 | `canvas-plugin/` | Quartz 5 pageType plugin: claims `.canvas`, registers links (graph/backlinks/search), rewrites canvas JSON at build time (markdown cards via shared resolver, subpath slicing, private placeholders, canvas→canvas cards), emits pages mounting the viewer | `canvas-plugin/README.md` |
 | `vintrin-explorer/` | Quartz 5 component plugin: folder-shaped Explorer over stable-id URLs — server-rendered from the engine-injected `vintrinPath`; collapse-only folders (ADR 0005) | `vintrin-explorer/README.md` |
 | `vintrin-breadcrumbs/` | Quartz 5 component plugin: `Home ❯ folders (plain text) ❯ title` crumbs from `vintrinPath` (ADR 0005) | `vintrin-breadcrumbs/README.md` |
-| `cli/` | `publish build` / `publish preview` (pure PreviewPathResolver + node:http wiring; implements the URL-routing contract of `docs-internal/hosting.md`) / `publish deploy` (pure DeployPlanner + executor, `--dry-run`) | `cli/README.md` |
+| `cli/` | `publish build` / `publish preview` (pure PreviewPathResolver + node:http wiring; implements the URL-routing contract of `docs/hosting.md`) / `publish deploy` (pure DeployPlanner + executor, `--dry-run`) | `cli/README.md` |
 | `test-vault/` | Canonical fixture; exercises the full parity checklist; private note carries leak sentinel `LEAK-SENTINEL-9f3a72` — do not break its invariants | `test-vault/README.md` |
 | `vendor/quartz/` | Gitignored pinned Quartz checkout; pin in `vendor/quartz-pin.json`; managed by `npm run setup` (ADR 0002) | — |
 
@@ -55,4 +55,4 @@ Gotchas (hard-won, see `docs-internal/status/phase-*.md`):
 
 ## Current state / what's next
 
-MVP complete, DoD verified by browser QA (38/38): `plan/done/mvp-execution-summary.md`. Local preview: `publish preview` (URL-routing contract + CloudFront Function recipe: `docs-internal/hosting.md`). Pending: real-vault dogfood, real AWS deploy (+ manual CloudFront Function per `docs-internal/hosting.md`), follow-ups in plan §7 (incl. SSR canvas prerender, file-card "armed" affordance, link-card fallback).
+MVP complete, DoD verified by browser QA (38/38): `plan/done/mvp-execution-summary.md`. Local preview: `publish preview` (URL-routing contract: `docs/hosting.md`; S3 + CloudFront setup guide incl. the Function: `docs/publish-to-s3.md`). Pending: real-vault dogfood, real AWS deploy (+ manual CloudFront Function per `docs/publish-to-s3.md`), follow-ups in plan §7 (incl. SSR canvas prerender, file-card "armed" affordance, link-card fallback).

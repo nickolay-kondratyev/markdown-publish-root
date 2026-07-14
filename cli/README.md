@@ -96,12 +96,13 @@ the first failure.
 
 ### CloudFront prerequisites (manual for MVP, plan §5)
 
-- Distribution + OAC pointing at the bucket/prefix: set up manually.
+- Distribution + OAC pointing at the bucket/prefix: set up manually —
+  **step-by-step guide with the paste-ready CloudFront Function:
+  `docs/publish-to-s3.md`**.
 - The distribution MUST implement the site's URL-routing contract
-  (extensionless → `.html`, 404 wiring): **see `docs/hosting.md`** for the
-  contract and a paste-ready CloudFront Function. This is a hosting concern
-  by design — the build output and validation pass both treat `foo` and
-  `foo.html` as the same target.
+  (extensionless → `.html`, 404 wiring): `docs/hosting.md`. This is a hosting
+  concern by design — the build output and validation pass both treat `foo`
+  and `foo.html` as the same target.
 
 Exit codes (all commands): `0` success, `1` build/config/deploy/preview
 failure, `2` usage error.

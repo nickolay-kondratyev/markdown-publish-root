@@ -29,46 +29,9 @@ Reference implementation: `cli/src/preview/previewPathResolver.ts`.
 
 Plain **S3 static-website hosting cannot implement this contract** — it only
 offers index and error documents, no extensionless→`.html` rewrite. Use
-CloudFront with a **CloudFront Function** on **viewer request**.
-
-### CloudFront Function (paste-ready, runtime `cloudfront-js-2.0`)
-
-Attach to the distribution's default cache behavior, event type
-**Viewer request**:
-
-```js
-function handler(event) {
-  var request = event.request;
-  var uri = request.uri;
-  var lastSegment = uri.split('/').pop();
-  if (uri.endsWith('/')) {
-    // Directory index (rule 2). Origin-side rewrite; no redirect needed —
-    // Quartz's emitted links already resolve to trailing-slash folder URLs.
-    request.uri = uri + 'index.html';
-  } else if (!lastSegment.includes('.') || lastSegment.endsWith('.canvas')) {
-    // Extensionless page or canvas page (rule 3).
-    request.uri = uri + '.html';
-  }
-  return request;
-}
-```
-
-Notes:
-- The function cannot check whether files exist, so rule 3 rewrites
-  unconditionally; misses become origin 404s handled below. Hand-typed
-  `/dir` (no slash, no dot) rewrites to `/dir.html` and 404s — Quartz never
-  emits such links (`publish preview` additionally redirects them as a local
-  convenience).
-- Rule 0 needs no edge code: S3 object keys can't contain `..` path
-  escapes, and CloudFront normalizes dot-segments before the function runs.
-
-### 404 page (rule 4)
-
-Wire the site's `404.html` via **CloudFront custom error responses**: map
-error code **403** (S3 + OAC returns 403, not 404, for missing keys) — and
-404 for completeness — to response page `/404.html` with response code
-**404**. If you deploy under a `prefix` (deploy.json), the response page path
-must include it.
+CloudFront with a **CloudFront Function** on **viewer request**: step-by-step
+setup, including the paste-ready function (rules 2–3) and the 404 wiring
+(rule 4), lives in [publish-to-s3.md](publish-to-s3.md).
 
 ## Other hosts (one-liners, for completeness)
 
