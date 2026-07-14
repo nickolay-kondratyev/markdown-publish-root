@@ -17,7 +17,8 @@ import {
   CanvasNoteNode,
   CanvasTextNode,
 } from "./flowNodes.jsx"
-import { FlowNodeType } from "./canvasToFlow.js"
+import { CanvasEdge } from "./flowEdges.jsx"
+import { FlowEdgeType, FlowNodeType } from "./canvasToFlow.js"
 import { MinimapPreference } from "./minimapPreference.js"
 
 const NODE_TYPES = Object.freeze({
@@ -26,6 +27,10 @@ const NODE_TYPES = Object.freeze({
   [FlowNodeType.MEDIA]: CanvasMediaNode,
   [FlowNodeType.LINK]: CanvasLinkNode,
   [FlowNodeType.GROUP]: CanvasGroupNode,
+})
+
+const EDGE_TYPES = Object.freeze({
+  [FlowEdgeType.CANVAS]: CanvasEdge,
 })
 
 // Obsidian-like zoom range (parity with the previous viewer's 0.05x-20x clamp).
@@ -82,6 +87,7 @@ export function CanvasApp({ flow, theme }) {
         defaultNodes={flow.nodes}
         defaultEdges={flow.edges}
         nodeTypes={NODE_TYPES}
+        edgeTypes={EDGE_TYPES}
         colorMode={theme}
         fitView
         fitViewOptions={FIT_VIEW_OPTIONS}

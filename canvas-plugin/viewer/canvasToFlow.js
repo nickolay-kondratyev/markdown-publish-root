@@ -25,6 +25,13 @@ export const FlowNodeType = Object.freeze({
   GROUP: "canvasGroup",
 })
 
+/** Flow edge type names. Every canvas edge renders via the Obsidian-style
+ * bezier (viewer/flowEdges.jsx) — React Flow's built-in bezier collapses to a
+ * straight line when the edge travels parallel to its handle's side. */
+export const FlowEdgeType = Object.freeze({
+  CANVAS: "canvasEdge",
+})
+
 /**
  * The six JSON Canvas preset colors (Obsidian palette). Same values serve both
  * themes — Obsidian keeps canvas hues stable across light/dark.
@@ -160,6 +167,7 @@ function toFlowEdge(edge, nodeById) {
   const { fromSide, toSide } = edgeSides(edge, nodeById)
   return {
     id: edge.id,
+    type: FlowEdgeType.CANVAS,
     source: edge.fromNode,
     target: edge.toNode,
     sourceHandle: fromSide,

@@ -5,6 +5,7 @@
 		{"id":"file-back","type":"file","x":-300,"y":80,"width":600,"height":300,"file":"canvases/main.canvas","color":"1"}
 	],
 	"edges":[
-		{"id":"edge-back","fromNode":"text-second","fromSide":"bottom","toNode":"file-back","toSide":"top","toEnd":"arrow","label":"back to main"}
+		{"id":"edge-back","fromNode":"text-second","fromSide":"bottom","toNode":"file-back","toSide":"top","toEnd":"arrow","label":"back to main"},
+		{"id":"edge-same-side","fromNode":"text-second","fromSide":"left","toNode":"file-back","toSide":"left","color":"5","label":"same-side curve"}
 	]
 }
