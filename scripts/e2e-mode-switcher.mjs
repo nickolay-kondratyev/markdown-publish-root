@@ -10,7 +10,8 @@
  *     time, outside-click/Escape close, aria-checked tracks the selection);
  *   - Zen strips the chrome while markdown KEEPS the site-wide reading
  *     measure; Reader dims the sidebars (hover-revealed) with the cluster
- *     exempt; switching Zen -> Reader directly proves the STRICT radio (the
+ *     exempt; the WHOLE cluster (darkmode included) stays visible in every
+ *     mode; switching Zen -> Reader directly proves the STRICT radio (the
  *     old stacking behavior is gone);
  *   - reading mode survives SPA navigation and reloads (localStorage), and
  *     the switcher stays usable at tablet/mobile widths.
@@ -84,6 +85,15 @@ const measure = () =>
           .every((b) => magnifier.left <= b.getBoundingClientRect().left)
       })(),
       darkVisible: width("button.darkmode") > 0 && effectiveOpacity("button.darkmode") > 0,
+      // Uniform icon row: every visible cluster button shares one 32px flex
+      // line (the vendored darkmode's Flex slot once added 4px of baseline
+      // space, sinking the switcher triggers 2px — custom.scss dissolves it).
+      clusterRowAligned: (() => {
+        const boxes = [...document.querySelectorAll(".sidebar.left .flex-component button")]
+          .map((b) => b.getBoundingClientRect())
+          .filter((b) => b.width > 0)
+        return boxes.length > 0 && boxes.every((b) => b.top === boxes[0].top && b.height === boxes[0].height)
+      })(),
       centerWidth: width(".center"),
       rightSidebarWidth: width(".sidebar.right"),
       searchOpacity: effectiveOpacity(".sidebar.left .search"),
@@ -146,6 +156,7 @@ check("initial reading mode is plain", initial.readingMode === "plain")
 check("both switcher triggers render top-right", initial.readingTriggerVisible && initial.screenTriggerVisible && initial.triggersInRightHalf)
 check("magnifier visible and LEFTMOST in the cluster", initial.magnifierVisible && initial.magnifierLeftmost)
 check("darkmode icon visible in plain mode", initial.darkVisible)
+check("cluster icons share one row (equal top + height)", initial.clusterRowAligned)
 check("no popover open initially", initial.popoversOpen === 0)
 check("default rows pre-checked (plain + normal)", initial.checkedValues.join(",") === "plain,normal")
 check("right sidebar visible in plain mode", initial.rightSidebarWidth > 0)
@@ -206,7 +217,9 @@ check(
 )
 check("both triggers stay visible in zen (exit stays reachable)", zen.readingTriggerVisible && zen.screenTriggerVisible && zen.triggersInRightHalf)
 check("magnifier stays visible and leftmost in zen", zen.magnifierVisible && zen.magnifierLeftmost)
-check("darkmode icon hidden in zen (minimal chrome)", !zen.darkVisible)
+// Approved requirement (2026-07-13): the cluster stays COMPLETE in every mode
+// — the theme toggle must never require leaving zen/reader first.
+check("darkmode icon stays visible in zen (theme always switchable)", zen.darkVisible)
 check("divider + breadcrumbs hidden in zen", !zen.dividerHrVisible && !zen.breadcrumbsVisible)
 await screenshotFromTop("mode-switcher-zen.png")
 
@@ -245,7 +258,7 @@ check("selecting Reader FROM zen sets reading-mode=reader (strict radio)", reade
 check("zen layout fully restored on switch (right sidebar back)", reader.rightSidebarWidth === initial.rightSidebarWidth)
 check("reader dims the sidebar chrome (search)", await searchOpacityBecomes(0))
 check("cluster stays visible in reader (exempt from the dim)", reader.readingTriggerVisible && reader.magnifierVisible)
-check("darkmode icon hidden in reader (minimal chrome)", !reader.darkVisible)
+check("darkmode icon stays visible in reader (theme always switchable)", reader.darkVisible)
 await screenshotFromTop("mode-switcher-reader.png")
 
 // --- 4b. Hover-reveal for the dimmed chrome still works (stock behavior) ------
@@ -272,7 +285,7 @@ await selectMode("reading", "plain")
 const plainAgain = await measure()
 check("selecting Plain restores reading-mode=plain", plainAgain.readingMode === "plain")
 check("sidebar chrome opaque again", await searchOpacityBecomes(1))
-check("darkmode icon restored", plainAgain.darkVisible)
+check("darkmode icon still visible back in plain", plainAgain.darkVisible)
 check("divider + breadcrumbs restored", plainAgain.dividerHrVisible && plainAgain.breadcrumbsVisible)
 
 // --- 6. Persistence: SPA navigation, then full reload ---------------------------

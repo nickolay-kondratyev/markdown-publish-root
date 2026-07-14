@@ -49,6 +49,30 @@ describe("SiteChromeStyles — mode-toggle cluster pin", () => {
     assert.equal(rule.includes("display: none"), true)
   })
 
+  test("GIVEN the vendored darkmode's Flex slot WHEN inspected THEN it is dissolved (display: contents) so its button shares the cluster's 32px flex line", () => {
+    // WHY: the slot div is a block box whose inline-block button leaves ~4px
+    // of baseline descender space (36px-tall slot) — align-self: center then
+    // shifted every 32px switcher item 2px DOWN relative to darkmode/search.
+    const rule =
+      SiteChromeStyles.scss().match(
+        /\.flex-component > div:has\(> \.darkmode\)\s*\{([^}]*)\}/,
+      )?.[1] ?? ""
+    assert.equal(rule.includes("display: contents"), true)
+  })
+
+  test("GIVEN darkmode's edge-to-edge sun/moon glyphs WHEN inspected THEN they are shrunk to the Phosphor optical content size (16.25px) and re-centered", () => {
+    // Phosphor glyphs draw ~208/256 of their viewBox (16.25px of a 20px box);
+    // darkmode's fill theirs fully and looked one size larger in the row.
+    const rule = SiteChromeStyles.scss().match(/\.darkmode svg\s*\{([^}]*)\}/)?.[1] ?? ""
+    assert.equal(
+      rule.includes("width: 16.25px") &&
+        rule.includes("height: 16.25px") &&
+        rule.includes("top: calc(50% - 8.125px)") &&
+        rule.includes("left: calc(50% - 8.125px)"),
+      true,
+    )
+  })
+
   test("GIVEN the mode-switcher owns all reading-mode CSS WHEN inspected THEN no legacy reader-mode/zen-mode selectors remain here", () => {
     assert.equal(
       SiteChromeStyles.scss().includes("reader-mode=") ||

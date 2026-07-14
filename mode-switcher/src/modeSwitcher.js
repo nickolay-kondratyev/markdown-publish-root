@@ -15,6 +15,9 @@
  * IS the "something is on" cue, same language as darkmode's glyph swap),
  * opening a labeled vertical popover with radio semantics. No caret: the
  * cluster reads as a uniform icon row; the click itself reveals the choices.
+ * The cluster stays COMPLETE in every mode — including the vendored darkmode
+ * toggle — so users never have to guess which icons are available (reader/zen
+ * once hid darkmode; approved requirement 2026-07-13 keeps it visible).
  *
  * State contract (attributes on <html> — never swapped by the SPA router, so
  * both survive every navigation):
@@ -371,17 +374,6 @@ const READER_MODE_CSS = `
 }
 `
 
-// Reading modes hide the darkmode wrapper: minimal chrome while reading. The
-// magnifier + both switcher groups stay — they are the exit affordances.
-// Hiding by :has() content stays generic — new cluster plugins hide
-// automatically. WHY wrappers and not content: emptied wrappers would keep
-// their flex-gap slots between the surviving icons.
-const CLUSTER_MINIMIZE_CSS = `
-:root:is([reading-mode="reader"], [reading-mode="zen"]) #quartz-body .sidebar.left .flex-component > div:not(:has(.mode-search)):not(:has(.mode-switcher)) {
-  display: none;
-}
-`
-
 // Zen mode: the width reclaim, ported verbatim from the retired zen-mode
 // plugin (selector attribute renamed zen-mode="on" -> reading-mode="zen").
 // The single grid override (no media query) beats base's desktop/tablet/
@@ -493,7 +485,6 @@ const MODE_SWITCHER_CSS = [
   STRUCTURAL_CSS,
   ...GROUPS.map((groupSpec) => `${triggerGlyphRules(groupSpec)}\n${selectedOptionRules(groupSpec)}`),
   READER_MODE_CSS,
-  CLUSTER_MINIMIZE_CSS,
   CANVAS_FULL_SCREEN_CSS,
   ZEN_MODE_CSS,
 ].join("\n")

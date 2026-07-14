@@ -71,6 +71,29 @@ $readingMeasure: 70ch;
   z-index: 2;
 }
 
+/* Cluster icon harmony — the vendored darkmode plugin cannot be edited
+   (gitignored pinned checkout), so the engine reconciles it with the
+   mode-switcher's Phosphor icons here.
+   1) Row alignment: darkmode ships inside its own Flex slot div; that block
+      box's inline-block button leaves ~4px of baseline descender space (36px
+      slot vs 32px buttons), and align-self: center then sank every dissolved
+      32px mode-switcher item 2px below darkmode/search. Dissolve the slot
+      (same trick the mode-switcher applies to its own wrapper) so the button
+      itself is the flex item and the whole row shares one 32px line. */
+.sidebar.left > .flex-component > div:has(> .darkmode) {
+  display: contents;
+}
+/* 2) Optical size: Phosphor glyphs draw ~208/256 of their viewBox — 16.25px
+      of their 20px boxes — while darkmode's sun/moon fill theirs edge-to-edge
+      and read one size larger. Shrink the svg to the Phosphor content size
+      (re-centered), keeping the 20px-wide button hit area untouched. */
+.darkmode svg {
+  width: 16.25px;
+  height: 16.25px;
+  top: calc(50% - 8.125px);
+  left: calc(50% - 8.125px);
+}
+
 @media all and ($mobile) {
   /* Align with the mobile header row (base.scss: padding-top 2rem, 2rem-tall
      search button) and with #quartz-body's 1rem gutter. */
@@ -78,9 +101,8 @@ $readingMeasure: 70ch;
     right: 1rem;
   }
   /* The header row's spacer pushes search to the right edge — reserve the
-     cluster's footprint (magnifier + darkmode + two switcher triggers with
-     carets + gaps + gutter; the mode-switcher's magnifier is always visible)
-     so they never overlap. */
+     cluster's footprint (magnifier + darkmode + two switcher triggers + gaps
+     + gutter; every cluster icon is always visible) so they never overlap. */
   #quartz-body .sidebar.left {
     padding-right: 8.75rem;
   }

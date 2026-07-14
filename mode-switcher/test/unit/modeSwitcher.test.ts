@@ -180,12 +180,16 @@ describe("ModeSwitcher component — CSS (cluster + popover)", () => {
     )
   })
 
-  test("GIVEN reading modes WHEN active THEN cluster wrappers WITHOUT switcher content hide (darkmode) while both switchers survive", () => {
+  test("GIVEN any reading mode WHEN active THEN NO cluster icon is hidden — darkmode (theme toggle) stays available in reader/zen", () => {
+    // Approved requirement (2026-07-13): the cluster is ALWAYS complete, so
+    // users never guess when the theme can be switched. Any rule that both
+    // targets a cluster wrapper div and sets display: none would break that.
+    const clusterWrapperRules = [
+      ...component.css.matchAll(/\.flex-component > div[^{]*\{([^}]*)\}/g),
+    ]
     assert.equal(
-      component.css.includes(
-        ".flex-component > div:not(:has(.mode-search)):not(:has(.mode-switcher))",
-      ),
-      true,
+      clusterWrapperRules.some(([, body]) => body.includes("display: none")),
+      false,
     )
   })
 })

@@ -10,8 +10,14 @@
     Canvas full screen `arrows-out` (4 arrows = one step beyond).
 - Selected-state language: a switcher TRIGGER shows the CURRENT mode's glyph —
   **outline while the group's default (plain/normal) is active, FILL for any
-  non-default mode** — plus a `caret-down`. The selected popover row shows the
+  non-default mode**. The selected popover row shows the
   fill glyph + `var(--highlight)` background + `aria-checked`.
+- The cluster stays **COMPLETE in every mode** (approved 2026-07-13): darkmode
+  is never hidden in reader/zen — users must never guess when theming works.
+- Vendored darkmode is reconciled by engine `siteChromeStyles.ts` (custom.scss,
+  unlayered): its Flex slot is dissolved (`display: contents`) so all buttons
+  share one 32px row, and its edge-to-edge sun/moon svgs are shrunk to the
+  Phosphor optical content size (20px x 208/256 = 16.25px, re-centered).
 - Per-mode trigger/row CSS is GENERATED from the mode tables in
   modeSwitcher.js — add a mode by adding a table entry, not CSS.
 - Cluster tooltips are pure CSS off `aria-label` (engine siteChromeStyles.ts);
