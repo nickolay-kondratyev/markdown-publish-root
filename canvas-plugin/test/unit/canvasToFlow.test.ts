@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { describe, test } from "node:test"
 import {
+  FlowEdgeType,
   FlowNodeType,
   PRESET_COLORS,
   canvasToFlow,
@@ -218,6 +219,10 @@ describe("canvasToFlow edges", () => {
     const { edges } = canvasToFlow(payload({ nodes, edges: [{ id: "e1", fromNode: "from", toNode: "to", ...edge }] }))
     return edges[0]
   }
+
+  test("GIVEN any edge WHEN converting THEN it carries the Obsidian-bezier edge type (viewer/flowEdges.jsx)", () => {
+    assert.equal(convertEdge({}).type, FlowEdgeType.CANVAS)
+  })
 
   test("GIVEN explicit fromSide/toSide WHEN converting THEN they become source/target handles", () => {
     const edge = convertEdge({ fromSide: "bottom", toSide: "top" })
