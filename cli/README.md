@@ -10,19 +10,25 @@ plan/main.md §3).
 ```bash
 source ~/.nvm/nvm.sh && nvm use 26   # Node >= 22 required; >= 23.6 recommended, tested on v26
 
+node cli/bin/publish.mjs build <vault-dir>                                  # in-vault config
 node cli/bin/publish.mjs build <vault-dir> --config site.json --out ./public
 ```
 
 | Flag | Meaning |
 |------|---------|
-| `--config <file>` | Site settings JSON (schema: engine/README.md) |
-| `--out <dir>` | Output directory for the static site |
+| `--config <file>` | Site settings JSON (format: docs/config-format.md). Default: `.external_publish_config.json` at the vault root |
+| `--out <dir>` | Output directory for the static site. Default: the config's `output_dir`, resolved relative to the config file |
 | `--keep-staging` | Keep the temporary staging dir (debugging) |
 | `--strict-links` | Fail the build on broken internal links (default: print a report) |
 
-Canvases are published when covered by `publishFilter.includeFolders` in the
-site config (canvas JSON has no frontmatter — see engine/README.md filter
-semantics). The success line reports pages, canvases and assets separately.
+The config file is the engine's site.json schema PLUS the CLI-level
+`output_dir` key (`src/externalPublishConfig.ts` strips it before the engine
+sees the config — outDir is a build-invocation concern, like `--out`).
+
+Canvases are published when covered by `publishFilter.includeFolders` or
+`publishFilter.publishAll` in the site config (canvas JSON has no
+frontmatter — see engine/README.md filter semantics). The success line
+reports pages, canvases and assets separately.
 
 The build ends with the engine's validation pass: a private-content **leak
 check always fails the build** on findings; the **broken-internal-link report**
@@ -106,7 +112,8 @@ sources.
 
 ## Stable vs evolving
 
-- **Stable:** `build <vault> --config <site.json> --out <dir>`,
+- **Stable:** `build <vault> [--config <site.json>] [--out <dir>]` (defaults:
+  in-vault `.external_publish_config.json` + its `output_dir`),
   `preview <site-dir> [--port <n>]` and
   `deploy <site-dir> --deploy-config <deploy.json>` shapes; deploy.json grows
   compatibly; the URL-routing contract (docs/hosting.md).

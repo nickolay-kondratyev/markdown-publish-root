@@ -1,0 +1,6 @@
+{
+  "title": "Test Vault",
+  "baseUrl": "test-vault.example.com",
+  "publishFilter": { "publishAll": true },
+  "output_dir": "../.build/external-publish-out"
+}
