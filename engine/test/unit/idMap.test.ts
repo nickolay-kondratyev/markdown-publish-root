@@ -5,6 +5,7 @@ import { DocIdValidationError, IdMap } from "../../src/idMap.ts"
 const ID_A = "docid_aaaaaaaaaaaaaaaaaaaaa_e"
 const ID_B = "docid_bbbbbbbbbbbbbbbbbbbbb_e"
 const ID_C = "docid_ccccccccccccccccccccc_e"
+const ID_D = "docid_ddddddddddddddddddddd_e"
 
 describe("IdMap", () => {
   describe("GIVEN publishable docs with valid ids", () => {
@@ -12,6 +13,7 @@ describe("IdMap", () => {
       { vaultPath: "notes/foo.md", idValue: ID_A },
       { vaultPath: "canvases/x.canvas", idValue: ID_B },
       { vaultPath: "index.md", idValue: ID_C },
+      { vaultPath: "index.canvas", idValue: ID_D },
     ])
 
     test("THEN a note stages under n/<docid>.md", () => {
@@ -24,6 +26,15 @@ describe("IdMap", () => {
 
     test("THEN the root index.md stays at index.md (homepage exception)", () => {
       assert.equal(map.stagedPathOf("index.md"), "index.md")
+    })
+
+    test("THEN the root index.canvas stays at index.canvas (canvas-homepage exception)", () => {
+      assert.equal(map.stagedPathOf("index.canvas"), "index.canvas")
+    })
+
+    test("THEN a NON-root index.canvas still stages under n/", () => {
+      const nested = IdMap.build([{ vaultPath: "sub/index.canvas", idValue: ID_D }])
+      assert.equal(nested.stagedPathOf("sub/index.canvas"), `n/${ID_D}.canvas`)
     })
 
     test("THEN urlSegmentOf returns the harvested id verbatim", () => {

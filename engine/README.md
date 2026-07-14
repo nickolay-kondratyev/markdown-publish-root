@@ -38,7 +38,10 @@ implementation detail.
      `DocIdValidationError` (full offending list) BEFORE anything is written —
      fix with `make vault-add-ids VAULT=<vault>`.
    - Docs are staged *named by id*: `n/<docid>.md` / `n/<docid>.canvas`
-     (root `index.md` stays at `index.md` so the site keeps `/`). Quartz stays
+     (root `index.md` / `index.canvas` stay in place so the site keeps `/`;
+     with no root `index.md`, a root `index.canvas` becomes the homepage —
+     its emitted page is copied to `index.html` after the Quartz build,
+     ref.ap.rGs0fu3jLTTAsMrPrRmb8.E). Quartz stays
      id-unaware; its slugs — and therefore all URLs, graph/backlinks/search —
      follow from the staged names automatically.
    - `title: <original basename>` is injected when absent (md frontmatter /

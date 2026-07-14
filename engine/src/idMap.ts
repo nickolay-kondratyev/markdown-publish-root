@@ -27,7 +27,14 @@ export class DocIdValidationError extends Error {
 export const ID_NAMESPACE_DIR = "n"
 
 /** The vault's root index.md keeps its path so the site keeps a homepage at "/". */
-const ROOT_INDEX_PATH = "index.md"
+export const ROOT_INDEX_MD_PATH = "index.md"
+/**
+ * A vault-root index.canvas gets the same exception: staged in place, its page
+ * is emitted at /index.canvas.html with root-depth relative URLs, which lets
+ * HomepageAlias copy it to /index.html (ref.ap.rGs0fu3jLTTAsMrPrRmb8.E).
+ */
+export const ROOT_INDEX_CANVAS_PATH = "index.canvas"
+const ROOT_INDEX_PATHS: ReadonlySet<string> = new Set([ROOT_INDEX_MD_PATH, ROOT_INDEX_CANVAS_PATH])
 
 /**
  * vaultPath -> URL-segment mapping for every publishable doc, plus the derived
@@ -88,7 +95,7 @@ export class IdMap {
    * purpose: Quartz + canvas plugin slug logic stays untouched (plan §6.1).
    */
   stagedPathOf(vaultPath: string): string {
-    if (vaultPath === ROOT_INDEX_PATH) return ROOT_INDEX_PATH
+    if (ROOT_INDEX_PATHS.has(vaultPath)) return vaultPath
     const urlSegment = this.urlSegmentByVaultPath.get(vaultPath)
     if (urlSegment === undefined) {
       throw new Error(`stagedPathOf called for a non-doc path: ${vaultPath}`)

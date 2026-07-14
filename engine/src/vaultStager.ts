@@ -60,7 +60,7 @@ export class ReservedFrontmatterKeyError extends Error {
  *
  * Since id-based publishing (plan/id-based-publishing.md), staging is ALSO the
  * id transformation surface: docs are staged under `n/<docid>.*` (root
- * index.md excepted), titles are injected, and wikilinks / canvas file nodes
+ * index.md / index.canvas excepted), titles are injected, and wikilinks / canvas file nodes
  * are rewritten to docid targets. Ids are validated hard BEFORE anything is
  * written — missing/non-string/empty ids and URL-segment collisions throw
  * DocIdValidationError (foreign ids are accepted via UrlSegment derivation).

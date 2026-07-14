@@ -3,6 +3,7 @@ import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { CanvasLinkEnricher } from "./canvasLinkEnrichment.ts"
+import { HomepageAlias } from "./homepageAlias.ts"
 import { LinkMetadataResolver, type FetchLike } from "./linkMetadata.ts"
 import { PublishFilter } from "./publishFilter.ts"
 import { QuartzConfigGenerator } from "./quartzConfigGenerator.ts"
@@ -111,6 +112,11 @@ export class SiteBuilder {
       this.runner.writeCustomStyles(SiteChromeStyles.scss())
       const buildOutput = this.runner.build(path.resolve(stagingDir), path.resolve(options.outDir))
       assertQuartzSawStagedContent(buildOutput.stdout, staging, stagingDir)
+
+      // Canvas homepage (ref.ap.rGs0fu3jLTTAsMrPrRmb8.E): a root index.canvas
+      // without a root index.md serves at "/" — BEFORE validation, so the
+      // aliased index.html is leak-scanned like every other output file.
+      HomepageAlias.apply(staging, path.resolve(options.outDir))
 
       // Final stage: validation pass (plan §6 Phase 3). Leaks ALWAYS fail the
       // build (§4.4 backstop); broken links fail only under strictLinks.
