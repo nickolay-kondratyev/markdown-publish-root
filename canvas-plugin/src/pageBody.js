@@ -105,10 +105,57 @@ const CANVAS_PAGE_CSS = `
 .canvas-page .canvas-text-preview {
   display: none;
 }
+/* The canvas IS the content in EVERY reading mode, so the mount fills the
+   viewport's remaining height below the page header. A flex chain — NOT a
+   "calc(100dvh - Xrem)" offset — so the mount ends at the viewport bottom
+   whatever height the breadcrumbs/title header happens to take.
+   #quartz-body carried for the cascade (base nests everything under that ID);
+   dvh so mobile browser-UI collapse doesn't leave a gap. The empty
+   .page-footer sibling keeps its 1rem margin as bottom breathing room. */
+#quartz-body .center:has(.canvas-page) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+/* Flex items are independent formatting contexts: the title's own top margin
+   no longer collapses into .page-header's, which would sit the heading
+   ~2.25rem lower than on note pages. Zero it — .page-header's margin alone
+   positions the heading, identically to notes. (Visible only where the H1
+   survives: zen, and the breadcrumb-less homepage canvas — see below.) */
+#quartz-body .center:has(.canvas-page) .article-title {
+  margin-top: 0;
+}
+/* Base's 5px row-gap x the two empty trailing grid rows = 10px of dead scroll
+   below the 100dvh column. Zen already zeroes it grid-wide (mode-switcher
+   plugin); same fix here for the other modes. */
+.page > #quartz-body:has(.canvas-page) {
+  row-gap: 0;
+}
+/* Breadcrumbs already name the canvas — the H1 and the article/footer divider
+   only eat vertical canvas room, so drop both. Scoped via
+   :has(.breadcrumb-container) so a homepage canvas (breadcrumbs render with
+   condition: not-index) keeps its title; zen re-shows the H1 because zen
+   hides the breadcrumbs instead (mode-switcher plugin). */
+.center:has(.canvas-page):has(.breadcrumb-container) .article-title {
+  display: none;
+}
+:root[reading-mode="zen"] .center:has(.canvas-page) .article-title {
+  display: block;
+}
+.center:has(.canvas-page) > hr {
+  display: none;
+}
+.canvas-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
 .canvas-page-mount {
   width: 100%;
-  height: min(75vh, 56rem);
-  /* Breathing room below the page heading — content-meta used to supply this
+  flex: 1;
+  min-height: 0;
+  /* Breathing room below the page header — content-meta used to supply this
      gap; it is excluded on canvas pages (quartzConfigGenerator canvas layout). */
   margin-top: 1rem;
   border: 1px solid var(--lightgray);
@@ -116,6 +163,11 @@ const CANVAS_PAGE_CSS = `
   overflow: hidden;
   position: relative;
   background-color: var(--light);
+}
+/* Zen positions its header via .page-header's margin alone (mode-switcher
+   plugin) — drop the embed's breathing-room margin for maximum canvas. */
+:root[reading-mode="zen"] .canvas-page .canvas-page-mount {
+  margin-top: 0;
 }
 .canvas-page-loading {
   text-align: center;
@@ -142,41 +194,6 @@ const CANVAS_PAGE_CSS = `
   z-index: 1;
   border: none;
   border-radius: 0;
-}
-/* Zen mode (root attribute owned by the mode-switcher plugin, same
-   cross-plugin contract as its reader dim): the canvas IS the content, so
-   fill the viewport's remaining height instead of the page-embed cap above.
-   A flex chain — NOT a "calc(100dvh - Xrem)" offset — so the mount ends at the
-   viewport bottom whatever height the title/meta header happens to take.
-   #quartz-body carried for the cascade (base nests everything under that ID);
-   dvh so mobile browser-UI collapse doesn't leave a gap. The empty
-   .page-footer sibling keeps its 1rem margin as bottom breathing room. */
-:root[reading-mode="zen"] #quartz-body .center:has(.canvas-page) {
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
-}
-/* Flex items are independent formatting contexts: the title's own top margin
-   no longer collapses into .page-header's, which would sit the heading
-   ~2.25rem lower than on zen note pages. Zero it — .page-header's margin
-   (mode-switcher plugin) alone positions the heading, identically to notes. */
-:root[reading-mode="zen"] #quartz-body .center:has(.canvas-page) .article-title {
-  margin-top: 0;
-}
-:root[reading-mode="zen"] #quartz-body .center .canvas-page {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-:root[reading-mode="zen"] #quartz-body .center .canvas-page .canvas-page-mount {
-  flex: 1;
-  height: auto;
-  min-height: 0;
-  /* Flex chain owns the vertical layout here; the heading gap is set by
-     .page-header's margin, so drop the embed's top margin to avoid overflowing
-     the 100dvh column. */
-  margin-top: 0;
 }
 /* Rewritten cards: canvas->canvas, PDF, unsupported files, private placeholders. */
 .canvas-card {
