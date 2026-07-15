@@ -11,15 +11,17 @@
 		{"id":"file-image","type":"file","file":"attachments/diagram.png","x":-520,"y":480,"width":400,"height":250},
 		{"id":"file-private","type":"file","file":"notes/private-secret.md","x":-40,"y":480,"width":400,"height":300,"color":"2"},
 		{"id":"file-canvas-card","type":"file","file":"canvases/second.canvas","x":440,"y":480,"width":400,"height":300,"color":"5"},
-		{"id":"file-note-usage","type":"file","file":"notes/getting-started.md","subpath":"#Usage","x":880,"y":480,"width":400,"height":300},
 		{"id":"link-card","type":"link","url":"https://jsoncanvas.org/","x":600,"y":40,"width":400,"height":360},
-		{"id":"3c0efaf16624d732","x":740,"y":-480,"width":400,"height":329,"type":"file","file":"canvases/impl/Canvas With Url.canvas"}
+		{"id":"3c0efaf16624d732","type":"file","file":"canvases/impl/Canvas With Url.canvas","x":740,"y":-480,"width":400,"height":329},
+		{"id":"file-note-usage","type":"file","file":"notes/getting-started.md","subpath":"#Usage","x":880,"y":480,"width":400,"height":300}
 	],
 	"edges":[
 		{"id":"edge-welcome-note","fromNode":"text-welcome","fromSide":"bottom","toNode":"file-note-full","toSide":"top","color":"3","label":"embeds note"},
 		{"id":"edge-subpath","fromNode":"text-colors","fromSide":"bottom","toNode":"file-note-subpath","toSide":"top","label":"only #Installation"},
 		{"id":"edge-to-canvas","fromNode":"file-note-subpath","fromSide":"bottom","toNode":"file-canvas-card","toSide":"top","color":"5","label":"go to second canvas"},
 		{"id":"edge-private","fromNode":"file-image","fromSide":"right","toNode":"file-private","toSide":"left","label":"private placeholder"},
-		{"id":"edge-both-ends","fromNode":"text-welcome","fromSide":"right","toNode":"text-colors","toSide":"left","fromEnd":"arrow","toEnd":"none","label":"reversed arrow"}
+		{"id":"edge-both-ends","fromNode":"text-welcome","fromSide":"right","toNode":"text-colors","toSide":"left","fromEnd":"arrow","toEnd":"none","label":"reversed arrow"},
+		{"id":"a894b0921c2dd827","fromNode":"text-welcome","fromSide":"left","toNode":"file-note-full","toSide":"left","label":"side arrow"},
+		{"id":"ac384b7596ac16c2","fromNode":"text-colors","fromSide":"top","toNode":"file-note-subpath","toSide":"right"}
 	]
 }
