@@ -20,6 +20,7 @@ import path from "node:path"
 import {
   buildTestVaultSite,
   docIdOf,
+  ID_NAMESPACE_DIR,
   filterOwnErrors,
   launchBrowserPage,
   makeChecker,
@@ -73,7 +74,7 @@ const selectScreenMode = async (value) => {
 
 const MAIN_CANVAS_ID = docIdOf("canvases/main.canvas")
 // deep-dive.md links to [[main.canvas]] — the note -> canvas SPA path.
-const NOTE_URL = `${base}/n/${docIdOf("notes/deep-dive.md")}`
+const NOTE_URL = `${base}/${ID_NAMESPACE_DIR}/${docIdOf("notes/deep-dive.md")}`
 await page.goto(NOTE_URL)
 await page.waitForSelector(".mode-switcher")
 fs.mkdirSync(path.join(repoRoot, ".out"), { recursive: true })

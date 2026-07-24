@@ -3,6 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { after, before, describe, test } from "node:test"
+import { ID_NAMESPACE_DIR } from "../../src/idMap.ts"
 import { SiteBuilder } from "../../src/siteBuilder.ts"
 import { SiteConfigParser } from "../../src/siteConfig.ts"
 
@@ -19,12 +20,12 @@ const VAULT_DIR = path.join(REPO_ROOT, "test-vault")
 const OUT_DIR = path.join(REPO_ROOT, ".build", "integration-out")
 
 // Doc pages are published under stable-id URLs (plan/id-based-publishing.md):
-// page slug = n/<docid>, read from the fixture's frontmatter.
-const GETTING_STARTED_SLUG = `n/${docIdOf("notes/getting-started.md")}`
-const ARCHITECTURE_SLUG = `n/${docIdOf("notes/architecture.md")}`
-const PRIVATE_NOTE_SLUG = `n/${docIdOf("notes/private-secret.md")}`
-const PRIVATE_TREE_SLUG = `n/${docIdOf("notes/Private-tree-e2e/nested/leaky-tree-note.md")}`
-const PRIVATE_FILE_SLUG = `n/${docIdOf("notes/e2e-PRIVATE-file.md")}`
+// page slug = notes/<docid>, read from the fixture's frontmatter.
+const GETTING_STARTED_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("notes/getting-started.md")}`
+const ARCHITECTURE_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("notes/architecture.md")}`
+const PRIVATE_NOTE_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("notes/private-secret.md")}`
+const PRIVATE_TREE_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("notes/Private-tree-e2e/nested/leaky-tree-note.md")}`
+const PRIVATE_FILE_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("notes/e2e-PRIVATE-file.md")}`
 
 describe("SiteBuilder integration — builds test-vault markdown-only", () => {
   // GIVEN the fixture vault WHEN building once (Quartz run is expensive)
@@ -55,7 +56,7 @@ describe("SiteBuilder integration — builds test-vault markdown-only", () => {
       .filter((p) => p.endsWith(".html"))
       .filter((p) => !p.startsWith("static") && !p.startsWith("tags") && p !== "index.html" && p !== "404.html")
     const offGrammar = docPages.filter(
-      (p) => !/^n\/docid_[0-9a-z]{21}_e(\.canvas)?\.html$/.test(p),
+      (p) => !/^notes\/docid_[0-9a-z]{21}_e(\.canvas)?\.html$/.test(p),
     )
     assert.deepEqual(offGrammar, [])
   })

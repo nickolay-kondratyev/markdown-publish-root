@@ -3,7 +3,7 @@
 End-to-end guide: `publish build` output → live site on S3 behind CloudFront.
 
 **Why CloudFront is mandatory:** the build emits `foo.html` on disk but links
-pages WITHOUT the extension (`/notes/foo`, `/n/X.canvas`). Plain S3
+pages WITHOUT the extension (`/notes/foo`, `/notes/X.canvas`). Plain S3
 static-website hosting cannot map extensionless URLs to `.html` objects, so
 every internal link 404s. A CloudFront Function (step 3) does that mapping.
 The full URL-routing contract lives in [hosting.md](hosting.md).

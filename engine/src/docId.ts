@@ -4,7 +4,7 @@ import crypto from "node:crypto"
  * Stable document id grammar (plan/id-based-publishing.md §2).
  *
  * A docid is the published identity of a doc page: every note/canvas is served
- * at `/n/<docid>` regardless of its vault path, so renames never change URLs.
+ * at `/notes/<docid>` regardless of its vault path, so renames never change URLs.
  * Shared by the id-addition script (scripts/add-doc-ids.mjs) and the engine's
  * staging validation — the ONE definition of what a valid id is.
  *

@@ -23,8 +23,8 @@ export class DocIdValidationError extends Error {
   }
 }
 
-/** Staged docs live under this directory, making every page URL /n/<url-segment>. */
-export const ID_NAMESPACE_DIR = "n"
+/** Staged docs live under this directory, making every page URL /notes/<url-segment>. */
+export const ID_NAMESPACE_DIR = "notes"
 
 /** The vault's root index.md keeps its path so the site keeps a homepage at "/". */
 export const ROOT_INDEX_MD_PATH = "index.md"

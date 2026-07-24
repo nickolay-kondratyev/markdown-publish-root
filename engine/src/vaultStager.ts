@@ -59,7 +59,7 @@ export class ReservedFrontmatterKeyError extends Error {
  * output (plan/main.md §4.4; validation-pass backstop lands in Phase 3).
  *
  * Since id-based publishing (plan/id-based-publishing.md), staging is ALSO the
- * id transformation surface: docs are staged under `n/<docid>.*` (root
+ * id transformation surface: docs are staged under `notes/<docid>.*` (root
  * index.md / index.canvas excepted), titles are injected, and wikilinks / canvas file nodes
  * are rewritten to docid targets. Ids are validated hard BEFORE anything is
  * written — missing/non-string/empty ids and URL-segment collisions throw

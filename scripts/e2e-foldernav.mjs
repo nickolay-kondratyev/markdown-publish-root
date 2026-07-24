@@ -3,7 +3,7 @@
  * E2e: folder-shaped navigation over stable-id URLs
  * (plan/folder-nav-over-id-urls.md Phase 4). Builds test-vault through the
  * real engine, serves with the REAL preview server, drives headless Chromium:
- *   - desktop: expand collapsed folders, click a note -> lands on /n/<docid>
+ *   - desktop: expand collapsed folders, click a note -> lands on /notes/<docid>
  *   - breadcrumbs visible + correct on note AND canvas pages
  *   - folder collapse state survives SPA navigation (localStorage fileTree)
  *   - mobile (390x844): hamburger toggle opens/closes the tree; active doc
@@ -15,7 +15,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { SiteBuilder, SiteConfigParser } from "../engine/src/index.ts"
+import { ID_NAMESPACE_DIR, SiteBuilder, SiteConfigParser } from "../engine/src/index.ts"
 import { PreviewServer } from "../cli/src/preview/previewServer.ts"
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
@@ -36,9 +36,9 @@ const docIdOf = (vaultRelPath) => {
   if (vaultRelPath.endsWith(".canvas")) return JSON.parse(content).metadata.frontmatter.id
   return content.match(/^id: (docid_[0-9a-z]{21}_e)$/m)[1]
 }
-const DEEP_DIVE_SLUG = `n/${docIdOf("notes/guides/deep-dive.md")}`
-const GETTING_STARTED_SLUG = `n/${docIdOf("notes/getting-started.md")}`
-const MAIN_CANVAS_SLUG = `n/${docIdOf("canvases/main.canvas")}.canvas`
+const DEEP_DIVE_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("notes/guides/deep-dive.md")}`
+const GETTING_STARTED_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("notes/getting-started.md")}`
+const MAIN_CANVAS_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("canvases/main.canvas")}.canvas`
 
 // --- 1. Build + serve -------------------------------------------------------
 console.log("building test-vault (folder-nav e2e)...")
@@ -81,7 +81,7 @@ try {
   await page.screenshot({ path: path.join(shotDir, "01-home-expanded.png") })
   await page.locator(`.explorer a[data-slug="${DEEP_DIVE_SLUG}"]`).click()
   await page.waitForURL(`**/${DEEP_DIVE_SLUG}`)
-  check("clicking the nested note lands on /n/<docid>", page.url() === `${base}/${DEEP_DIVE_SLUG}`, page.url())
+  check("clicking the nested note lands on /notes/<docid>", page.url() === `${base}/${DEEP_DIVE_SLUG}`, page.url())
 
   // --- 3. Breadcrumbs on the note page --------------------------------------
   const noteCrumbs = (await page.locator(".breadcrumb-container").innerText()).replace(/\n/g, " ")

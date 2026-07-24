@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { describe, test } from "node:test"
 import { CanvasStagingTransformer } from "../../src/canvasStagingTransform.ts"
-import { IdMap } from "../../src/idMap.ts"
+import { ID_NAMESPACE_DIR, IdMap } from "../../src/idMap.ts"
 import { MarkdownStagingTransformer } from "../../src/markdownStagingTransform.ts"
 
 const ID_A = "docid_aaaaaaaaaaaaaaaaaaaaa_e"
@@ -93,7 +93,7 @@ describe("CanvasStagingTransformer", () => {
   test("THEN doc file nodes point at their staged id paths (subpath preserved)", () => {
     assert.deepEqual(
       { file: transformed.nodes[0].file, subpath: transformed.nodes[0].subpath },
-      { file: `n/${ID_A}.md`, subpath: "#Installation" },
+      { file: `${ID_NAMESPACE_DIR}/${ID_A}.md`, subpath: "#Installation" },
     )
   })
 

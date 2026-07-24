@@ -5,7 +5,7 @@ import path from "node:path"
 import { after, before, describe, test } from "node:test"
 import VintrinCanvasPage from "../../index.js"
 
-const CANVAS_FILE = "n/docid_ccccccccccccccccccccc_e.canvas"
+const CANVAS_FILE = "notes/docid_ccccccccccccccccccccc_e.canvas"
 
 describe("VintrinCanvasPage.generate — virtual page frontmatter", () => {
   let stagingDir: string

@@ -7,10 +7,13 @@
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { SiteBuilder, SiteConfigParser } from "../../engine/src/index.ts"
+import { ID_NAMESPACE_DIR, SiteBuilder, SiteConfigParser } from "../../engine/src/index.ts"
 import { PreviewServer } from "../../cli/src/preview/previewServer.ts"
 
 export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..")
+
+/** Published namespace dir every doc page lives under (engine's ID_NAMESPACE_DIR). */
+export { ID_NAMESPACE_DIR }
 
 /**
  * Doc pages live at stable-id URLs (plan/id-based-publishing.md); read the

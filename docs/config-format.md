@@ -103,7 +103,7 @@ the vault would be re-ingested as publishable assets on the next build.
 ## Prerequisite: stable doc ids
 
 Every publishable `.md`/`.canvas` must carry a stable docid (URLs are
-`/n/<docid>` — they survive renames). Stamp them once (idempotent):
+`/notes/<docid>` — they survive renames). Stamp them once (idempotent):
 
 ```bash
 make vault-add-ids VAULT=/path/to/vault

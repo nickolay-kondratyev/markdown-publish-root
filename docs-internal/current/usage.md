@@ -9,8 +9,8 @@ Publish an Obsidian vault (markdown + `.canvas`) as a static website.
 
 ## Stamp stable ids (once per vault, then idempotent)
 
-Every published doc page is served at a stable-id URL (`/n/<docid>`,
-`/n/<docid>.canvas`) read from md frontmatter `id:` / canvas
+Every published doc page is served at a stable-id URL (`/notes/<docid>`,
+`/notes/<docid>.canvas`) read from md frontmatter `id:` / canvas
 `metadata.frontmatter.id` — renames never change published URLs. A publishable
 doc without an id **fails the build early** with the file named. Stamp ids:
 

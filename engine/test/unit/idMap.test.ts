@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { describe, test } from "node:test"
-import { DocIdValidationError, IdMap } from "../../src/idMap.ts"
+import { DocIdValidationError, ID_NAMESPACE_DIR, IdMap } from "../../src/idMap.ts"
 
 const ID_A = "docid_aaaaaaaaaaaaaaaaaaaaa_e"
 const ID_B = "docid_bbbbbbbbbbbbbbbbbbbbb_e"
@@ -16,12 +16,12 @@ describe("IdMap", () => {
       { vaultPath: "index.canvas", idValue: ID_D },
     ])
 
-    test("THEN a note stages under n/<docid>.md", () => {
-      assert.equal(map.stagedPathOf("notes/foo.md"), `n/${ID_A}.md`)
+    test("THEN a note stages under notes/<docid>.md", () => {
+      assert.equal(map.stagedPathOf("notes/foo.md"), `${ID_NAMESPACE_DIR}/${ID_A}.md`)
     })
 
-    test("THEN a canvas stages under n/<docid>.canvas", () => {
-      assert.equal(map.stagedPathOf("canvases/x.canvas"), `n/${ID_B}.canvas`)
+    test("THEN a canvas stages under notes/<docid>.canvas", () => {
+      assert.equal(map.stagedPathOf("canvases/x.canvas"), `${ID_NAMESPACE_DIR}/${ID_B}.canvas`)
     })
 
     test("THEN the root index.md stays at index.md (homepage exception)", () => {
@@ -32,9 +32,9 @@ describe("IdMap", () => {
       assert.equal(map.stagedPathOf("index.canvas"), "index.canvas")
     })
 
-    test("THEN a NON-root index.canvas still stages under n/", () => {
+    test("THEN a NON-root index.canvas still stages under notes/", () => {
       const nested = IdMap.build([{ vaultPath: "sub/index.canvas", idValue: ID_D }])
-      assert.equal(nested.stagedPathOf("sub/index.canvas"), `n/${ID_D}.canvas`)
+      assert.equal(nested.stagedPathOf("sub/index.canvas"), `${ID_NAMESPACE_DIR}/${ID_D}.canvas`)
     })
 
     test("THEN urlSegmentOf returns the harvested id verbatim", () => {
@@ -66,7 +66,7 @@ describe("IdMap", () => {
     })
 
     test("THEN staged paths use the derived segment, not the raw id", () => {
-      assert.equal(map.stagedPathOf("notes/cased.md"), "n/lc_mynote42.md")
+      assert.equal(map.stagedPathOf("notes/cased.md"), `${ID_NAMESPACE_DIR}/lc_mynote42.md`)
     })
   })
 

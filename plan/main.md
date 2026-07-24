@@ -92,7 +92,7 @@ Quartz expects humans editing `quartz.config.yaml`. In our product, config is GE
 
 > **Deviation note (2026-07-10, id-based publishing — ADR 0004, `plan/id-based-publishing.md`):**
 > the resolver contract is now `vaultPath -> docid -> published URL`. Doc pages
-> are served at `/n/<docid>` (`/n/<docid>.canvas`); the engine's staging pass
+> are served at `/notes/<docid>` (`/notes/<docid>.canvas`); the engine's staging pass
 > renames docs to their ids and rewrites links, still resolving through
 > Quartz's own utils (`engine/src/stagingLinkIndex.ts`). Everything below about
 > "never reimplement slugging" stands unchanged.

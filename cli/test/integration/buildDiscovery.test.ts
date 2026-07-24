@@ -3,6 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { after, before, describe, test } from "node:test"
+import { ID_NAMESPACE_DIR } from "../../../engine/src/index.ts"
 import { CliMain } from "../../src/main.ts"
 
 /**
@@ -17,13 +18,13 @@ const VAULT_DIR = path.join(REPO_ROOT, "test-vault")
 // Must mirror test-vault/.external_publish_config.json "output_dir" (resolved against the vault root).
 const OUT_DIR = path.join(REPO_ROOT, ".build", "external-publish-out")
 
-const README_SLUG = `n/${docIdOf("README.md")}`
-const MAIN_CANVAS_SLUG = `n/${docIdOf("canvases/main.canvas")}.canvas`
-const PRIVATE_NOTE_SLUG = `n/${docIdOf("notes/private-secret.md")}`
+const README_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("README.md")}`
+const MAIN_CANVAS_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("canvases/main.canvas")}.canvas`
+const PRIVATE_NOTE_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("notes/private-secret.md")}`
 // publish:false doc — must stay out even under publishAll. (Its FOLDER name
 // sentinel is not asserted here: the vault README documents that name in its
 // text and legitimately publishes under publishAll.)
-const PUBLISH_FALSE_SLUG = `n/${docIdOf("notes/vintrin-priv-only-x7q3/only-private.md")}`
+const PUBLISH_FALSE_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("notes/vintrin-priv-only-x7q3/only-private.md")}`
 
 let exitCode: number
 
