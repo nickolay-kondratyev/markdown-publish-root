@@ -1,7 +1,20 @@
 # PRIVATE state — notes URL prefix task
 
-## Status: COMPLETE. All code/tests/docs changed. typecheck + npm test green.
-Awaiting top-level commit. e2e NOT run (no browser).
+## Status: COMPLETE (Iteration 1 done). Code + tests + all docs aligned.
+typecheck green. Awaiting top-level commit. e2e NOT run (no browser).
+
+## Iteration 1 (reviewer doc follow-up) — DONE
+Fixed 3 current-tense `/n/` -> `/notes/` doc prose misses the code-only review
+flagged:
+- `README.md:28,60` (reviewer IMPORTANT #1).
+- `test-vault/notes/guides/deep-dive.md:10` fixture prose (reviewer MINOR #2).
+- `.claude/skills/verify/SKILL.md:29` canvas-URL operational line (found by my
+  own repo-wide markdown grep; reviewer only grepped code so missed it; it is a
+  live current-tense statement so I fixed it).
+typecheck exit 0. deep-dive.md prose is NOT asserted by any test (tests use only
+its slug via vault path), so no test re-run needed. Remaining `/n/` in .md =
+ADRs 0004/0005/0006, status/folder-nav.md, plan/* (historical) + publish-to-s3.md:89
+(unrelated S3 prefix) — all correctly left.
 
 ## The change in one line
 `engine/src/idMap.ts` `ID_NAMESPACE_DIR` `"n"` -> `"notes"` is the ONLY logic

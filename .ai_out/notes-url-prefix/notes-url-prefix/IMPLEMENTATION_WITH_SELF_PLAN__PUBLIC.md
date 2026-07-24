@@ -106,3 +106,46 @@ constant. Wikilinks/backlinks/graph/search follow automatically.)
 ## Not done (intentional)
 - No git commit (top-level agent commits).
 - No e2e execution (environment/browser).
+
+## Iteration 1 — reviewer doc-fix follow-up
+
+Addresses `IMPLEMENTATION_REVIEW__PUBLIC.md` (commit `3ed5d11`, APPROVE with
+doc fixes). All current-tense `/n/` note-URL references moved to `/notes/`.
+
+### Files changed (3, doc-only prose)
+- `README.md` — line 28 `page URLs are `/n/<docid>`` -> `/notes/<docid>`;
+  line 60 preview comment `extensionless /n/<docid> pages` -> `/notes/<docid>`.
+  (Resolves reviewer IMPORTANT #1.)
+- `test-vault/notes/guides/deep-dive.md:10` — fixture body prose `the URL stays
+  `/n/<docid>`` -> `/notes/<docid>`. (Resolves reviewer MINOR #2.)
+- `.claude/skills/verify/SKILL.md:29` — `Canvas pages live at ... /n/<docid>.canvas`
+  -> `/notes/<docid>.canvas`. NOT in the reviewer's list (reviewer grepped only
+  code, not the skill file), but this is a live, current-tense operational
+  statement of the canvas URL scheme that drives the verify e2e harness — it
+  would actively mislead. Fixed per the task's "if any is a current-tense
+  factual statement of the note URL scheme, fix it too" clause.
+
+### Resolution of reviewer items
+- IMPORTANT #1 (root README, 2 lines) — RESOLVED.
+- MINOR #2 (deep-dive.md fixture prose) — RESOLVED.
+- MINOR #3 (namespace-overlap consideration) — no action needed (reviewer agreed);
+  latent, pre-existing, protected by the unchanged index/_index guard.
+
+### Left as historical/unrelated (verified, not current-tense note-URL scheme)
+- ADRs `docs-internal/decisions/0004|0005|0006` — authored-time decision records.
+- `docs-internal/status/folder-nav.md` — phase status narrative.
+- `plan/id-based-publishing.md`, `plan/folder-nav-over-id-urls.md`,
+  `plan/assesments/stable-id-publishing-feasibility.md` — completed plan/assessment
+  narrative (URL shape as-of authoring).
+- `docs/publish-to-s3.md:89` `prefix n` -> `/n/404.html` — UNRELATED S3 deploy-path
+  prefix example, not the note namespace (per task; confirmed).
+
+### Verification
+- `npm run typecheck` — exit 0 (`.tmp/typecheck.log`). Doc-only edits, no code.
+- No test asserts on `deep-dive.md` prose body: tests derive only its slug from
+  the vault path (`folderNav.test.ts:24`, `e2e-foldernav.mjs:39`), never the line-10
+  text — so the prose edit needs no test re-run. Full suite unchanged from
+  Iteration 0 (592 unit + 87 integration, 0 fail).
+- Final repo-wide `grep '/n/' **/*.md` (excluding node_modules/vendor/.ai_out):
+  only the historical/unrelated files above remain. No current-tense note-URL
+  `/n/` reference left anywhere.
