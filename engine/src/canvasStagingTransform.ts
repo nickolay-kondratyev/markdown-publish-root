@@ -19,7 +19,7 @@ export interface CanvasTransformOptions {
 /**
  * Transforms one publishable canvas on its way into the staging dir
  * (plan/id-based-publishing.md §4.6):
- *   - `file` nodes targeting id-bearing docs -> their staged `n/<docid>.*` path
+ *   - `file` nodes targeting id-bearing docs -> their staged `notes/<docid>.*` path
  *     (unresolvable targets stay untouched: the plugin's privacy placeholder
  *     fails closed downstream)
  *   - wikilinks inside text nodes -> docid form (shared rewriter)

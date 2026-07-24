@@ -24,6 +24,7 @@ import path from "node:path"
 import {
   buildTestVaultSite,
   docIdOf,
+  ID_NAMESPACE_DIR,
   filterOwnErrors,
   launchBrowserPage,
   makeChecker,
@@ -138,7 +139,7 @@ const searchOpacityBecomes = (expected) =>
 // The long-form fixture (test-vault/notes/deep-dive.md): TOC, table, code —
 // the page zen mode is FOR. Pages live at stable-id URLs (plan/id-based-publishing.md).
 const GETTING_STARTED_ID = docIdOf("notes/getting-started.md")
-const NOTE_URL = `${base}/n/${docIdOf("notes/deep-dive.md")}`
+const NOTE_URL = `${base}/${ID_NAMESPACE_DIR}/${docIdOf("notes/deep-dive.md")}`
 await page.goto(NOTE_URL)
 await page.waitForSelector(".mode-switcher")
 
@@ -291,7 +292,7 @@ check("divider + breadcrumbs restored", plainAgain.dividerHrVisible && plainAgai
 // --- 6. Persistence: SPA navigation, then full reload ---------------------------
 await selectMode("reading", "zen")
 await page.click(`article a[href*="${GETTING_STARTED_ID}"]`) // Quartz SPA nav
-await page.waitForURL(`**/n/${GETTING_STARTED_ID}`)
+await page.waitForURL(`**/${ID_NAMESPACE_DIR}/${GETTING_STARTED_ID}`)
 await page.waitForSelector(".mode-switcher")
 const afterNav = await measure()
 check("zen survives SPA navigation", afterNav.readingMode === "zen")

@@ -189,12 +189,12 @@ interface PluginEntry {
  *   bases-page        DISABLED  .base files are out of MVP scope.
  *   footer            DISABLED  only renders "Created with Quartz vX (c) YEAR"
  *                               branding (we configure no links) — unwanted.
- *   explorer          DISABLED  slug-trie tree = flat /n/ listing; replaced by
+ *   explorer          DISABLED  slug-trie tree = flat /notes/ listing; replaced by
  *                               OUR vintrin-explorer (folder-nav plan §3.1).
  *   breadcrumbs       DISABLED  slug-trie crumbs; replaced by OUR
  *                               vintrin-breadcrumbs (folder-nav plan §4.3).
  *   folder-page       DISABLED  collapse-only folders have no URLs; its only
- *                               output was a flat listing at /n/.
+ *                               output was a flat listing at /notes/.
  *
  * Plugins that are disabled in stock Quartz (citations, hard-line-breaks,
  * ox-hugo, roam, comments, recent-notes, stacked-pages, tag-list) plus
@@ -246,10 +246,10 @@ const PLUGIN_ENTRIES: PluginEntry[] = [
   { source: "canvas-page", enabled: false },
   { source: "content-page", enabled: true },
   // folder-page DISABLED: no folder URLs with collapse-only folders; its only
-  // output was a flat meaningless listing at /n/ (folder-nav plan §2).
+  // output was a flat meaningless listing at /notes/ (folder-nav plan §2).
   { source: "folder-page", enabled: false },
   { source: "tag-page", enabled: true },
-  // explorer DISABLED: builds its tree from slugs -> flat n/ listing; replaced
+  // explorer DISABLED: builds its tree from slugs -> flat notes/ listing; replaced
   // by our vintrin-explorer local plugin (plan/folder-nav-over-id-urls.md §3.1).
   { source: "explorer", enabled: false },
   { source: "graph", enabled: true, layout: { position: "right", priority: 10 } },

@@ -37,7 +37,7 @@ implementation detail.
      `src/docId.ts`). Missing/malformed/duplicate ids throw
      `DocIdValidationError` (full offending list) BEFORE anything is written —
      fix with `make vault-add-ids VAULT=<vault>`.
-   - Docs are staged *named by id*: `n/<docid>.md` / `n/<docid>.canvas`
+   - Docs are staged *named by id*: `notes/<docid>.md` / `notes/<docid>.canvas`
      (root `index.md` / `index.canvas` stay in place so the site keeps `/`;
      with no root `index.md`, a root `index.canvas` becomes the homepage —
      its emitted page is copied to `index.html` after the Quartz build,
@@ -185,7 +185,7 @@ See `canvas-plugin/README.md`.
 
 ## Folder-shaped navigation (ADR 0005)
 
-The UI shows the ORIGINAL vault hierarchy while URLs stay `/n/<docid>`: the
+The UI shows the ORIGINAL vault hierarchy while URLs stay `/notes/<docid>`: the
 generated config disables stock `explorer`/`breadcrumbs`/`folder-page` and
 registers our local component plugins `vintrin-explorer/` and
 `vintrin-breadcrumbs/` (same local-source mechanism as `canvas-plugin/`).

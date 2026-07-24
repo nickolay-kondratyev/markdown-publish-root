@@ -56,7 +56,7 @@ describe("UrlSegment.deriveFrom", () => {
       assert.match(UrlSegment.deriveFrom("UE_foo"), /^ue_[0-9a-z]+$/)
     })
 
-    test("THEN the id [index] is encoded (n/index.md would hijack the /n/ folder page)", () => {
+    test("THEN the id [index] is encoded (notes/index.md would hijack the /notes/ folder page)", () => {
       assert.match(UrlSegment.deriveFrom("index"), /^ue_[0-9a-z]+$/)
     })
 

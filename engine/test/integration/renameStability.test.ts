@@ -4,6 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { after, before, describe, test } from "node:test"
+import { ID_NAMESPACE_DIR } from "../../src/idMap.ts"
 import { SiteBuilder } from "../../src/siteBuilder.ts"
 import { SiteConfigParser, type SiteConfig } from "../../src/siteConfig.ts"
 
@@ -75,7 +76,7 @@ describe("Move stability integration — moving a note changes crumbs but NO pub
         .readFileSync(path.join(originalVault, "notes/getting-started.md"), "utf-8")
         .match(/^id: (docid_[0-9a-z]{21}_e)$/m) as RegExpMatchArray
     )[1]
-    movedNoteSlug = `n/${docId}`
+    movedNoteSlug = `${ID_NAMESPACE_DIR}/${docId}`
 
     originalSnapshot = await buildAndSnapshot(originalVault, path.join(workDir, "out-original"))
     movedSnapshot = await buildAndSnapshot(movedVault, path.join(workDir, "out-moved"))

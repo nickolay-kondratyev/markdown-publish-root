@@ -3,13 +3,14 @@ import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { after, before, describe, test } from "node:test"
+import { ID_NAMESPACE_DIR } from "../../src/idMap.ts"
 import { SiteBuilder } from "../../src/siteBuilder.ts"
 import { SiteConfigParser } from "../../src/siteConfig.ts"
 
 /**
  * Folder-shaped navigation over stable-id URLs
  * (plan/folder-nav-over-id-urls.md Phase 4): the Explorer/breadcrumbs show
- * the ORIGINAL vault hierarchy while every doc href stays /n/<docid>[.canvas].
+ * the ORIGINAL vault hierarchy while every doc href stays /notes/<docid>[.canvas].
  */
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..")
@@ -18,10 +19,10 @@ const OUT_DIR = path.join(REPO_ROOT, ".build", "integration-foldernav-out")
 
 // The private-only folder's NAME is the leak sentinel (test-vault/README.md).
 const FOLDER_LEAK_SENTINEL = "vintrin-priv-only-x7q3"
-const DOC_HREF_GRAMMAR = /^\/n\/docid_[0-9a-z]{21}_e(\.canvas)?$/
+const DOC_HREF_GRAMMAR = /^\/notes\/docid_[0-9a-z]{21}_e(\.canvas)?$/
 
-const NESTED_NOTE_SLUG = `n/${docIdOf("notes/guides/deep-dive.md")}`
-const MAIN_CANVAS_SLUG = `n/${canvasDocIdOf("canvases/main.canvas")}.canvas`
+const NESTED_NOTE_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("notes/guides/deep-dive.md")}`
+const MAIN_CANVAS_SLUG = `${ID_NAMESPACE_DIR}/${canvasDocIdOf("canvases/main.canvas")}.canvas`
 
 describe("Folder-nav integration — explorer + breadcrumbs on the fixture vault", () => {
   before(async () => {
@@ -90,8 +91,8 @@ describe("Folder-nav integration — explorer + breadcrumbs on the fixture vault
     assert.deepEqual(filesContaining(OUT_DIR, FOLDER_LEAK_SENTINEL), [])
   })
 
-  test("THEN no /n/ folder-listing page is emitted (folder-page disabled)", () => {
-    assert.equal(fs.existsSync(path.join(OUT_DIR, "n", "index.html")), false)
+  test("THEN no /notes/ folder-listing page is emitted (folder-page disabled)", () => {
+    assert.equal(fs.existsSync(path.join(OUT_DIR, ID_NAMESPACE_DIR, "index.html")), false)
   })
 })
 

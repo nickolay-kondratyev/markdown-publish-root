@@ -1,5 +1,5 @@
 /**
- * Derives the published URL segment for a doc id (`/n/<segment>`).
+ * Derives the published URL segment for a doc id (`/notes/<segment>`).
  *
  * Ids WE generate (DocId grammar) are URL-safe by construction and pass
  * through verbatim. Foreign ids (vaults stamped by other tooling) are accepted
@@ -31,7 +31,7 @@ export class UrlSegment {
   static deriveFrom(id: string): string {
     const lowered = id.toLowerCase()
     // Marker-prefixed ids are ALWAYS encoded so lc_/ue_ in a URL is always ours;
-    // "index"/"_index" would hijack Quartz's /n/ folder-index routing.
+    // "index"/"_index" would hijack Quartz's /notes/ folder-index routing.
     if (!UrlSegment.spoofsMarkerOrIndex(lowered)) {
       if (UrlSegment.SAFE_SEGMENT_REGEX.test(id)) return id
       if (UrlSegment.SAFE_SEGMENT_REGEX.test(lowered)) {

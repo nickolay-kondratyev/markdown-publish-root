@@ -26,7 +26,7 @@ const address = await new PreviewServer("out/public").start(0) // port 0 = free 
 const { chromium } = await import("playwright-core")
 const browser = await chromium.launch({ executablePath: "/usr/bin/chromium", args: ["--no-sandbox", "--disable-dev-shm-usage"] })
 ```
-- Canvas pages live at stable-id URLs: `/n/<docid>.canvas` (extensionless works; docid = `metadata.frontmatter.id` in `test-vault/canvases/*.canvas`). main links to second and back — good for SPA-nav flows.
+- Canvas pages live at stable-id URLs: `/notes/<docid>.canvas` (extensionless works; docid = `metadata.frontmatter.id` in `test-vault/canvases/*.canvas`). main links to second and back — good for SPA-nav flows.
 - The viewer is React Flow (ADR 0003). Wait for `.canvas-page-mount .react-flow__node`, then ~900ms for async fragment fetches.
 - Nodes are addressable by JSON Canvas id: `.react-flow__node[data-id="text-welcome"]`.
 - Controls: `.react-flow__controls` buttons titled `Zoom In` / `Zoom Out` / `Fit View` / `Enter canvas fullscreen`. Minimap: `.react-flow__minimap`.

@@ -17,6 +17,7 @@ import path from "node:path"
 import {
   buildTestVaultSite,
   docIdOf,
+  ID_NAMESPACE_DIR,
   filterOwnErrors,
   launchBrowserPage,
   makeChecker,
@@ -26,7 +27,7 @@ import {
 
 const { check, summarize } = makeChecker()
 
-const URL_CANVAS_SLUG = `n/${docIdOf("canvases/impl/Canvas With Url.canvas")}.canvas`
+const URL_CANVAS_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("canvases/impl/Canvas With Url.canvas")}.canvas`
 // Node ids from the stamped fixture test-vault/canvases/impl/Canvas With Url.canvas.
 const GOOGLE_NODE = "453ef57832cea649"
 const YOUTUBE_WATCH_NODE = "37709759f2fb9207"

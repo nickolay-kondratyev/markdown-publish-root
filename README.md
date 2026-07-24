@@ -25,7 +25,7 @@ scripts/setup-dev-env.sh
 
 **2. Prepare your vault** — drop a `.external_publish_config.json` at the
 vault root (full format + examples: [docs/config-format.md](docs/config-format.md))
-and stamp stable doc ids (page URLs are `/n/<docid>`, so they survive
+and stamp stable doc ids (page URLs are `/notes/<docid>`, so they survive
 renames; idempotent, safe to re-run after adding notes):
 
 ```bash
@@ -57,7 +57,7 @@ override). The static site lands in the config's `output_dir` (here
 **4. View / ship it:**
 
 ```bash
-# Local preview (production URL routing, e.g. extensionless /n/<docid> pages):
+# Local preview (production URL routing, e.g. extensionless /notes/<docid> pages):
 node cli/bin/publish.mjs preview /path/to/vault/.publish_out
 
 # Deploy to S3 + CloudFront (needs AWS CLI v2 + credentials; --dry-run previews):

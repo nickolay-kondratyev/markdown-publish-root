@@ -4,6 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { after, before, describe, test } from "node:test"
+import { ID_NAMESPACE_DIR } from "../../src/idMap.ts"
 import { SiteBuilder } from "../../src/siteBuilder.ts"
 import { SiteConfigParser } from "../../src/siteConfig.ts"
 import { UrlSegment } from "../../src/urlSegment.ts"
@@ -15,13 +16,13 @@ const VAULT_DIR = path.join(REPO_ROOT, "test-vault")
 const MIXED_CASE_ID = "MyForeign_Id42"
 const UNSAFE_ID = "my id! (v1.2)"
 
-const LC_SLUG = `n/${UrlSegment.deriveFrom(MIXED_CASE_ID)}`
-const UE_SLUG = `n/${UrlSegment.deriveFrom(UNSAFE_ID)}`
+const LC_SLUG = `${ID_NAMESPACE_DIR}/${UrlSegment.deriveFrom(MIXED_CASE_ID)}`
+const UE_SLUG = `${ID_NAMESPACE_DIR}/${UrlSegment.deriveFrom(UNSAFE_ID)}`
 
 /**
  * End-to-end check of the UrlSegment fixed-point invariant: derived `lc_`/`ue_`
  * segments must survive Quartz's slugification BYTE-FOR-BYTE — pages are emitted
- * exactly at /n/<derived-segment> and rewritten wikilinks resolve to them.
+ * exactly at /notes/<derived-segment> and rewritten wikilinks resolve to them.
  */
 describe("Foreign-id integration — lc_/ue_ URLs survive a real Quartz build", () => {
   let workDir: string
@@ -60,7 +61,7 @@ describe("Foreign-id integration — lc_/ue_ URLs survive a real Quartz build", 
   test("THEN the wikilink to the unsafe-id note resolves to its ue_ page", () => {
     // getting-started.md links [[architecture]]; staged as [[<ue_segment>|architecture]].
     const html = fs.readFileSync(path.join(outDir, `${LC_SLUG}.html`), "utf-8")
-    assert.match(html, new RegExp(UE_SLUG.slice("n/".length)))
+    assert.match(html, new RegExp(UE_SLUG.slice(ID_NAMESPACE_DIR.length + 1)))
   })
 })
 

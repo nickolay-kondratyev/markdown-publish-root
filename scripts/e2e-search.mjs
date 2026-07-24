@@ -11,6 +11,7 @@
 import {
   buildTestVaultSite,
   docIdOf,
+  ID_NAMESPACE_DIR,
   filterOwnErrors,
   launchBrowserPage,
   makeChecker,
@@ -19,8 +20,8 @@ import {
 
 const { check, summarize } = makeChecker()
 
-const MAIN_CANVAS_SLUG = `n/${docIdOf("canvases/main.canvas")}.canvas`
-const GETTING_STARTED_SLUG = `n/${docIdOf("notes/getting-started.md")}`
+const MAIN_CANVAS_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("canvases/main.canvas")}.canvas`
+const GETTING_STARTED_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("notes/getting-started.md")}`
 
 console.log("building test-vault (canvases included)...")
 const { siteDir } = await buildTestVaultSite("e2e-search-site")

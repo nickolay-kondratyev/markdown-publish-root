@@ -13,6 +13,7 @@ import path from "node:path"
 import {
   buildTestVaultSite,
   docIdOf,
+  ID_NAMESPACE_DIR,
   filterOwnErrors,
   launchBrowserPage,
   makeChecker,
@@ -23,11 +24,11 @@ import {
 const { check, summarize } = makeChecker()
 
 // Stable-id slugs (plan/id-based-publishing.md) for every page this flow visits.
-const MAIN_CANVAS_SLUG = `n/${docIdOf("canvases/main.canvas")}.canvas`
-const SECOND_CANVAS_SLUG = `n/${docIdOf("canvases/second.canvas")}.canvas`
-const SPARSE_CANVAS_SLUG = `n/${docIdOf("canvases/sparse.canvas")}.canvas`
-const GETTING_STARTED_SLUG = `n/${docIdOf("notes/getting-started.md")}`
-const ARCHITECTURE_SLUG = `n/${docIdOf("notes/architecture.md")}`
+const MAIN_CANVAS_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("canvases/main.canvas")}.canvas`
+const SECOND_CANVAS_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("canvases/second.canvas")}.canvas`
+const SPARSE_CANVAS_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("canvases/sparse.canvas")}.canvas`
+const GETTING_STARTED_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("notes/getting-started.md")}`
+const ARCHITECTURE_SLUG = `${ID_NAMESPACE_DIR}/${docIdOf("notes/architecture.md")}`
 
 console.log("building test-vault (canvases included)...")
 const { siteDir } = await buildTestVaultSite("e2e-canvas-flow-site")

@@ -3,7 +3,7 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { after, before, describe, test } from "node:test"
-import { DocIdValidationError } from "../../src/idMap.ts"
+import { DocIdValidationError, ID_NAMESPACE_DIR } from "../../src/idMap.ts"
 import { PublishFilter } from "../../src/publishFilter.ts"
 import {
   ReservedFrontmatterKeyError,
@@ -65,16 +65,16 @@ describe("VaultStager", () => {
     assert.equal(fs.existsSync(path.join(stagingDir, "index.md")), true)
   })
 
-  test("THEN a published note stages under n/<docid>.md", () => {
-    assert.equal(fs.existsSync(path.join(stagingDir, `n/${ID_NOTE}.md`)), true)
+  test("THEN a published note stages under notes/<docid>.md", () => {
+    assert.equal(fs.existsSync(path.join(stagingDir, `${ID_NAMESPACE_DIR}/${ID_NOTE}.md`)), true)
   })
 
   test("THEN the note's staged path is reported in stagedPathByVaultPath", () => {
-    assert.equal(result.stagedPathByVaultPath["notes/note.md"], `n/${ID_NOTE}.md`)
+    assert.equal(result.stagedPathByVaultPath["notes/note.md"], `${ID_NAMESPACE_DIR}/${ID_NOTE}.md`)
   })
 
-  test("THEN a published canvas stages under n/<docid>.canvas", () => {
-    assert.equal(fs.existsSync(path.join(stagingDir, `n/${ID_CANVAS}.canvas`)), true)
+  test("THEN a published canvas stages under notes/<docid>.canvas", () => {
+    assert.equal(fs.existsSync(path.join(stagingDir, `${ID_NAMESPACE_DIR}/${ID_CANVAS}.canvas`)), true)
   })
 
   test("THEN wikilinks in staged markdown are rewritten to docid targets", () => {
@@ -83,12 +83,12 @@ describe("VaultStager", () => {
   })
 
   test("THEN a title is injected from the original basename when absent", () => {
-    const staged = fs.readFileSync(path.join(stagingDir, `n/${ID_NOTE}.md`), "utf-8")
+    const staged = fs.readFileSync(path.join(stagingDir, `${ID_NAMESPACE_DIR}/${ID_NOTE}.md`), "utf-8")
     assert.equal(staged.includes(`title: "note"`), true)
   })
 
   test("THEN the note's ORIGINAL vault path is injected as vintrinPath", () => {
-    const staged = fs.readFileSync(path.join(stagingDir, `n/${ID_NOTE}.md`), "utf-8")
+    const staged = fs.readFileSync(path.join(stagingDir, `${ID_NAMESPACE_DIR}/${ID_NOTE}.md`), "utf-8")
     assert.equal(staged.includes(`vintrinPath: "notes/note.md"`), true)
   })
 
@@ -99,7 +99,7 @@ describe("VaultStager", () => {
 
   test("THEN the staged canvas carries its ORIGINAL vault path as metadata vintrinPath", () => {
     const staged = JSON.parse(
-      fs.readFileSync(path.join(stagingDir, `n/${ID_CANVAS}.canvas`), "utf-8"),
+      fs.readFileSync(path.join(stagingDir, `${ID_NAMESPACE_DIR}/${ID_CANVAS}.canvas`), "utf-8"),
     )
     assert.equal(staged.metadata.frontmatter.vintrinPath, "boards/main.canvas")
   })
@@ -109,11 +109,11 @@ describe("VaultStager", () => {
   })
 
   test("THEN a publish:true note under a folder whose name contains 'Private' is NOT staged (private rule wins)", () => {
-    assert.equal(fs.existsSync(path.join(stagingDir, `n/${ID_PRIVATE_TREE}.md`)), false)
+    assert.equal(fs.existsSync(path.join(stagingDir, `${ID_NAMESPACE_DIR}/${ID_PRIVATE_TREE}.md`)), false)
   })
 
   test("THEN a publish:true note whose file name contains 'PRIVATE' is NOT staged (private rule wins)", () => {
-    assert.equal(fs.existsSync(path.join(stagingDir, `n/${ID_PRIVATE_FILE}.md`)), false)
+    assert.equal(fs.existsSync(path.join(stagingDir, `${ID_NAMESPACE_DIR}/${ID_PRIVATE_FILE}.md`)), false)
   })
 
   test("THEN nothing from the private-named tree leaks anywhere in the staging dir", () => {
