@@ -1,11 +1,12 @@
 ---
+working_dir: nickolay-kondratyev_markdown-publish-root
 id: nid_lgerk1snh3a2i8p8p8sangu84_e
 title: "BUG - issue with publishing note that is within a folder"
-status: open
+status: in_progress
 deps: []
 links: []
 created_iso: 2026-08-28T22:02:58Z
-status_updated_iso: 2026-08-28T22:02:58Z
+status_updated_iso: 2026-08-28T22:06:28Z
 type: task
 priority: 3
 assignee: nickolaykondratyev
