@@ -27,9 +27,11 @@ export class SiteChromeStyles {
 // it. mode-switcher's CSS relies on the same fact.
 const SITE_CHROME_SCSS = `@use "./variables.scss" as *;
 
-/* Markdown reading measure (~65-70ch): ch is measured against the body font,
-   so the cap tracks typography changes instead of hardcoding pixels. */
-$readingMeasure: 70ch;
+/* Markdown reading measure (~98ch): ch is measured against the body font,
+   so the cap tracks typography changes instead of hardcoding pixels. Widened
+   40% from the former 70ch measure (ticket increase-the-width-of-text-column)
+   to give the text column more room. */
+$readingMeasure: 98ch;
 
 /* Viewport-anchored layout: the rails, not the page, define the frame.
    Quartz centers .page under a ~1500px cap — right for markdown, wasted width
