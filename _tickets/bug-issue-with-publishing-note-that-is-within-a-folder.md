@@ -1,4 +1,5 @@
 ---
+session_ids: [{"a": "claude", "type": "execution", "id": "ac2ccab6-ca77-45a4-924b-803aa7e379bf"}]
 working_dir: nickolay-kondratyev_markdown-publish-root
 id: nid_lgerk1snh3a2i8p8p8sangu84_e
 title: "BUG - issue with publishing note that is within a folder"
