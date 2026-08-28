@@ -1,6 +1,6 @@
 ---
 closed_iso: 2026-08-28T18:33:06Z
-session_ids: [{"a": "claude", "type": "execution", "id": "fea02293-487c-43a3-b969-f06fc7034705"}]
+session_ids: [{"a": "claude", "type": "execution", "id": "fea02293-487c-43a3-b969-f06fc7034705"}, {"a": "claude", "type": "review", "id": "f27cc7fa-561f-41d6-a233-04f3b21d0040"}]
 working_dir: nickolay-kondratyev_markdown-publish-root
 id: nid_2l4x6as325r6xiruc7h0p5dx8_e
 title: "Increase the width of text column"
