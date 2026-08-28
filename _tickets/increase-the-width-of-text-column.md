@@ -1,11 +1,12 @@
 ---
+working_dir: nickolay-kondratyev_markdown-publish-root
 id: nid_2l4x6as325r6xiruc7h0p5dx8_e
 title: "Increase the width of text column"
-status: open
+status: in_progress
 deps: []
 links: []
 created_iso: 2026-08-28T17:58:52Z
-status_updated_iso: 2026-08-28T17:58:52Z
+status_updated_iso: 2026-08-28T18:31:34Z
 type: task
 priority: 3
 assignee: nickolaykondratyev
