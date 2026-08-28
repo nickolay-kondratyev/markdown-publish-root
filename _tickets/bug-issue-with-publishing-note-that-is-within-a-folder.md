@@ -70,3 +70,8 @@ No slugging is reimplemented — the helper only trims the Quartz-produced slug.
   without the fix and PASS with it.
 
 Full suite green: `npm run test:unit` (596) + engine integration (83) + typecheck.
+## Notes
+
+**2026-08-28T22:19:02Z**
+
+__READY_AS_IS__: focused folder-note alias fix is correct; typecheck + 596 unit + 90 integration (incl. 3 new folder-note tests verified to fail without fix) all green.
