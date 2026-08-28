@@ -100,8 +100,8 @@ describe("SiteChromeStyles — viewport-anchored layout", () => {
     assert.equal(/\.page\s*\{[^}]*max-width: none/.test(scss()), true)
   })
 
-  test("GIVEN the scss WHEN inspected THEN a reading measure of ~65-70ch is defined", () => {
-    assert.equal(scss().includes("$readingMeasure: 70ch"), true)
+  test("GIVEN the scss WHEN inspected THEN the ~98ch reading measure is defined (40% wider than the former 70ch)", () => {
+    assert.equal(scss().includes("$readingMeasure: 98ch"), true)
   })
 
   test("GIVEN a default-frame page WHEN inspected THEN the center column is capped at the reading measure", () => {
