@@ -42,3 +42,9 @@ Also updated the corresponding unit assertion in
 Verified: `npm run typecheck` passes; the full `siteChromeStyles.test.ts` suite
 passes (16/16).
 
+
+## Notes
+
+**2026-08-28T18:34:29Z**
+
+__READY_AS_IS__: single-value 70ch->98ch (+40%) reading-measure change; math correct, test updated, typecheck + 16/16 scss tests pass, canvas unaffected.
